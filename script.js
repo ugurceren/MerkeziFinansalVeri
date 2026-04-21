@@ -112,9 +112,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         for (let i = 0; i < rows.length; i++) {
             const cells = rows[i].getElementsByTagName('td');
-            const accountId = parseInt(cells[0].textContent);
-            const accountName = cells[1].textContent.toLowerCase();
-            const accountTeam = cells[2].textContent.toLowerCase();
+            const accountId = parseInt(cells[1].textContent);
+            const accountName = cells[2].textContent.toLowerCase();
+            const accountTeam = cells[3].textContent.toLowerCase();
             
             let match = true;
             
@@ -152,16 +152,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Yeni hesap ekleme (basit simülasyon)
     addBtn.addEventListener('click', function() {
         const newRow = accountsTable.insertRow();
-        const idCell = newRow.insertCell(0);
-        const nameCell = newRow.insertCell(1);
-        const teamCell = newRow.insertCell(2);
-        const actionsCell = newRow.insertCell(3);
-
         const nextId = accountsTable.rows.length;
-        idCell.textContent = nextId;
-        nameCell.textContent = `Yeni Kurumsal Hesap ${nextId}`;
-        teamCell.textContent = 'Yeni Ekip';
-        actionsCell.innerHTML = '<button class="edit-btn">Düzenle</button> <button class="delete-btn">Sil</button>';
+        
+        newRow.insertCell(0).textContent = nextId;
+        newRow.insertCell(1).textContent = nextId;
+        newRow.insertCell(2).textContent = `Yeni Kurumsal Hesap ${nextId}`;
+        newRow.insertCell(3).textContent = 'Yeni Ekip';
+        newRow.insertCell(4).textContent = '-';
+        newRow.insertCell(5).textContent = 'Sistem';
+        newRow.insertCell(6).textContent = new Date().toISOString().split('T')[0];
+        newRow.insertCell(7).textContent = new Date().toISOString().split('T')[0];
+        newRow.insertCell(8).textContent = document.getElementById('userName').textContent;
+        newRow.insertCell(9).textContent = '-';
+        
+        const actionsCell = newRow.insertCell(10);
+        actionsCell.innerHTML = '<button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button>';
 
         // Silme işlevi
         actionsCell.querySelector('.delete-btn').addEventListener('click', function() {

@@ -88,11 +88,14 @@ input {
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 8px;
-    font-size: 1.4rem;
+    padding: 12px;
+    font-size: 1.8rem;
     line-height: 1;
     transition: color 0.25s, transform 0.3s;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .sidebar-toggle:hover {
@@ -100,7 +103,7 @@ input {
 }
 
 .app-shell.sidebar-collapsed .sidebar-toggle {
-    transform: rotateY(180deg);
+    transform: none;
 }
 
 .app-shell.sidebar-collapsed .sidebar {
@@ -215,7 +218,7 @@ input {
     padding-left: 18px;
     box-shadow: inset 2px 0 0 var(--accent);
 }
-}
+
 
 .badge {
     background-color: var(--border);
@@ -536,16 +539,17 @@ table {
 
 th,
 td {
-    padding: 16px 14px;
+    padding: 10px 10px;
     text-align: left;
     border-bottom: 1px solid var(--border);
     color: var(--text-primary);
+    font-size: 0.85rem;
 }
 
 th {
     color: var(--text-muted);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
 }
 
 tbody tr:hover {
