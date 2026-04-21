@@ -56,9 +56,21 @@ function initUserName() {
     userAvatarElement.textContent = initials || 'K';
 }
 
+// Sidebar toggle işlevselliği
+function initSidebarToggle() {
+    const sidebarToggleBtn = document.getElementById('sidebarToggle');
+    const appShell = document.querySelector('.app-shell');
+    
+    sidebarToggleBtn.addEventListener('click', function() {
+        appShell.classList.toggle('sidebar-collapsed');
+    });
+}
+
 // Basit JavaScript işlevselliği
 document.addEventListener('DOMContentLoaded', function() {
     initThemeToggle();
+    initUserName();
+    initSidebarToggle();
     
     // Menü navigasyon işlevi
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
