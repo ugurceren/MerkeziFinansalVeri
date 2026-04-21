@@ -5,27 +5,249 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merkezi Finansal Veri | Kurumsal Yönetim Sistemi</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ── Sidebar sabit — filtre açılınca kaymasın ── */
+        .app-shell {
+            align-items: flex-start !important;
+        }
+        .sidebar {
+            position: sticky !important;
+            top: 0 !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            align-self: flex-start !important;
+        }
+
+        /* Logo */
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* ── İçerik sarmalayıcı: filtre paneli + tablo yan yana ── */
+        .content-area {
+            display: flex;
+            gap: 0;
+            align-items: flex-start;
+        }
+
+        /* ── Sol filtre paneli ── */
+        .filter-side-panel {
+            flex-shrink: 0;
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: width 0.35s cubic-bezier(0.4,0,0.2,1),
+                        opacity 0.25s,
+                        margin-right 0.35s cubic-bezier(0.4,0,0.2,1);
+            margin-right: 0;
+        }
+        .filter-side-panel.open {
+            width: 240px;
+            opacity: 1;
+            margin-right: 16px;
+        }
+
+        .filter-side-panel-inner {
+            width: 240px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px 16px 22px;
+        }
+
+        .fsp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .fsp-title {
+            margin: 0;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+        }
+        .fsp-clear {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 7px;
+            transition: background 0.2s;
+        }
+        .fsp-clear:hover { background: var(--accent-soft); }
+
+        .fsp-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+        .fsp-group label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .fsp-input {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font: inherit;
+            font-size: 0.88rem;
+            box-sizing: border-box;
+            transition: border-color 0.22s, background 0.22s;
+        }
+        .fsp-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .fsp-input::placeholder { color: var(--text-muted); }
+
+        .fsp-range {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .fsp-range .fsp-input { flex: 1; min-width: 0; }
+        .fsp-dash { color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+
+        .fsp-apply {
+            width: 100%;
+            padding: 10px;
+            border-radius: 11px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: opacity 0.2s, transform 0.18s;
+        }
+        .fsp-apply:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── Tablo paneli flex: 1 alır ── */
+        .table-panel { flex: 1; min-width: 0; }
+
+        /* ── Panel header butonları ── */
+        .panel-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .panel-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .panel-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.87rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            transition: background 0.22s, border-color 0.22s, transform 0.18s, color 0.22s;
+            white-space: nowrap;
+        }
+        .panel-action-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .panel-action-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        /* Badge */
+        .filter-badge {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: var(--danger);
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            width: 17px; height: 17px;
+        }
+        .filter-badge.visible { display: inline-flex; }
+
+        /* Eski filter-row gizle */
+        .filter-row { display: none !important; }
+        .panel-header { margin-bottom: 20px; }
+
+        /* Sayfa içeriği taşmasın, sidebar etkilenmesin */
+        .page-content { overflow: hidden; }
+        .content-area { overflow: hidden; }
+
+        /* ── Inline editing ── */
+        tr.row-editing { background: var(--accent-soft) !important; outline: 1.5px solid var(--accent); outline-offset: -1px; }
+        .cell-input {
+            width: 100%; padding: 6px 10px;
+            border-radius: 8px; border: 1.5px solid var(--accent);
+            background: var(--bg-surface); color: var(--text-primary);
+            font: inherit; font-size: 0.85rem; box-sizing: border-box;
+            min-width: 80px;
+        }
+        .cell-input:focus { outline: none; background: var(--bg-card); }
+        .save-btn   { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .save-btn:hover { background: rgba(34,197,94,0.28); }
+        .cancel-btn { background: rgba(156,163,175,0.15); color: var(--text-muted); }
+        .cancel-btn:hover { background: rgba(156,163,175,0.28); }
+
+        @media (max-width: 900px) {
+            .filter-side-panel.open { width: 200px; }
+            .filter-side-panel-inner { width: 200px; }
+        }
+        @media (max-width: 700px) {
+            .content-area { flex-direction: column; }
+            .filter-side-panel.open { width: 100%; margin-right: 0; margin-bottom: 14px; }
+            .filter-side-panel-inner { width: 100%; }
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
-                    <div class="brand-mark">TD</div>
-                    <div>
-                        <h1>Merkezi Finansal Veri</h1>
-                    </div>
+                    <img src="data:image/jpeg;base64,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" alt="Trusted Data Logo" class="brand-logo">
+                    <div><h1>Merkezi Finansal Veri</h1></div>
                 </div>
-                <button class="sidebar-toggle" id="sidebarToggle" title="Menüyü Aç/Kapat">
-                    <span>☰</span>
-                </button>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Menüyü Aç/Kapat"><span>☰</span></button>
             </div>
 
             <div class="sidebar-section">
                 <p class="section-title">GENEL</p>
                 <a class="sidebar-link" href="#" data-section="GENEL" data-page="Genel Bakış">Genel Bakış</a>
             </div>
-
             <div class="sidebar-section">
                 <p class="section-title">MUTABAKAT</p>
                 <a class="sidebar-link active" href="#" data-section="MUTABAKAT" data-page="Kebir Hesapları Sorumluluk Listesi">Kebir Hesapları Sorumluluk Listesi</a>
@@ -33,20 +255,17 @@
                 <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Yevmiye Defteri">Yevmiye Defteri</a>
                 <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Masraf Hesapları">Masraf Hesapları</a>
             </div>
-
             <div class="sidebar-section">
                 <p class="section-title">RAPORLAMA</p>
                 <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Bilanço">Bilanço</a>
                 <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Gelir Tablosu">Gelir Tablosu</a>
                 <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Excel Dışa Aktar">Excel Dışa Aktar</a>
             </div>
-
             <div class="sidebar-section">
                 <p class="section-title">YÖNETİM</p>
                 <a class="sidebar-link" href="#" data-section="YÖNETİM" data-page="Kullanıcı Yönetimi">Kullanıcı Yönetimi</a>
                 <a class="sidebar-link" href="#" data-section="YÖNETİM" data-page="Ayarlar">Ayarlar</a>
             </div>
-
             <div class="sidebar-footer">
                 <div class="user-avatar" id="userAvatar">AY</div>
                 <div>
@@ -68,218 +287,262 @@
                 </div>
             </div>
 
-            <section class="table-panel">
-                <div class="panel-header">
-                    <div>
-                        <h3>Kurumsal Hesaplar</h3>
-                        <p>Bankadaki görevli ekipler tarafından yönetilen hesaplar.</p>
+            <!-- Sol filtre + tablo yan yana -->
+            <div class="content-area">
+
+                <!-- Sol filtre paneli -->
+                <div class="filter-side-panel" id="filterSidePanel">
+                    <div class="filter-side-panel-inner">
+                        <div class="fsp-header">
+                            <p class="fsp-title">Filtreler</p>
+                            <button class="fsp-clear" id="clearFiltersBtn">Temizle</button>
+                        </div>
+                        <div class="fsp-group">
+                            <label>Hesap Adı</label>
+                            <input class="fsp-input" type="text" id="filterNameInput" placeholder="Hesap adı ara...">
+                        </div>
+                        <div class="fsp-group">
+                            <label>Ekip</label>
+                            <input class="fsp-input" type="text" id="filterTeamInput" placeholder="Ekip ara...">
+                        </div>
+                        <div class="fsp-group">
+                            <label>Hesap ID Aralığı</label>
+                            <div class="fsp-range">
+                                <input class="fsp-input" type="number" id="filterIdMin" placeholder="Min">
+                                <span class="fsp-dash">—</span>
+                                <input class="fsp-input" type="number" id="filterIdMax" placeholder="Max">
+                            </div>
+                        </div>
+                        <button class="fsp-apply" id="filterBtn">Filtrele</button>
                     </div>
-                    <button id="addBtn" class="primary-btn">Yeni Hesap Ekle</button>
                 </div>
 
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Hesap Adı</label>
-                        <input type="text" id="filterNameInput" placeholder="Hesap adı ara...">
-                    </div>
-                    <div class="filter-group">
-                        <label>Ekip</label>
-                        <input type="text" id="filterTeamInput" placeholder="Ekip ara...">
-                    </div>
-                    <div class="filter-group">
-                        <label>Hesap ID Aralığı</label>
-                        <div class="filter-range">
-                            <input type="number" id="filterIdMin" placeholder="Min">
-                            <span class="range-dash">—</span>
-                            <input type="number" id="filterIdMax" placeholder="Max">
+                <!-- Tablo paneli -->
+                <section class="table-panel">
+                    <div class="panel-header">
+                        <div class="panel-header-row">
+                            <div>
+                                <h3>Kurumsal Hesaplar</h3>
+                            </div>
+                            <div class="panel-header-actions">
+                                <button id="filterToggleBtn" class="panel-action-btn">
+                                    <span>⚙</span> Filtreler
+                                    <span class="filter-badge" id="filterBadge">0</span>
+                                </button>
+                                <button id="addBtn" class="panel-action-btn">
+                                    <span>＋</span> Yeni Hesap Ekle
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <button id="filterBtn">Filtrele</button>
-                </div>
 
-                <table id="accountsTable">
-                    <thead>
-                        <tr>
-                            <th>Hesap No</th>
-                            <th>HesapID</th>
-                            <th>Hesap Adı</th>
-                            <th>Sorumlu Ekip</th>
-                            <th>Alınması Beklenen Aksiyon</th>
-                            <th>Kaynak</th>
-                            <th>Kayıt Tarihi</th>
-                            <th>Güncelleme Tarihi</th>
-                            <th>Kaydı Oluşturan Kullanıcı</th>
-                            <th>Güncelleyen Kullanıcı</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>1</td>
-                            <td>Kurumsal Hesap 1</td>
-                            <td>Banka Ekip 1</td>
-                            <td>Ödeme İşlemi</td>
-                            <td>Banka Sistemi</td>
-                            <td>2024-01-15</td>
-                            <td>2024-01-20</td>
-                            <td>Ahmet Yılmaz</td>
-                            <td>Mehmet Kara</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>2</td>
-                            <td>Kurumsal Hesap 2</td>
-                            <td>Banka Ekip 2</td>
-                            <td>Hesap Aktarımı</td>
-                            <td>Merkezi Sistem</td>
-                            <td>2024-01-18</td>
-                            <td>2024-01-21</td>
-                            <td>Ayşe Demir</td>
-                            <td>Zeynep Can</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>3</td>
-                            <td>Kurumsal Hesap 3</td>
-                            <td>Banka Ekip 1</td>
-                            <td>Kaydı Güncelle</td>
-                            <td>Banka Sistemi</td>
-                            <td>2024-01-20</td>
-                            <td>2024-01-22</td>
-                            <td>Mehmet Kara</td>
-                            <td>Ahmet Yılmaz</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>4</td>
-                            <td>Kurumsal Hesap 4</td>
-                            <td>Banka Ekip 3</td>
-                            <td>Doğrulama Bekle</td>
-                            <td>Merkezi Sistem</td>
-                            <td>2024-01-22</td>
-                            <td>2024-01-23</td>
-                            <td>Fatih Şahin</td>
-                            <td>Seda Yıldız</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>5</td>
-                            <td>5</td>
-                            <td>Kurumsal Hesap 5</td>
-                            <td>Banka Ekip 2</td>
-                            <td>Bilgi Eksik</td>
-                            <td>Banka Sistemi</td>
-                            <td>2024-01-23</td>
-                            <td>2024-01-24</td>
-                            <td>Zeynep Can</td>
-                            <td>Ayşe Demir</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>6</td>
-                            <td>6</td>
-                            <td>Kurumsal Hesap 6</td>
-                            <td>Banka Ekip 1</td>
-                            <td>İzin Bekle</td>
-                            <td>Merkezi Sistem</td>
-                            <td>2024-01-25</td>
-                            <td>2024-01-26</td>
-                            <td>Seda Yıldız</td>
-                            <td>Fatih Şahin</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>7</td>
-                            <td>7</td>
-                            <td>Kurumsal Hesap 7</td>
-                            <td>Banka Ekip 3</td>
-                            <td>Ödeme İşlemi</td>
-                            <td>Banka Sistemi</td>
-                            <td>2024-01-26</td>
-                            <td>2024-01-27</td>
-                            <td>Ahmet Yılmaz</td>
-                            <td>Mehmet Kara</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>8</td>
-                            <td>8</td>
-                            <td>Kurumsal Hesap 8</td>
-                            <td>Banka Ekip 2</td>
-                            <td>Hesap Aktarımı</td>
-                            <td>Merkezi Sistem</td>
-                            <td>2024-01-27</td>
-                            <td>2024-01-28</td>
-                            <td>Zeynep Can</td>
-                            <td>Ayşe Demir</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>9</td>
-                            <td>9</td>
-                            <td>Kurumsal Hesap 9</td>
-                            <td>Banka Ekip 1</td>
-                            <td>Kaydı Güncelle</td>
-                            <td>Banka Sistemi</td>
-                            <td>2024-01-28</td>
-                            <td>2024-01-29</td>
-                            <td>Fatih Şahin</td>
-                            <td>Seda Yıldız</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>10</td>
-                            <td>10</td>
-                            <td>Kurumsal Hesap 10</td>
-                            <td>Banka Ekip 3</td>
-                            <td>Doğrulama Bekle</td>
-                            <td>Merkezi Sistem</td>
-                            <td>2024-01-29</td>
-                            <td>2024-01-30</td>
-                            <td>Mehmet Kara</td>
-                            <td>Ahmet Yılmaz</td>
-                            <td>
-                                <button class="table-btn edit-btn">Düzenle</button>
-                                <button class="table-btn delete-btn">Sil</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
+                    <!-- Eski filter-row gizli -->
+                    <div class="filter-row" aria-hidden="true">
+                        <div class="filter-group"><label>Hesap Adı</label><input type="text" id="_c1"></div>
+                        <div class="filter-group"><label>Ekip</label><input type="text" id="_c2"></div>
+                        <div class="filter-group"><label>Hesap ID</label><div class="filter-range"><input type="number" id="_c3"><span class="range-dash">—</span><input type="number" id="_c4"></div></div>
+                        <button>Filtrele</button>
+                    </div>
+
+                    <table id="accountsTable">
+                        <thead>
+                            <tr>
+                                <th>Hesap No</th>
+                                <th>HesapID</th>
+                                <th>Hesap Adı</th>
+                                <th>Sorumlu Ekip</th>
+                                <th>Alınması Beklenen Aksiyon</th>
+                                <th>Kaynak</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>Güncelleme Tarihi</th>
+                                <th>Kaydı Oluşturan Kullanıcı</th>
+                                <th>Güncelleyen Kullanıcı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td><td>1</td><td>Kurumsal Hesap 1</td><td>Banka Ekip 1</td>
+                                <td>Ödeme İşlemi</td><td>Banka Sistemi</td>
+                                <td>2024-01-15</td><td>2024-01-20</td>
+                                <td>Ahmet Yılmaz</td><td>Mehmet Kara</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td><td>2</td><td>Kurumsal Hesap 2</td><td>Banka Ekip 2</td>
+                                <td>Hesap Aktarımı</td><td>Merkezi Sistem</td>
+                                <td>2024-01-18</td><td>2024-01-21</td>
+                                <td>Ayşe Demir</td><td>Zeynep Can</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td><td>3</td><td>Kurumsal Hesap 3</td><td>Banka Ekip 1</td>
+                                <td>Kaydı Güncelle</td><td>Banka Sistemi</td>
+                                <td>2024-01-20</td><td>2024-01-22</td>
+                                <td>Mehmet Kara</td><td>Ahmet Yılmaz</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td><td>4</td><td>Kurumsal Hesap 4</td><td>Banka Ekip 3</td>
+                                <td>Doğrulama Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-22</td><td>2024-01-23</td>
+                                <td>Fatih Şahin</td><td>Seda Yıldız</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td><td>5</td><td>Kurumsal Hesap 5</td><td>Banka Ekip 2</td>
+                                <td>Bilgi Eksik</td><td>Banka Sistemi</td>
+                                <td>2024-01-23</td><td>2024-01-24</td>
+                                <td>Zeynep Can</td><td>Ayşe Demir</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td><td>6</td><td>Kurumsal Hesap 6</td><td>Banka Ekip 1</td>
+                                <td>İzin Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-25</td><td>2024-01-26</td>
+                                <td>Seda Yıldız</td><td>Fatih Şahin</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td><td>7</td><td>Kurumsal Hesap 7</td><td>Banka Ekip 3</td>
+                                <td>Ödeme İşlemi</td><td>Banka Sistemi</td>
+                                <td>2024-01-26</td><td>2024-01-27</td>
+                                <td>Ahmet Yılmaz</td><td>Mehmet Kara</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td><td>8</td><td>Kurumsal Hesap 8</td><td>Banka Ekip 2</td>
+                                <td>Hesap Aktarımı</td><td>Merkezi Sistem</td>
+                                <td>2024-01-27</td><td>2024-01-28</td>
+                                <td>Zeynep Can</td><td>Ayşe Demir</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>9</td><td>9</td><td>Kurumsal Hesap 9</td><td>Banka Ekip 1</td>
+                                <td>Kaydı Güncelle</td><td>Banka Sistemi</td>
+                                <td>2024-01-28</td><td>2024-01-29</td>
+                                <td>Fatih Şahin</td><td>Seda Yıldız</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>10</td><td>10</td><td>Kurumsal Hesap 10</td><td>Banka Ekip 3</td>
+                                <td>Doğrulama Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-29</td><td>2024-01-30</td>
+                                <td>Mehmet Kara</td><td>Ahmet Yılmaz</td>
+                                <td><button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div><!-- /content-area -->
         </main>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        /* ── Filter Side Panel Toggle ── */
+        const filterToggleBtn  = document.getElementById('filterToggleBtn');
+        const filterSidePanel  = document.getElementById('filterSidePanel');
+        const filterBadge      = document.getElementById('filterBadge');
+        const clearBtn         = document.getElementById('clearFiltersBtn');
+        const applyBtn         = document.getElementById('filterBtn');
+        const nameInput        = document.getElementById('filterNameInput');
+        const teamInput        = document.getElementById('filterTeamInput');
+        const idMin            = document.getElementById('filterIdMin');
+        const idMax            = document.getElementById('filterIdMax');
+
+        filterToggleBtn.addEventListener('click', () => {
+            const isOpen = filterSidePanel.classList.toggle('open');
+            filterToggleBtn.classList.toggle('active', isOpen);
+        });
+
+        function countActive() {
+            let n = 0;
+            if (nameInput.value.trim()) n++;
+            if (teamInput.value.trim()) n++;
+            if (idMin.value.trim() || idMax.value.trim()) n++;
+            return n;
+        }
+        function updateBadge() {
+            const n = countActive();
+            filterBadge.textContent = n;
+            filterBadge.classList.toggle('visible', n > 0);
+        }
+        [nameInput, teamInput, idMin, idMax].forEach(el => el.addEventListener('input', updateBadge));
+
+        clearBtn.addEventListener('click', () => {
+            [nameInput, teamInput, idMin, idMax].forEach(el => el.value = '');
+            updateBadge();
+            filterTable();
+        });
+
+        function filterTable() {
+            const name = nameInput.value.trim().toLowerCase();
+            const team = teamInput.value.trim().toLowerCase();
+            const min  = idMin.value !== '' ? parseInt(idMin.value) : null;
+            const max  = idMax.value !== '' ? parseInt(idMax.value) : null;
+            document.querySelectorAll('#accountsTable tbody tr').forEach(row => {
+                const c = row.querySelectorAll('td');
+                const ok = (!name || c[2].textContent.toLowerCase().includes(name))
+                        && (!team || c[3].textContent.toLowerCase().includes(team))
+                        && (min === null || parseInt(c[1].textContent) >= min)
+                        && (max === null || parseInt(c[1].textContent) <= max);
+                row.style.display = ok ? '' : 'none';
+            });
+        }
+        applyBtn.addEventListener('click', filterTable);
+        [nameInput, teamInput, idMin, idMax].forEach(el =>
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') filterTable(); })
+        );
+
+        /* ── Inline Row Editing ── */
+        // 0:HesapNo, 1:HesapID, 7:GüncelleTarihi → readonly
+        const EDITABLE_COLS = [2, 3, 4, 5, 6, 8, 9];
+
+        function startEdit(row) {
+            if (row.dataset.editing === 'true') return;
+            row.dataset.editing = 'true';
+            row.classList.add('row-editing');
+            const cells = row.querySelectorAll('td');
+            EDITABLE_COLS.forEach(i => {
+                const orig = cells[i].textContent.trim();
+                cells[i].dataset.original = orig;
+                cells[i].innerHTML = `<input class="cell-input" type="text" value="${orig.replace(/"/g,'&quot;')}">`;
+            });
+            const ac = cells[cells.length - 1];
+            ac.innerHTML = `<button class="table-btn save-btn">Kaydet</button> <button class="table-btn cancel-btn">İptal</button>`;
+            ac.querySelector('.save-btn').addEventListener('click', () => saveEdit(row));
+            ac.querySelector('.cancel-btn').addEventListener('click', () => cancelEdit(row));
+            cells[EDITABLE_COLS[0]].querySelector('input').focus();
+        }
+
+        function saveEdit(row) {
+            row.dataset.editing = 'false';
+            row.classList.remove('row-editing');
+            const cells = row.querySelectorAll('td');
+            EDITABLE_COLS.forEach(i => {
+                const inp = cells[i].querySelector('input');
+                cells[i].textContent = inp ? inp.value : cells[i].dataset.original;
+            });
+            restoreActions(cells[cells.length - 1], row);
+        }
+
+        function cancelEdit(row) {
+            row.dataset.editing = 'false';
+            row.classList.remove('row-editing');
+            const cells = row.querySelectorAll('td');
+            EDITABLE_COLS.forEach(i => { cells[i].textContent = cells[i].dataset.original || cells[i].textContent; });
+            restoreActions(cells[cells.length - 1], row);
+        }
+
+        function restoreActions(cell, row) {
+            cell.innerHTML = `<button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button>`;
+            cell.querySelector('.edit-btn').addEventListener('click', () => startEdit(row));
+        }
+
+        document.getElementById('accountsTable').addEventListener('click', e => {
+            if (e.target.classList.contains('edit-btn')) startEdit(e.target.closest('tr'));
+        });
+    </script>
 </body>
 </html>

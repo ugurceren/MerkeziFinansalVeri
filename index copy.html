@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merkezi Finansal Veri | Kurumsal Yönetim Sistemi</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="brand-mark">TD</div>
+                    <div>
+                        <h1>Merkezi Finansal Veri</h1>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Menüyü Aç/Kapat">
+                    <span>☰</span>
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="section-title">GENEL</p>
+                <a class="sidebar-link" href="#" data-section="GENEL" data-page="Genel Bakış">Genel Bakış</a>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="section-title">MUTABAKAT</p>
+                <a class="sidebar-link active" href="#" data-section="MUTABAKAT" data-page="Kebir Hesapları Sorumluluk Listesi">Kebir Hesapları Sorumluluk Listesi</a>
+                <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Mizan">Mizan</a>
+                <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Yevmiye Defteri">Yevmiye Defteri</a>
+                <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Masraf Hesapları">Masraf Hesapları</a>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="section-title">RAPORLAMA</p>
+                <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Bilanço">Bilanço</a>
+                <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Gelir Tablosu">Gelir Tablosu</a>
+                <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Excel Dışa Aktar">Excel Dışa Aktar</a>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="section-title">YÖNETİM</p>
+                <a class="sidebar-link" href="#" data-section="YÖNETİM" data-page="Kullanıcı Yönetimi">Kullanıcı Yönetimi</a>
+                <a class="sidebar-link" href="#" data-section="YÖNETİM" data-page="Ayarlar">Ayarlar</a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar" id="userAvatar">AY</div>
+                <div>
+                    <p class="user-name" id="userName">Ahmet Yılmaz</p>
+                    <p class="user-role">Admin</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="page-content">
+            <div class="page-header">
+                <div>
+                    <p class="breadcrumb"><span id="breadcrumbSection">MUTABAKAT</span> / <strong id="breadcrumbPage">Kebir Hesapları Sorumluluk Listesi</strong></p>
+                    <h2 id="pageTitle">Kebir Hesapları Sorumluluk Listesi</h2>
+                </div>
+                <div class="header-actions">
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Tema Değiştir">Dark Mode</button>
+                    <button class="help-btn">Yardım</button>
+                </div>
+            </div>
+
+            <section class="table-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Kurumsal Hesaplar</h3>
+                        <p>Bankadaki görevli ekipler tarafından yönetilen hesaplar.</p>
+                    </div>
+                    <button id="addBtn" class="primary-btn">Yeni Hesap Ekle</button>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Hesap Adı</label>
+                        <input type="text" id="filterNameInput" placeholder="Hesap adı ara...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Ekip</label>
+                        <input type="text" id="filterTeamInput" placeholder="Ekip ara...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Hesap ID Aralığı</label>
+                        <div class="filter-range">
+                            <input type="number" id="filterIdMin" placeholder="Min">
+                            <span class="range-dash">—</span>
+                            <input type="number" id="filterIdMax" placeholder="Max">
+                        </div>
+                    </div>
+                    <button id="filterBtn">Filtrele</button>
+                </div>
+
+                <table id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th>Hesap No</th>
+                            <th>HesapID</th>
+                            <th>Hesap Adı</th>
+                            <th>Sorumlu Ekip</th>
+                            <th>Alınması Beklenen Aksiyon</th>
+                            <th>Kaynak</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Güncelleme Tarihi</th>
+                            <th>Kaydı Oluşturan Kullanıcı</th>
+                            <th>Güncelleyen Kullanıcı</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>Kurumsal Hesap 1</td>
+                            <td>Banka Ekip 1</td>
+                            <td>Ödeme İşlemi</td>
+                            <td>Banka Sistemi</td>
+                            <td>2024-01-15</td>
+                            <td>2024-01-20</td>
+                            <td>Ahmet Yılmaz</td>
+                            <td>Mehmet Kara</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>2</td>
+                            <td>Kurumsal Hesap 2</td>
+                            <td>Banka Ekip 2</td>
+                            <td>Hesap Aktarımı</td>
+                            <td>Merkezi Sistem</td>
+                            <td>2024-01-18</td>
+                            <td>2024-01-21</td>
+                            <td>Ayşe Demir</td>
+                            <td>Zeynep Can</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>3</td>
+                            <td>Kurumsal Hesap 3</td>
+                            <td>Banka Ekip 1</td>
+                            <td>Kaydı Güncelle</td>
+                            <td>Banka Sistemi</td>
+                            <td>2024-01-20</td>
+                            <td>2024-01-22</td>
+                            <td>Mehmet Kara</td>
+                            <td>Ahmet Yılmaz</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>4</td>
+                            <td>Kurumsal Hesap 4</td>
+                            <td>Banka Ekip 3</td>
+                            <td>Doğrulama Bekle</td>
+                            <td>Merkezi Sistem</td>
+                            <td>2024-01-22</td>
+                            <td>2024-01-23</td>
+                            <td>Fatih Şahin</td>
+                            <td>Seda Yıldız</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>Kurumsal Hesap 5</td>
+                            <td>Banka Ekip 2</td>
+                            <td>Bilgi Eksik</td>
+                            <td>Banka Sistemi</td>
+                            <td>2024-01-23</td>
+                            <td>2024-01-24</td>
+                            <td>Zeynep Can</td>
+                            <td>Ayşe Demir</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>6</td>
+                            <td>Kurumsal Hesap 6</td>
+                            <td>Banka Ekip 1</td>
+                            <td>İzin Bekle</td>
+                            <td>Merkezi Sistem</td>
+                            <td>2024-01-25</td>
+                            <td>2024-01-26</td>
+                            <td>Seda Yıldız</td>
+                            <td>Fatih Şahin</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>7</td>
+                            <td>Kurumsal Hesap 7</td>
+                            <td>Banka Ekip 3</td>
+                            <td>Ödeme İşlemi</td>
+                            <td>Banka Sistemi</td>
+                            <td>2024-01-26</td>
+                            <td>2024-01-27</td>
+                            <td>Ahmet Yılmaz</td>
+                            <td>Mehmet Kara</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>8</td>
+                            <td>Kurumsal Hesap 8</td>
+                            <td>Banka Ekip 2</td>
+                            <td>Hesap Aktarımı</td>
+                            <td>Merkezi Sistem</td>
+                            <td>2024-01-27</td>
+                            <td>2024-01-28</td>
+                            <td>Zeynep Can</td>
+                            <td>Ayşe Demir</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>9</td>
+                            <td>Kurumsal Hesap 9</td>
+                            <td>Banka Ekip 1</td>
+                            <td>Kaydı Güncelle</td>
+                            <td>Banka Sistemi</td>
+                            <td>2024-01-28</td>
+                            <td>2024-01-29</td>
+                            <td>Fatih Şahin</td>
+                            <td>Seda Yıldız</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>10</td>
+                            <td>Kurumsal Hesap 10</td>
+                            <td>Banka Ekip 3</td>
+                            <td>Doğrulama Bekle</td>
+                            <td>Merkezi Sistem</td>
+                            <td>2024-01-29</td>
+                            <td>2024-01-30</td>
+                            <td>Mehmet Kara</td>
+                            <td>Ahmet Yılmaz</td>
+                            <td>
+                                <button class="table-btn edit-btn">Düzenle</button>
+                                <button class="table-btn delete-btn">Sil</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
