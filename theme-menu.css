@@ -1,0 +1,223 @@
+/* Kullanıcı alanı + Dark/Light Mode anahtarı */
+.tb-user-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.tb-user-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-switch-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.theme-switch {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.theme-switch:focus-visible .theme-switch-track {
+    outline: 2px solid var(--rb-accent, #7c9aff);
+    outline-offset: 2px;
+}
+
+.theme-switch-track {
+    position: relative;
+    display: block;
+    width: 96px;
+    height: 46px;
+    border-radius: 999px;
+    transition: background 0.35s ease, box-shadow 0.35s ease;
+}
+
+.theme-switch.is-dark .theme-switch-track {
+    background: linear-gradient(180deg, #3d4f63 0%, #2a3644 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-switch.is-light .theme-switch-track {
+    background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+        inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.theme-switch-knob {
+    position: absolute;
+    top: 5px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    transition:
+        left 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+        background 0.35s ease,
+        box-shadow 0.35s ease,
+        color 0.25s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+}
+
+.theme-switch.is-dark .theme-switch-knob {
+    left: calc(100% - 41px);
+    background: #ffffff;
+    color: #1e293b;
+}
+
+.theme-switch.is-light .theme-switch-knob {
+    left: 5px;
+    background: linear-gradient(180deg, #2d4258 0%, #1e2f45 100%);
+    color: #fbbf24;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+}
+
+.theme-switch-knob-icon {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.theme-switch-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    line-height: 1;
+    pointer-events: none;
+    transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.theme-switch-icon-sun {
+    left: 13px;
+    color: #fbbf24;
+}
+
+.theme-switch.is-dark .theme-switch-icon-sun {
+    opacity: 1;
+}
+
+.theme-switch.is-light .theme-switch-icon-sun {
+    opacity: 0;
+}
+
+.theme-switch-icon-moon {
+    right: 13px;
+    color: rgba(148, 163, 184, 0.55);
+}
+
+.theme-switch.is-dark .theme-switch-icon-moon {
+    opacity: 0;
+}
+
+.theme-switch.is-light .theme-switch-icon-moon {
+    opacity: 1;
+    color: #64748b;
+}
+
+.theme-switch:active .theme-switch-knob {
+    transform: scale(0.94);
+}
+
+/* Sidebar uygulaması — header */
+.header-user-menu .tb-user {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.header-user-menu .tb-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.page-ribbon .title-bar-right {
+    display: flex;
+    align-items: center;
+}
+
+.page-ribbon .tb-user-menu {
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    min-height: 0;
+    gap: 0;
+    padding-bottom: 0;
+}
+
+.page-ribbon .tb-user-row {
+    padding-top: 0;
+    flex-shrink: 0;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-wrap {
+    flex: none;
+    display: flex;
+    align-items: center;
+    height: 28px;
+    margin-top: 0;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch {
+    flex: none;
+    display: flex;
+    align-items: center;
+    height: 28px;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-track {
+    width: 88px;
+    height: 28px;
+    flex: none;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-knob {
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translateY(-50%);
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch.is-dark .theme-switch-knob {
+    left: calc(100% - 25px);
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch.is-light .theme-switch-knob {
+    left: 3px;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch:active .theme-switch-knob {
+    transform: translateY(-50%) scale(0.94);
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-knob-icon {
+    font-size: 14px;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-icon {
+    font-size: 14px;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-icon-sun {
+    left: 10px;
+}
+
+.page-ribbon .ribbon-tabs-actions .theme-switch-icon-moon {
+    right: 10px;
+}

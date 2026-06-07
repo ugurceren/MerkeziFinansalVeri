@@ -1,113 +1,131 @@
-// Tema değiştirme işlevselliği
-function initThemeToggle() {
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const htmlElement = document.documentElement;
-    
-    // Kaydedilen temayı yükle veya sistem tercihini kullan
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    htmlElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-    
-    themeToggleBtn.addEventListener('click', function() {
-        const currentTheme = htmlElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
-    });
-}
-
-function updateThemeIcon(theme) {
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    themeToggleBtn.textContent = theme === 'dark' ? '◉ Light Mode' : '◉ Dark Mode';
+// Tema seçimi — theme-toggle.js (initThemeMenu)
+function initThemeToggleFromScript() {
+    if (typeof initThemeMenu === 'function') initThemeMenu();
 }
 
 // Kullanıcı adı yönetimi
 function initUserName() {
     const userNameElement = document.getElementById('userName');
     const userAvatarElement = document.getElementById('userAvatar');
-    
-    // localStorage'dan kullanıcı adını oku
+    if (!userNameElement || !userAvatarElement) return;
+
     let userName = localStorage.getItem('userName');
-    
-    // Eğer kullanıcı adı yoksa sor
+
     if (!userName) {
         userName = prompt('Lütfen adınızı girin:');
-        
-        // Eğer kullanıcı iptal ettiyse default değeri kullan
-        if (!userName) {
-            userName = 'Kullanıcı';
-        }
-        
-        // Adı localStorage'a kaydet
+        if (!userName) userName = 'Kullanıcı';
         localStorage.setItem('userName', userName);
     }
-    
-    // Adı sayfada göster
+
     userNameElement.textContent = userName;
-    
-    // Avatar baş harflerini güncelle
+
     const initials = userName.split(' ')
         .map(word => word[0])
         .join('')
         .toUpperCase()
         .substring(0, 2);
     userAvatarElement.textContent = initials || 'K';
+
+    const headerUser = document.getElementById('headerTbUser');
+    const headerAvatar = document.getElementById('headerTbAvatar');
+    if (headerUser) headerUser.textContent = userName;
+    if (headerAvatar) headerAvatar.textContent = initials || 'K';
+
+    return userName;
 }
 
 // Sidebar toggle işlevselliği
 function initSidebarToggle() {
     const sidebarToggleBtn = document.getElementById('sidebarToggle');
     const appShell = document.querySelector('.app-shell');
-    
+    if (!sidebarToggleBtn || !appShell) return;
+
     sidebarToggleBtn.addEventListener('click', function() {
         appShell.classList.toggle('sidebar-collapsed');
     });
 }
 
-// Basit JavaScript işlevselliği
-document.addEventListener('DOMContentLoaded', function() {
-    initThemeToggle();
-    initUserName();
-    initSidebarToggle();
-    
-    // Menü navigasyon işlevi
+// Menü bölümlerini aç/kapat
+function initSidebarSections() {
+    document.querySelectorAll('.sidebar-section').forEach(section => {
+        const titleBtn = section.querySelector('.section-title');
+        if (!titleBtn) return;
+
+        titleBtn.addEventListener('click', function() {
+            const isCollapsed = section.classList.toggle('collapsed');
+            titleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+        });
+    });
+}
+
+// Menü navigasyon — yalnızca aynı sayfa içi (#) linkler için
+function initSidebarNavigation() {
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href && href !== '#') return;
+
             e.preventDefault();
-            
-            // Active sınıfını kaldır
             sidebarLinks.forEach(l => l.classList.remove('active'));
-            // Tıklanan öğeye ekle
             this.classList.add('active');
-            
-            // Breadcrumb ve başlığı güncelle
+
             const section = this.getAttribute('data-section');
             const page = this.getAttribute('data-page');
-            
-            document.getElementById('breadcrumbSection').textContent = section;
-            document.getElementById('breadcrumbPage').textContent = page;
-            document.getElementById('pageTitle').textContent = page;
+            const breadcrumbSection = document.getElementById('breadcrumbSection');
+            const breadcrumbPage = document.getElementById('breadcrumbPage');
+            const pageTitle = document.getElementById('pageTitle');
+
+            if (breadcrumbSection) breadcrumbSection.textContent = section;
+            if (breadcrumbPage) breadcrumbPage.textContent = page;
+            if (pageTitle) pageTitle.textContent = page;
         });
     });
-    
+}
+
+// Dashboard — Genel Bakış ana ekran
+function initDashboard() {
+    const greetingEl = document.getElementById('dashboardGreeting');
+    const dateEl = document.getElementById('dashboardDate');
+    if (!greetingEl && !dateEl) return;
+
+    const userName = localStorage.getItem('userName') || 'Kullanıcı';
+    const firstName = userName.split(' ')[0];
+
+    if (greetingEl) {
+        greetingEl.textContent = `Hoş geldiniz, ${firstName}`;
+    }
+
+    if (dateEl) {
+        const now = new Date();
+        dateEl.textContent = now.toLocaleDateString('tr-TR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+}
+
+// Kebir hesapları sayfası — tablo işlemleri (inline script yoksa yedek)
+function initAccountsPage() {
+    const filterBtn = document.getElementById('filterBtn');
+    const accountsTableEl = document.getElementById('accountsTable');
+    const addBtn = document.getElementById('addBtn');
+
+    if (!accountsTableEl || !filterBtn || accountsTableEl.dataset.inlineInit === 'true') return;
+
     const filterNameInput = document.getElementById('filterNameInput');
     const filterTeamInput = document.getElementById('filterTeamInput');
     const filterIdMin = document.getElementById('filterIdMin');
     const filterIdMax = document.getElementById('filterIdMax');
-    const filterBtn = document.getElementById('filterBtn');
-    const accountsTable = document.getElementById('accountsTable').getElementsByTagName('tbody')[0];
-    const addBtn = document.getElementById('addBtn');
+    const accountsTable = accountsTableEl.getElementsByTagName('tbody')[0];
 
-    // Filtreleme işlevi
     filterBtn.addEventListener('click', function() {
         const filterName = filterNameInput.value.toLowerCase();
         const filterTeam = filterTeamInput.value.toLowerCase();
         const minId = filterIdMin.value ? parseInt(filterIdMin.value) : null;
         const maxId = filterIdMax.value ? parseInt(filterIdMax.value) : null;
-        
         const rows = accountsTable.getElementsByTagName('tr');
 
         for (let i = 0; i < rows.length; i++) {
@@ -115,71 +133,60 @@ document.addEventListener('DOMContentLoaded', function() {
             const accountId = parseInt(cells[1].textContent);
             const accountName = cells[2].textContent.toLowerCase();
             const accountTeam = cells[3].textContent.toLowerCase();
-            
             let match = true;
-            
-            // Hesap adı filtresi
-            if (filterName && !accountName.includes(filterName)) {
-                match = false;
-            }
-            
-            // Ekip filtresi
-            if (filterTeam && !accountTeam.includes(filterTeam)) {
-                match = false;
-            }
-            
-            // Hesap ID aralığı filtresi
-            if (minId !== null && accountId < minId) {
-                match = false;
-            }
-            if (maxId !== null && accountId > maxId) {
-                match = false;
-            }
-            
+
+            if (filterName && !accountName.includes(filterName)) match = false;
+            if (filterTeam && !accountTeam.includes(filterTeam)) match = false;
+            if (minId !== null && accountId < minId) match = false;
+            if (maxId !== null && accountId > maxId) match = false;
+
             rows[i].style.display = match ? '' : 'none';
         }
     });
 
-    // Enter tuşu ile filtrele
     [filterNameInput, filterTeamInput, filterIdMin, filterIdMax].forEach(input => {
         input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                filterBtn.click();
-            }
+            if (e.key === 'Enter') filterBtn.click();
         });
     });
 
-    // Yeni hesap ekleme (basit simülasyon)
-    addBtn.addEventListener('click', function() {
-        const newRow = accountsTable.insertRow();
-        const nextId = accountsTable.rows.length;
-        
-        newRow.insertCell(0).textContent = nextId;
-        newRow.insertCell(1).textContent = nextId;
-        newRow.insertCell(2).textContent = `Yeni Kurumsal Hesap ${nextId}`;
-        newRow.insertCell(3).textContent = 'Yeni Ekip';
-        newRow.insertCell(4).textContent = '-';
-        newRow.insertCell(5).textContent = 'Sistem';
-        newRow.insertCell(6).textContent = new Date().toISOString().split('T')[0];
-        newRow.insertCell(7).textContent = new Date().toISOString().split('T')[0];
-        newRow.insertCell(8).textContent = document.getElementById('userName').textContent;
-        newRow.insertCell(9).textContent = '-';
-        
-        const actionsCell = newRow.insertCell(10);
-        actionsCell.innerHTML = '<button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button>';
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            const newRow = accountsTable.insertRow();
+            const nextId = accountsTable.rows.length;
 
-        // Silme işlevi
-        actionsCell.querySelector('.delete-btn').addEventListener('click', function() {
-            accountsTable.deleteRow(newRow.rowIndex - 1);
+            newRow.insertCell(0).textContent = nextId;
+            newRow.insertCell(1).textContent = nextId;
+            newRow.insertCell(2).textContent = `Yeni Kurumsal Hesap ${nextId}`;
+            newRow.insertCell(3).textContent = 'Yeni Ekip';
+            newRow.insertCell(4).textContent = '-';
+            newRow.insertCell(5).textContent = 'Sistem';
+            newRow.insertCell(6).textContent = new Date().toISOString().split('T')[0];
+            newRow.insertCell(7).textContent = new Date().toISOString().split('T')[0];
+            newRow.insertCell(8).textContent = document.getElementById('userName').textContent;
+            newRow.insertCell(9).textContent = '-';
+
+            const actionsCell = newRow.insertCell(10);
+            actionsCell.innerHTML = '<button class="table-btn edit-btn">Düzenle</button> <button class="table-btn delete-btn">Sil</button>';
+            actionsCell.querySelector('.delete-btn').addEventListener('click', function() {
+                accountsTable.deleteRow(newRow.rowIndex - 1);
+            });
         });
-    });
+    }
 
-    // Mevcut silme butonlarına işlev ekleme
-    const deleteBtns = document.querySelectorAll('.delete-btn');
-    deleteBtns.forEach(btn => {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const row = this.closest('tr');
-            row.remove();
+            this.closest('tr').remove();
         });
     });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initThemeToggleFromScript();
+    initUserName();
+    initSidebarToggle();
+    initSidebarSections();
+    initSidebarNavigation();
+    initDashboard();
+    initAccountsPage();
 });

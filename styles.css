@@ -160,20 +160,27 @@ input {
 }
 
 .brand-mark {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     border-radius: 14px;
     background: var(--accent-soft);
     color: var(--accent);
     display: grid;
     place-items: center;
-    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.brand-mark svg {
+    width: 32px;
+    height: 32px;
+    display: block;
 }
 
 .sidebar-brand h1 {
     margin: 0;
-    font-size: 1.1rem;
-    letter-spacing: 0.04em;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
 }
 
 .sidebar-brand p {
@@ -183,18 +190,97 @@ input {
 }
 
 .sidebar-section {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
 .section-title {
-    display: block;
-    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
     color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.14em;
     font-size: 0.75rem;
     font-weight: 700;
     opacity: 0.9;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-family: inherit;
+}
+
+.section-title:hover {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+}
+
+.section-chevron {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s,
+                border-color 0.2s,
+                color 0.2s;
+}
+
+[data-theme="light"] .section-chevron {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.section-chevron::before {
+    content: '';
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    margin-top: -2px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-section.collapsed .section-chevron::before {
+    transform: rotate(-45deg);
+    margin-top: 0;
+    margin-left: 2px;
+}
+
+.section-title:hover .section-chevron {
+    background: var(--accent-soft);
+    border-color: rgba(124, 154, 255, 0.35);
+    color: var(--accent);
+}
+
+[data-theme="light"] .section-title:hover .section-chevron {
+    border-color: rgba(79, 70, 229, 0.25);
+}
+
+.section-links {
+    overflow: hidden;
+    max-height: 400px;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+    opacity: 1;
+}
+
+.sidebar-section.collapsed .section-links {
+    max-height: 0;
+    opacity: 0;
+}
+
+.sidebar-section.collapsed .section-title {
+    margin-bottom: 0;
 }
 
 .sidebar-link {
@@ -218,7 +304,6 @@ input {
     padding-left: 18px;
     box-shadow: inset 2px 0 0 var(--accent);
 }
-
 
 .badge {
     background-color: var(--border);
@@ -265,46 +350,6 @@ input {
     font-size: 0.8rem;
 }
 
-.theme-toggle-btn {
-    background: var(--bg-card);
-    border: 2.5px solid var(--accent);
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 10px 16px;
-    border-radius: 24px;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    min-width: 130px;
-}
-
-[data-theme="dark"] .theme-toggle-btn {
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-[data-theme="light"] .theme-toggle-btn {
-    background: var(--bg-surface);
-    color: var(--text-primary);
-}
-
-.theme-toggle-btn:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    box-shadow: 0 4px 12px var(--accent-soft);
-    transform: translateY(-1px);
-}
-
-.theme-toggle-btn:active {
-    transform: translateY(0px);
-}
-
 .page-content {
     padding: 28px 32px;
 }
@@ -320,7 +365,7 @@ input {
 .header-actions {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .breadcrumb {

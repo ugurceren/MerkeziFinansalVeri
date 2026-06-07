@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="tr" class="page-ribbon">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genel Bakış | Merkezi Güvenilir Finansal Veri</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="ribbon.css">
+<link rel="stylesheet" href="homepage.css">
+<link rel="stylesheet" href="theme-menu.css">
+<script>
+(function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
+</script>
+</head>
+<body>
+<div class="app">
+
+  <!-- Title Bar -->
+  <div class="title-bar">
+    <div class="title-bar-left">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 3.5L18.5 6.5V11.5C18.5 15.5 15.8 18.8 12 19.8C8.2 18.8 5.5 15.5 5.5 11.5V6.5L12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="8" y1="13" x2="14" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="title-bar-title">Merkezi Güvenilir Finansal Veri</span>
+    </div>
+    <div class="title-bar-right">
+      <div class="tb-user-menu">
+        <div class="tb-user-row">
+          <span class="tb-user" id="tbUser">Ahmet Yılmaz</span>
+          <div class="tb-avatar" id="tbAvatar">AY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ribbon Tabs -->
+  <div class="ribbon-tabs" id="ribbonTabs">
+    <div class="ribbon-tab-list">
+    <button class="rtab active" data-tab="genel">Genel</button>
+    <button class="rtab" data-tab="surec">Süreç</button>
+    <button class="rtab" data-tab="mutabakat">Mutabakat</button>
+    <button class="rtab" data-tab="raporlama">Raporlama</button>
+    <button class="rtab" data-tab="ayarlar">Ayarlar</button>
+    <button class="rtab" data-tab="yonetim">Yönetim</button>
+    </div>
+    <div class="ribbon-tabs-actions">
+      <div class="theme-switch-wrap">
+        <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
+          <span class="theme-switch-track">
+            <i class="ti ti-sun theme-switch-icon theme-switch-icon-sun" aria-hidden="true"></i>
+            <i class="ti ti-moon theme-switch-icon theme-switch-icon-moon" aria-hidden="true"></i>
+            <span class="theme-switch-knob">
+              <i class="ti ti-moon theme-switch-knob-icon" aria-hidden="true"></i>
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ribbon Body -->
+  <div class="ribbon-body" id="ribbonBody">
+
+    <!-- GENEL -->
+    <div class="tab-panel active" id="tab-genel">
+      <div class="ribbon-group" style="border-right:none">
+        <div class="rg-buttons">
+          <button class="rbtn active" data-page="Genel Bakış" data-section="GENEL">
+            <i class="ti ti-home"></i>
+            <span>Genel Bakış</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SÜREÇ -->
+    <div class="tab-panel" id="tab-surec">
+      <div class="ribbon-group" style="border-right:none">
+        <div class="rg-buttons">
+          <button class="rbtn" data-href="surec.html" data-section="SÜREÇ">
+            <i class="ti ti-timeline"></i>
+            <span>Süreç</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MUTABAKAT -->
+    <div class="tab-panel" id="tab-mutabakat">
+      <div class="ribbon-group">
+        <div class="rg-buttons">
+          <button class="rbtn" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="MUTABAKAT" data-href="kebir-hesaplari.html">
+            <i class="ti ti-notebook"></i>
+            <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
+          </button>
+          <button class="rbtn" data-page="Mizan" data-section="MUTABAKAT">
+            <i class="ti ti-scale"></i>
+            <span>Mizan</span>
+          </button>
+          <button class="rbtn" data-page="Yevmiye Defteri" data-section="MUTABAKAT">
+            <i class="ti ti-book"></i>
+            <span>Yevmiye Defteri</span>
+          </button>
+          <button class="rbtn" data-page="Masraf Hesapları" data-section="MUTABAKAT">
+            <i class="ti ti-receipt"></i>
+            <span>Masraf Hesapları</span>
+          </button>
+        </div>
+        <div class="rg-label">Mutabakat</div>
+      </div>
+    </div>
+
+    <!-- RAPORLAMA -->
+    <div class="tab-panel" id="tab-raporlama">
+      <div class="ribbon-group">
+        <div class="rg-buttons">
+          <button class="rbtn" data-page="Bilanço" data-section="RAPORLAMA">
+            <i class="ti ti-chart-bar"></i>
+            <span>Bilanço</span>
+          </button>
+          <button class="rbtn" data-page="Gelir Tablosu" data-section="RAPORLAMA">
+            <i class="ti ti-trending-up"></i>
+            <span>Gelir Tablosu</span>
+          </button>
+        </div>
+        <div class="rg-label">Mali Tablolar</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="rg-buttons">
+          <button class="rbtn" data-page="Ters Bakiye Raporu" data-section="RAPORLAMA">
+            <i class="ti ti-arrows-exchange"></i>
+            <span>Ters Bakiye Raporu</span>
+          </button>
+          <button class="rbtn" data-page="Nazım Hesapları Raporu" data-section="RAPORLAMA">
+            <i class="ti ti-file-analytics"></i>
+            <span>Nazım Hesapları Raporu</span>
+          </button>
+        </div>
+        <div class="rg-label">Özel Raporlar</div>
+      </div>
+      <div class="ribbon-group">
+        <div class="rg-buttons">
+          <button class="rbtn" data-page="Excel Dışa Aktar" data-section="RAPORLAMA">
+            <i class="ti ti-file-spreadsheet"></i>
+            <span>Excel Dışa Aktar</span>
+          </button>
+        </div>
+        <div class="rg-label">Dışa Aktar</div>
+      </div>
+    </div>
+
+    <!-- AYARLAR -->
+    <div class="tab-panel" id="tab-ayarlar">
+      <div class="ribbon-group" style="border-right:none">
+        <div class="rg-buttons">
+          <div class="rbtn rbtn-settings-title" aria-hidden="true">
+            <i class="ti ti-settings"></i>
+            <span>Ayarlar</span>
+          </div>
+        </div>
+        <div class="rg-label">Menü</div>
+      </div>
+    </div>
+
+    <!-- YÖNETİM -->
+    <div class="tab-panel" id="tab-yonetim">
+      <div class="ribbon-group" style="border-right:none">
+        <div class="rg-buttons">
+          <button class="rbtn" data-page="Kullanıcı Yönetimi" data-section="YÖNETİM" data-href="kullanici-yonetimi.html">
+            <i class="ti ti-users"></i>
+            <span>Kullanıcı Yönetimi</span>
+          </button>
+        </div>
+        <div class="rg-label">Sistem</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Page Area -->
+  <div class="page-area">
+    <div class="page-body" id="pageBody"></div>
+  </div>
+
+</div>
+
+<script src="theme-toggle.js"></script>
+<script>
+const tabs = document.querySelectorAll('.rtab');
+const panels = document.querySelectorAll('.tab-panel');
+const btns = document.querySelectorAll('.rbtn');
+const pageBody = document.getElementById('pageBody');
+
+const tabMap = {
+  GENEL: 'genel',
+  MUTABAKAT: 'mutabakat',
+  RAPORLAMA: 'raporlama',
+  AYARLAR: 'ayarlar',
+  'YÖNETİM': 'yonetim'
+};
+
+function initUserBar() {
+  const userName = localStorage.getItem('userName') || 'Ahmet Yılmaz';
+  const tbUser = document.getElementById('tbUser');
+  const tbAvatar = document.getElementById('tbAvatar');
+  if (tbUser) tbUser.textContent = userName;
+  if (tbAvatar) {
+    tbAvatar.textContent = userName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) || 'K';
+  }
+  return userName;
+}
+
+function buildDashboardHTML() {
+  return `<section class="dashboard">
+    <div class="stat-grid">
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon blue">◈</div><span class="stat-trend up">+8%</span></div><p class="stat-value">248</p><p class="stat-label">Toplam Kurumsal Hesap</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon amber">!</div><span class="stat-trend down">-3</span></div><p class="stat-value">37</p><p class="stat-label">Bekleyen Aksiyon</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon green">✓</div><span class="stat-trend up">+2%</span></div><p class="stat-value">94%</p><p class="stat-label">Mutabakat Tamamlanma</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon purple">◉</div><span class="stat-trend neutral">Aktif</span></div><p class="stat-value">12</p><p class="stat-label">Sorumlu Ekip</p></article>
+    </div>
+    <div class="dashboard-grid">
+      <div class="dashboard-main">
+        <div class="dashboard-panel">
+          <div class="panel-head"><h4>Mutabakat İlerlemesi — Ekip Bazlı</h4><span>Son 30 gün</span></div>
+          <div class="chart-bars">
+            <div class="chart-row"><label>Banka Ekip 1</label><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="pct">92%</span></div>
+            <div class="chart-row"><label>Banka Ekip 2</label><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><span class="pct">78%</span></div>
+            <div class="chart-row"><label>Banka Ekip 3</label><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><span class="pct">85%</span></div>
+            <div class="chart-row"><label>Merkezi Kontrol</label><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="pct">96%</span></div>
+          </div>
+        </div>
+        <div class="dashboard-panel">
+          <div class="panel-head"><h4>Son Aktiviteler</h4><span>Canlı akış</span></div>
+          <ul class="activity-list">
+            <li class="activity-item"><div class="activity-dot edit">✎</div><div class="activity-body"><strong>Kurumsal Hesap 3 güncellendi</strong><span>Mehmet Kara — Sorumlu ekip değişikliği</span></div><span class="activity-time">12 dk önce</span></li>
+            <li class="activity-item"><div class="activity-dot alert">!</div><div class="activity-body"><strong>7 hesapta aksiyon bekleniyor</strong><span>Banka Ekip 2 — Doğrulama süreci</span></div><span class="activity-time">1 saat önce</span></li>
+            <li class="activity-item"><div class="activity-dot ok">✓</div><div class="activity-body"><strong>Ocak mutabakatı onaylandı</strong><span>Merkezi Kontrol — Mizan eşleşmesi tamam</span></div><span class="activity-time">3 saat önce</span></li>
+            <li class="activity-item"><div class="activity-dot export">↓</div><div class="activity-body"><strong>Excel dışa aktarım tamamlandı</strong><span>Ayşe Demir — Gelir tablosu raporu</span></div><span class="activity-time">Dün 16:42</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="dashboard-side">
+        <div class="dashboard-panel">
+          <div class="panel-head"><h4>Hızlı Erişim</h4></div>
+          <div class="quick-links">
+            <a class="quick-link" href="kebir-hesaplari.html"><span class="quick-link-icon">≡</span>Kebir Hesapları Listesi</a>
+            <a class="quick-link" href="#" data-quick-page="Mizan" data-quick-section="MUTABAKAT"><span class="quick-link-icon">⊞</span>Mizan Görüntüle</a>
+            <a class="quick-link" href="#" data-quick-page="Bilanço" data-quick-section="RAPORLAMA"><span class="quick-link-icon">◫</span>Bilanço Raporu</a>
+            <a class="quick-link" href="#" data-quick-page="Excel Dışa Aktar" data-quick-section="RAPORLAMA"><span class="quick-link-icon">↓</span>Excel Dışa Aktar</a>
+          </div>
+        </div>
+        <div class="dashboard-panel">
+          <div class="panel-head"><h4>Ekip İş Yükü</h4><span>Bekleyen görev</span></div>
+          <div class="team-load-list">
+            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 1</span><span>14 görev</span></div><div class="load-track"><div class="load-fill high" style="width:82%"></div></div></div>
+            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 2</span><span>11 görev</span></div><div class="load-track"><div class="load-fill medium" style="width:65%"></div></div></div>
+            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 3</span><span>8 görev</span></div><div class="load-track"><div class="load-fill low" style="width:48%"></div></div></div>
+          </div>
+        </div>
+        <div class="dashboard-panel">
+          <div class="panel-head"><h4>Sistem Durumu</h4></div>
+          <div class="status-list">
+            <div class="status-item"><span>Banka Sistemi</span><span class="status-badge online">Çevrimiçi</span></div>
+            <div class="status-item"><span>Merkezi Sistem</span><span class="status-badge online">Çevrimiçi</span></div>
+            <div class="status-item"><span>Veri Senkronizasyonu</span><span class="status-badge syncing">Senkronize</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+const tableData = [
+  [1,1,'Kurumsal Hesap 1','Banka Ekip 1','Ödeme İşlemi','Banka Sistemi','2024-01-15','2024-01-20','Ahmet Yılmaz','Mehmet Kara'],
+  [2,2,'Kurumsal Hesap 2','Banka Ekip 2','Hesap Aktarımı','Merkezi Sistem','2024-01-18','2024-01-21','Ayşe Demir','Zeynep Can'],
+  [3,3,'Kurumsal Hesap 3','Banka Ekip 1','Kaydı Güncelle','Banka Sistemi','2024-01-20','2024-01-22','Mehmet Kara','Ahmet Yılmaz'],
+  [4,4,'Kurumsal Hesap 4','Banka Ekip 3','Doğrulama Bekle','Merkezi Sistem','2024-01-22','2024-01-23','Fatih Şahin','Seda Yıldız'],
+  [5,5,'Kurumsal Hesap 5','Banka Ekip 2','Bilgi Eksik','Banka Sistemi','2024-01-23','2024-01-24','Zeynep Can','Ayşe Demir'],
+  [6,6,'Kurumsal Hesap 6','Banka Ekip 1','İzin Bekle','Merkezi Sistem','2024-01-25','2024-01-26','Seda Yıldız','Fatih Şahin'],
+  [7,7,'Kurumsal Hesap 7','Banka Ekip 3','Ödeme İşlemi','Banka Sistemi','2024-01-26','2024-01-27','Ahmet Yılmaz','Mehmet Kara'],
+  [8,8,'Kurumsal Hesap 8','Banka Ekip 2','Hesap Aktarımı','Merkezi Sistem','2024-01-27','2024-01-28','Zeynep Can','Ayşe Demir'],
+  [9,9,'Kurumsal Hesap 9','Banka Ekip 1','Kaydı Güncelle','Banka Sistemi','2024-01-28','2024-01-29','Fatih Şahin','Seda Yıldız'],
+  [10,10,'Kurumsal Hesap 10','Banka Ekip 3','Doğrulama Bekle','Merkezi Sistem','2024-01-29','2024-01-30','Mehmet Kara','Ahmet Yılmaz'],
+];
+
+function buildTableHTML(data) {
+  const rows = data.map(r => `<tr>
+    <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
+    <td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td>
+    <td>${r[8]}</td><td>${r[9]}</td>
+    <td><button class="edit-btn">Düzenle</button><button class="del-btn">Sil</button></td>
+  </tr>`).join('');
+  return `<div class="table-card">
+    <div class="tc-head">
+      <div><h3>Kurumsal Hesaplar</h3><p>Bankadaki görevli ekipler tarafından yönetilen hesaplar.</p></div>
+      <button class="add-btn">+ Yeni Hesap Ekle</button>
+    </div>
+    <div class="filter-bar">
+      <div class="fg"><label>Hesap Adı</label><input type="text" id="fName" placeholder="Hesap adı ara..."></div>
+      <div class="fg"><label>Ekip</label><input type="text" id="fTeam" placeholder="Ekip ara..."></div>
+      <div class="fg"><label>Hesap ID Aralığı</label>
+        <div class="filter-range">
+          <input type="number" id="fMin" placeholder="Min">
+          <span class="range-dash">—</span>
+          <input type="number" id="fMax" placeholder="Max">
+        </div>
+      </div>
+      <button class="filter-btn" onclick="applyFilter()">Filtrele</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="mainTable">
+        <thead><tr>
+          <th>Hesap No</th><th>HesapID</th><th>Hesap Adı</th><th>Sorumlu Ekip</th>
+          <th>Alınması Beklenen Aksiyon</th><th>Kaynak</th><th>Kayıt Tarihi</th>
+          <th>Güncelleme Tarihi</th><th>Kaydı Oluşturan</th><th>Güncelleyen</th><th>İşlemler</th>
+        </tr></thead>
+        <tbody id="tableBody">${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function applyFilter() {
+  const name = document.getElementById('fName').value.toLowerCase();
+  const team = document.getElementById('fTeam').value.toLowerCase();
+  const min = parseInt(document.getElementById('fMin').value) || 0;
+  const max = parseInt(document.getElementById('fMax').value) || 99999;
+  const filtered = tableData.filter(r =>
+    r[2].toLowerCase().includes(name) &&
+    r[3].toLowerCase().includes(team) &&
+    r[1] >= min && r[1] <= max
+  );
+  document.getElementById('tableBody').innerHTML = filtered.map(r => `<tr>
+    <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
+    <td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td>
+    <td>${r[8]}</td><td>${r[9]}</td>
+    <td><button class="edit-btn">Düzenle</button><button class="del-btn">Sil</button></td>
+  </tr>`).join('');
+}
+
+const iconMap = {
+  'Genel Bakış': 'ti-home',
+  'Kebir Hesapları Sorumluluk Listesi': 'ti-notebook',
+  'Mizan': 'ti-scale',
+  'Yevmiye Defteri': 'ti-book',
+  'Masraf Hesapları': 'ti-receipt',
+  'Bilanço': 'ti-chart-bar',
+  'Gelir Tablosu': 'ti-trending-up',
+  'Ters Bakiye Raporu': 'ti-arrows-exchange',
+  'Nazım Hesapları Raporu': 'ti-file-analytics',
+  'Excel Dışa Aktar': 'ti-file-spreadsheet',
+  'Kullanıcı Yönetimi': 'ti-users',
+  'Ayarlar': 'ti-settings'
+};
+
+function activateTab(section) {
+  const tabId = tabMap[section];
+  if (!tabId) return;
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
+}
+
+function setPage(section, page, options = {}) {
+  if (options.href) {
+    window.location.href = options.href;
+    return;
+  }
+
+  activateTab(section);
+
+  if (page === 'Genel Bakış') {
+    pageBody.innerHTML = buildDashboardHTML();
+    bindQuickLinks();
+    return;
+  }
+
+  if (page === 'Kebir Hesapları Sorumluluk Listesi') {
+    pageBody.innerHTML = buildTableHTML(tableData);
+    return;
+  }
+
+  const icon = iconMap[page] || 'ti-file';
+  pageBody.innerHTML = `<div class="placeholder-page">
+    <i class="ti ${icon}"></i>
+    <p>${page}</p>
+    <span>Bu sayfa için içerik buraya gelecek.</span>
+  </div>`;
+}
+
+function bindQuickLinks() {
+  pageBody.querySelectorAll('[data-quick-page]').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const page = link.dataset.quickPage;
+      const section = link.dataset.quickSection;
+      activateTab(section);
+      btns.forEach(b => b.classList.toggle('active', b.dataset.page === page));
+      setPage(section, page);
+    });
+  });
+}
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+btns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('ribbon-dropdown-trigger')) return;
+    if (btn.classList.contains('theme-option')) return;
+
+    const href = btn.dataset.href;
+    if (href) {
+      window.location.href = href;
+      return;
+    }
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    setPage(btn.dataset.section, btn.dataset.page);
+  });
+});
+
+const userName = initUserBar();
+initThemeMenu();
+setPage('GENEL', 'Genel Bakış');
+</script>
+</body>
+</html>

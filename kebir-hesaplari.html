@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="tr" class="page-ribbon">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kebir Hesapları | Merkezi Güvenilir Finansal Veri</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="ribbon.css">
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="theme-menu.css">
+    <script>
+    (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
+    </script>
+</head>
+<body>
+<div class="app">
+
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 3.5L18.5 6.5V11.5C18.5 15.5 15.8 18.8 12 19.8C8.2 18.8 5.5 15.5 5.5 11.5V6.5L12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    <line x1="8" y1="13" x2="14" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span class="title-bar-title">Merkezi Güvenilir Finansal Veri</span>
+        </div>
+        <div class="title-bar-right">
+            <div class="tb-user-menu">
+                <div class="tb-user-row">
+                    <span class="tb-user" id="tbUser">Ahmet Yılmaz</span>
+                    <div class="tb-avatar" id="tbAvatar">AY</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ribbon-tabs" id="ribbonTabs">
+        <div class="ribbon-tab-list">
+        <button class="rtab" data-tab="genel">Genel</button>
+        <button class="rtab" data-tab="surec">Süreç</button>
+        <button class="rtab active" data-tab="mutabakat">Mutabakat</button>
+        <button class="rtab" data-tab="raporlama">Raporlama</button>
+        <button class="rtab" data-tab="ayarlar">Ayarlar</button>
+        <button class="rtab" data-tab="yonetim">Yönetim</button>
+        </div>
+        <div class="ribbon-tabs-actions">
+            <div class="theme-switch-wrap">
+                <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
+                    <span class="theme-switch-track">
+                        <i class="ti ti-sun theme-switch-icon theme-switch-icon-sun" aria-hidden="true"></i>
+                        <i class="ti ti-moon theme-switch-icon theme-switch-icon-moon" aria-hidden="true"></i>
+                        <span class="theme-switch-knob">
+                            <i class="ti ti-moon theme-switch-knob-icon" aria-hidden="true"></i>
+                        </span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="ribbon-body" id="ribbonBody">
+
+        <div class="tab-panel" id="tab-genel">
+            <div class="ribbon-group" style="border-right:none">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-home"></i>
+                        <span>Genel Bakış</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-surec">
+            <div class="ribbon-group" style="border-right:none">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="surec.html">
+                        <i class="ti ti-timeline"></i>
+                        <span>Süreç</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel active" id="tab-mutabakat">
+            <div class="ribbon-group">
+                <div class="rg-buttons">
+                    <button class="rbtn active" type="button" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="MUTABAKAT">
+                        <i class="ti ti-notebook"></i>
+                        <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
+                    </button>
+                    <button class="rbtn" type="button" data-page="Mizan" data-section="MUTABAKAT">
+                        <i class="ti ti-scale"></i>
+                        <span>Mizan</span>
+                    </button>
+                    <button class="rbtn" type="button" data-page="Yevmiye Defteri" data-section="MUTABAKAT">
+                        <i class="ti ti-book"></i>
+                        <span>Yevmiye Defteri</span>
+                    </button>
+                    <button class="rbtn" type="button" data-page="Masraf Hesapları" data-section="MUTABAKAT">
+                        <i class="ti ti-receipt"></i>
+                        <span>Masraf Hesapları</span>
+                    </button>
+                </div>
+                <div class="rg-label">Mutabakat</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-raporlama">
+            <div class="ribbon-group">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-chart-bar"></i>
+                        <span>Bilanço</span>
+                    </button>
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-trending-up"></i>
+                        <span>Gelir Tablosu</span>
+                    </button>
+                </div>
+                <div class="rg-label">Mali Tablolar</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-arrows-exchange"></i>
+                        <span>Ters Bakiye Raporu</span>
+                    </button>
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-file-analytics"></i>
+                        <span>Nazım Hesapları Raporu</span>
+                    </button>
+                </div>
+                <div class="rg-label">Özel Raporlar</div>
+            </div>
+            <div class="ribbon-group">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="HomePage.html">
+                        <i class="ti ti-file-spreadsheet"></i>
+                        <span>Excel Dışa Aktar</span>
+                    </button>
+                </div>
+                <div class="rg-label">Dışa Aktar</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-ayarlar">
+            <div class="ribbon-group" style="border-right:none">
+                <div class="rg-buttons">
+                    <div class="rbtn rbtn-settings-title" aria-hidden="true">
+                        <i class="ti ti-settings"></i>
+                        <span>Ayarlar</span>
+                    </div>
+                </div>
+                <div class="rg-label">Menü</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-yonetim">
+            <div class="ribbon-group" style="border-right:none">
+                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-href="kullanici-yonetimi.html">
+                        <i class="ti ti-users"></i>
+                        <span>Kullanıcı Yönetimi</span>
+                    </button>
+                </div>
+                <div class="rg-label">Sistem</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="page-area">
+        <div class="page-body">
+            <div id="view-kebir">
+            <div class="table-card">
+                <div class="filter-bar">
+                    <div class="fg">
+                        <label for="filterNameInput">Hesap Adı</label>
+                        <input type="text" id="filterNameInput" placeholder="Hesap adı ara...">
+                    </div>
+                    <div class="fg">
+                        <label for="filterTeamInput">Ekip</label>
+                        <input type="text" id="filterTeamInput" placeholder="Ekip ara...">
+                    </div>
+                    <div class="fg">
+                        <label>Hesap ID Aralığı</label>
+                        <div class="filter-range">
+                            <input type="number" id="filterIdMin" placeholder="Min">
+                            <span class="range-dash">—</span>
+                            <input type="number" id="filterIdMax" placeholder="Max">
+                        </div>
+                    </div>
+                    <button class="filter-btn" id="filterBtn" type="button">Filtrele</button>
+                    <button class="add-btn" id="addBtn" type="button">+ Yeni Hesap Ekle</button>
+                </div>
+                <div class="table-scroll">
+                    <table id="accountsTable">
+                        <thead>
+                            <tr>
+                                <th>Hesap No</th>
+                                <th>HesapID</th>
+                                <th>Hesap Adı</th>
+                                <th>Sorumlu Ekip</th>
+                                <th>Alınması Beklenen Aksiyon</th>
+                                <th>Kaynak</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>Güncelleme Tarihi</th>
+                                <th>Kaydı Oluşturan Kullanıcı</th>
+                                <th>Güncelleyen Kullanıcı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td><td>1</td><td>Kurumsal Hesap 1</td><td>Banka Ekip 1</td>
+                                <td>Ödeme İşlemi</td><td>Banka Sistemi</td>
+                                <td>2024-01-15</td><td>2024-01-20</td>
+                                <td>Ahmet Yılmaz</td><td>Mehmet Kara</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td><td>2</td><td>Kurumsal Hesap 2</td><td>Banka Ekip 2</td>
+                                <td>Hesap Aktarımı</td><td>Merkezi Sistem</td>
+                                <td>2024-01-18</td><td>2024-01-21</td>
+                                <td>Ayşe Demir</td><td>Zeynep Can</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td><td>3</td><td>Kurumsal Hesap 3</td><td>Banka Ekip 1</td>
+                                <td>Kaydı Güncelle</td><td>Banka Sistemi</td>
+                                <td>2024-01-20</td><td>2024-01-22</td>
+                                <td>Mehmet Kara</td><td>Ahmet Yılmaz</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td><td>4</td><td>Kurumsal Hesap 4</td><td>Banka Ekip 3</td>
+                                <td>Doğrulama Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-22</td><td>2024-01-23</td>
+                                <td>Fatih Şahin</td><td>Seda Yıldız</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td><td>5</td><td>Kurumsal Hesap 5</td><td>Banka Ekip 2</td>
+                                <td>Bilgi Eksik</td><td>Banka Sistemi</td>
+                                <td>2024-01-23</td><td>2024-01-24</td>
+                                <td>Zeynep Can</td><td>Ayşe Demir</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td><td>6</td><td>Kurumsal Hesap 6</td><td>Banka Ekip 1</td>
+                                <td>İzin Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-25</td><td>2024-01-26</td>
+                                <td>Seda Yıldız</td><td>Fatih Şahin</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td><td>7</td><td>Kurumsal Hesap 7</td><td>Banka Ekip 3</td>
+                                <td>Ödeme İşlemi</td><td>Banka Sistemi</td>
+                                <td>2024-01-26</td><td>2024-01-27</td>
+                                <td>Ahmet Yılmaz</td><td>Mehmet Kara</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td><td>8</td><td>Kurumsal Hesap 8</td><td>Banka Ekip 2</td>
+                                <td>Hesap Aktarımı</td><td>Merkezi Sistem</td>
+                                <td>2024-01-27</td><td>2024-01-28</td>
+                                <td>Zeynep Can</td><td>Ayşe Demir</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>9</td><td>9</td><td>Kurumsal Hesap 9</td><td>Banka Ekip 1</td>
+                                <td>Kaydı Güncelle</td><td>Banka Sistemi</td>
+                                <td>2024-01-28</td><td>2024-01-29</td>
+                                <td>Fatih Şahin</td><td>Seda Yıldız</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                            <tr>
+                                <td>10</td><td>10</td><td>Kurumsal Hesap 10</td><td>Banka Ekip 3</td>
+                                <td>Doğrulama Bekle</td><td>Merkezi Sistem</td>
+                                <td>2024-01-29</td><td>2024-01-30</td>
+                                <td>Mehmet Kara</td><td>Ahmet Yılmaz</td>
+                                <td><button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+            <div id="view-placeholder" class="placeholder-page" hidden>
+                <i class="ti ti-notebook" id="placeholderIcon"></i>
+                <p id="placeholderTitle">Kebir Hesapları Sorumluluk Listesi</p>
+                <span>Bu sayfa için içerik buraya gelecek.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="theme-toggle.js"></script>
+<script src="ribbon-shell.js"></script>
+<script>
+    const filterNameInput = document.getElementById('filterNameInput');
+    const filterTeamInput = document.getElementById('filterTeamInput');
+    const filterIdMin = document.getElementById('filterIdMin');
+    const filterIdMax = document.getElementById('filterIdMax');
+    const filterBtn = document.getElementById('filterBtn');
+    const accountsTable = document.getElementById('accountsTable');
+    const tbody = accountsTable.querySelector('tbody');
+    const addBtn = document.getElementById('addBtn');
+    const EDITABLE_COLS = [2, 3, 4, 5, 6, 8, 9];
+
+    function getUserName() {
+        return localStorage.getItem('userName') || document.getElementById('tbUser')?.textContent.split('·')[0].trim() || 'Kullanıcı';
+    }
+
+    function filterTable() {
+        const filterName = filterNameInput.value.toLowerCase();
+        const filterTeam = filterTeamInput.value.toLowerCase();
+        const minId = filterIdMin.value ? parseInt(filterIdMin.value) : null;
+        const maxId = filterIdMax.value ? parseInt(filterIdMax.value) : null;
+
+        tbody.querySelectorAll('tr').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const accountId = parseInt(cells[1].textContent);
+            const accountName = cells[2].textContent.toLowerCase();
+            const accountTeam = cells[3].textContent.toLowerCase();
+            let match = true;
+
+            if (filterName && !accountName.includes(filterName)) match = false;
+            if (filterTeam && !accountTeam.includes(filterTeam)) match = false;
+            if (minId !== null && accountId < minId) match = false;
+            if (maxId !== null && accountId > maxId) match = false;
+
+            row.style.display = match ? '' : 'none';
+        });
+    }
+
+    filterBtn.addEventListener('click', filterTable);
+    [filterNameInput, filterTeamInput, filterIdMin, filterIdMax].forEach(input => {
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') filterTable(); });
+    });
+
+    function bindDeleteButtons(scope) {
+        scope.querySelectorAll('.del-btn').forEach(btn => {
+            btn.addEventListener('click', () => btn.closest('tr').remove());
+        });
+    }
+
+    function restoreActions(cell, row) {
+        cell.innerHTML = '<button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button>';
+        cell.querySelector('.edit-btn').addEventListener('click', () => startEdit(row));
+        bindDeleteButtons(cell);
+    }
+
+    function startEdit(row) {
+        if (row.dataset.editing === 'true') return;
+        row.dataset.editing = 'true';
+        row.classList.add('row-editing');
+        const cells = row.querySelectorAll('td');
+        EDITABLE_COLS.forEach(i => {
+            const orig = cells[i].textContent.trim();
+            cells[i].dataset.original = orig;
+            cells[i].innerHTML = `<input class="cell-input" type="text" value="${orig.replace(/"/g, '&quot;')}">`;
+        });
+        const ac = cells[cells.length - 1];
+        ac.innerHTML = '<button class="save-btn" type="button">Kaydet</button><button class="cancel-btn" type="button">İptal</button>';
+        ac.querySelector('.save-btn').addEventListener('click', () => saveEdit(row));
+        ac.querySelector('.cancel-btn').addEventListener('click', () => cancelEdit(row));
+        cells[EDITABLE_COLS[0]].querySelector('input').focus();
+    }
+
+    function saveEdit(row) {
+        row.dataset.editing = 'false';
+        row.classList.remove('row-editing');
+        const cells = row.querySelectorAll('td');
+        EDITABLE_COLS.forEach(i => {
+            const inp = cells[i].querySelector('input');
+            cells[i].textContent = inp ? inp.value : cells[i].dataset.original;
+        });
+        restoreActions(cells[cells.length - 1], row);
+    }
+
+    function cancelEdit(row) {
+        row.dataset.editing = 'false';
+        row.classList.remove('row-editing');
+        const cells = row.querySelectorAll('td');
+        EDITABLE_COLS.forEach(i => { cells[i].textContent = cells[i].dataset.original || cells[i].textContent; });
+        restoreActions(cells[cells.length - 1], row);
+    }
+
+    accountsTable.addEventListener('click', e => {
+        if (e.target.classList.contains('edit-btn')) startEdit(e.target.closest('tr'));
+    });
+
+    addBtn.addEventListener('click', () => {
+        const newRow = tbody.insertRow();
+        const nextId = tbody.rows.length;
+        const today = new Date().toISOString().split('T')[0];
+        const user = getUserName();
+
+        newRow.insertCell(0).textContent = nextId;
+        newRow.insertCell(1).textContent = nextId;
+        newRow.insertCell(2).textContent = `Yeni Kurumsal Hesap ${nextId}`;
+        newRow.insertCell(3).textContent = 'Yeni Ekip';
+        newRow.insertCell(4).textContent = '-';
+        newRow.insertCell(5).textContent = 'Sistem';
+        newRow.insertCell(6).textContent = today;
+        newRow.insertCell(7).textContent = today;
+        newRow.insertCell(8).textContent = user;
+        newRow.insertCell(9).textContent = '-';
+        const actionsCell = newRow.insertCell(10);
+        actionsCell.innerHTML = '<button class="edit-btn" type="button">Düzenle</button><button class="del-btn" type="button">Sil</button>';
+        bindDeleteButtons(actionsCell);
+    });
+
+    bindDeleteButtons(tbody);
+
+    const pageIcons = {
+        'Kebir Hesapları Sorumluluk Listesi': 'ti-notebook',
+        'Mizan': 'ti-scale',
+        'Yevmiye Defteri': 'ti-book',
+        'Masraf Hesapları': 'ti-receipt'
+    };
+
+    window.handleRibbonPage = function(section, page) {
+        const viewKebir = document.getElementById('view-kebir');
+        const viewPlaceholder = document.getElementById('view-placeholder');
+
+        if (page === 'Kebir Hesapları Sorumluluk Listesi') {
+            viewKebir.hidden = false;
+            viewPlaceholder.hidden = true;
+            return;
+        }
+
+        viewKebir.hidden = true;
+        viewPlaceholder.hidden = false;
+        document.getElementById('placeholderTitle').textContent = page;
+        document.getElementById('placeholderIcon').className = 'ti ' + (pageIcons[page] || 'ti-file');
+    };
+</script>
+</body>
+</html>

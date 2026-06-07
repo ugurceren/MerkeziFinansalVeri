@@ -1,0 +1,184 @@
+/* Ribbon shell sayfaları — HomePage.html, kebir-hesaplari.html */
+
+/* Üst mavi bar — küçült, markayı ortala */
+.page-ribbon .title-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 4px 14px;
+    min-height: 50px;
+    box-sizing: border-box;
+}
+
+.page-ribbon .title-bar-left {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 10px;
+    max-width: calc(100% - 300px);
+}
+
+.page-ribbon .title-bar-right {
+    position: relative;
+    z-index: 1;
+}
+
+.page-ribbon .ribbon-tabs {
+    height: 34px;
+    padding: 0 14px 0 22px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.page-ribbon .ribbon-tab-list {
+    align-items: center;
+}
+
+.page-ribbon .ribbon-tabs-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.page-ribbon .ribbon-body {
+    padding: 4px 12px 4px 22px;
+    height: 92px;
+    min-height: 92px;
+    max-height: 92px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.page-ribbon .tab-panel.active {
+    height: 100%;
+    align-items: flex-start;
+}
+
+.page-ribbon .ribbon-group {
+    height: 100%;
+    box-sizing: border-box;
+    padding-left: 0;
+    padding-right: 10px;
+    gap: 2px;
+}
+
+.page-ribbon .rg-buttons {
+    align-items: flex-start;
+}
+
+.page-ribbon .ribbon-group + .ribbon-group {
+    padding-left: 10px;
+}
+
+.page-ribbon .rtab {
+    padding: 4px 14px;
+    line-height: 1.2;
+    font-size: 17px;
+}
+
+/* Üst bar yazıları — ribbon.css tabanına göre +2px */
+.page-ribbon .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.page-ribbon .brand-mark svg {
+    width: 25px;
+    height: 25px;
+}
+
+.page-ribbon .title-bar-title {
+    font-size: 23px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.page-ribbon .tb-user { font-size: 14px; }
+.page-ribbon .tb-avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+}
+
+.page-ribbon .rg-label { font-size: 13px; padding-top: 0; }
+.page-ribbon .rbtn {
+    gap: 2px;
+    padding: 4px 8px;
+}
+.page-ribbon .rbtn i {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.page-ribbon .rbtn span { font-size: 14px; }
+
+/* Genel Bakış / Süreç — aynı kutu boyutu ve simge hizası */
+.page-ribbon #tab-genel .rbtn,
+.page-ribbon #tab-surec .rbtn {
+    min-width: 88px;
+    width: 88px;
+    padding: 4px 8px;
+    box-sizing: border-box;
+}
+
+/* Ayarlar sekmesi */
+.page-ribbon .rbtn-settings-title {
+    pointer-events: none;
+    cursor: default;
+    background: var(--rb-rbtn-active-bg);
+    border-color: var(--rb-rbtn-active-border);
+}
+
+.page-ribbon .rbtn-settings-title i,
+.page-ribbon .rbtn-settings-title span {
+    color: var(--rb-rbtn-active-text);
+}
+
+.page-ribbon .tc-head h3 { font-size: 14px; }
+.page-ribbon .tc-head p { font-size: 12px; }
+.page-ribbon .add-btn { font-size: 13px; }
+.page-ribbon .fg label { font-size: 11px; }
+.page-ribbon .fg input { font-size: 13px; }
+.page-ribbon .range-dash { font-size: 13px; }
+.page-ribbon .filter-btn { font-size: 13px; }
+
+.page-ribbon table { font-size: 13px; }
+.page-ribbon th { font-size: 12px; }
+.page-ribbon .edit-btn,
+.page-ribbon .del-btn,
+.page-ribbon .save-btn,
+.page-ribbon .cancel-btn { font-size: 12px; }
+.page-ribbon .cell-input { font-size: 13px; }
+
+.page-ribbon .placeholder-page i { font-size: 44px; }
+.page-ribbon .placeholder-page p { font-size: 15px; }
+.page-ribbon .placeholder-page span { font-size: 13px; }
+
+.page-ribbon .stat-icon { font-size: 15px; }
+.page-ribbon .stat-trend { font-size: 11px; }
+.page-ribbon .stat-value { font-size: 24px; }
+.page-ribbon .stat-label { font-size: 12px; }
+
+.page-ribbon .panel-head h4 { font-size: 14px; }
+.page-ribbon .panel-head span { font-size: 12px; }
+.page-ribbon .chart-row label { font-size: 12px; }
+.page-ribbon .chart-row .pct { font-size: 12px; }
+
+.page-ribbon .activity-dot { font-size: 13px; }
+.page-ribbon .activity-body strong { font-size: 13px; }
+.page-ribbon .activity-body span { font-size: 12px; }
+.page-ribbon .activity-time { font-size: 11px; }
+
+.page-ribbon .quick-link { font-size: 13px; }
+.page-ribbon .quick-link-icon { font-size: 13px; }
+.page-ribbon .team-load-header { font-size: 12px; }
+.page-ribbon .status-item { font-size: 13px; }
+.page-ribbon .status-badge { font-size: 11px; }

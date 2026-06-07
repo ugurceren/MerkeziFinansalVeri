@@ -1,0 +1,302 @@
+.page-body:has(.cockpit) {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+}
+
+.cockpit {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    min-height: 0;
+}
+
+.cockpit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 2px 8px;
+    flex-shrink: 0;
+}
+
+.cockpit-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.cockpit-head p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.cockpit-live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+    animation: cockpit-pulse 1.8s infinite;
+}
+
+.cockpit-live time {
+    font-variant-numeric: tabular-nums;
+    color: var(--rb-text-muted);
+    font-weight: 500;
+}
+
+@keyframes cockpit-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+    50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+.cockpit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.cockpit-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 12px;
+    overflow: hidden;
+    --col-accent: var(--rb-accent);
+    --col-soft: var(--rb-accent-soft);
+}
+
+.cockpit-col.theme-teal { --col-accent: #2dd4bf; --col-soft: rgba(45, 212, 191, 0.14); }
+.cockpit-col.theme-blue { --col-accent: #7c9aff; --col-soft: rgba(124, 154, 255, 0.14); }
+.cockpit-col.theme-purple { --col-accent: #a855f7; --col-soft: rgba(168, 85, 247, 0.14); }
+.cockpit-col.status-running { border-color: color-mix(in srgb, var(--col-accent) 45%, var(--rb-border)); }
+.cockpit-col.status-done { border-color: rgba(34, 197, 94, 0.35); }
+
+.col-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+}
+
+.col-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.col-title i {
+    font-size: 22px;
+    color: var(--col-accent);
+    flex-shrink: 0;
+}
+
+.col-title h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--rb-text);
+    letter-spacing: 0.03em;
+}
+
+.col-title span {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    color: var(--rb-text-muted);
+    line-height: 1.3;
+}
+
+.col-meta { text-align: right; flex-shrink: 0; }
+
+.col-pct {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--col-accent);
+    line-height: 1;
+}
+
+.col-status-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--col-soft);
+    color: var(--col-accent);
+}
+
+.cockpit-col.status-done .col-status-badge {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+}
+
+.cockpit-col.status-waiting .col-status-badge {
+    background: var(--rb-card);
+    color: var(--rb-text-muted);
+}
+
+.col-stats {
+    display: flex;
+    gap: 16px;
+    padding: 8px 14px;
+    font-size: 10px;
+    color: var(--rb-text-muted);
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-filter-bg);
+}
+
+.col-stats strong {
+    color: var(--rb-text);
+    font-size: 12px;
+}
+
+.dataset-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.dataset-card {
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--rb-bg);
+    transition: border-color 0.2s;
+}
+
+.dataset-card.running {
+    border-color: color-mix(in srgb, var(--col-accent) 40%, var(--rb-border));
+    background: var(--col-soft);
+}
+
+.dataset-card.done { border-color: rgba(34, 197, 94, 0.25); }
+
+.dataset-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.dataset-head strong {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rb-text);
+}
+
+.dataset-head code {
+    font-size: 9px;
+    color: var(--rb-text-muted);
+    background: var(--rb-card);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+}
+
+.task-flow {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.flow-step {
+    flex: 1;
+    min-width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border-radius: 8px;
+    background: var(--rb-card);
+    border: 0.5px solid var(--rb-border);
+}
+
+.flow-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.flow-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.flow-step.done .flow-icon {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 0.5px solid rgba(34, 197, 94, 0.35);
+}
+
+.flow-step.done .flow-label { color: #22c55e; }
+
+.flow-step.running .flow-icon {
+    background: var(--col-soft);
+    color: var(--col-accent);
+    border: 0.5px solid var(--col-accent);
+    animation: cockpit-pulse 1.8s infinite;
+}
+
+.flow-step.running .flow-label { color: var(--col-accent); }
+
+.flow-step.pending .flow-icon {
+    background: var(--rb-bg);
+    color: var(--rb-text-muted);
+    border: 0.5px dashed var(--rb-border);
+}
+
+.flow-step.failed .flow-icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.page-ribbon .cockpit-head h3 { font-size: 16px; }
+.page-ribbon .col-title h4 { font-size: 15px; }
+.page-ribbon .dataset-head strong { font-size: 13px; }
+.page-ribbon .flow-label { font-size: 10px; }
+
+@media (max-width: 1100px) {
+    .cockpit-grid { grid-template-columns: 1fr; }
+}
