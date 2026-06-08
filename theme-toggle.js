@@ -17,9 +17,16 @@ function updateThemeSelectionUI(theme) {
             knobIcon.className = `ti ${isDark ? 'ti-moon' : 'ti-sun'} theme-switch-knob-icon`;
         }
     });
+
+    document.querySelectorAll('[data-theme-option]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.themeOption === theme);
+    });
 }
 
 function initThemeSwitch() {
+    if (initThemeSwitch._bound) return;
+    initThemeSwitch._bound = true;
+
     document.querySelectorAll('[data-theme-switch]').forEach(sw => {
         sw.addEventListener('click', () => {
             const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -38,4 +45,14 @@ function initThemeMenu() {
 
 function initThemeToggle() {
     initThemeMenu();
+}
+
+window.applyTheme = applyTheme;
+window.initThemeMenu = initThemeMenu;
+window.initThemeToggle = initThemeToggle;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initThemeToggle);
+} else {
+    initThemeToggle();
 }

@@ -1,3 +1,5 @@
+@import url('status-bar.css');
+
 /* Ribbon shell sayfaları — HomePage.html, kebir-hesaplari.html */
 
 /* Üst mavi bar — küçült, markayı ortala */
@@ -36,6 +38,17 @@
     align-items: center;
 }
 
+.page-ribbon .rtab {
+    padding: 5px 16px;
+    line-height: 1.2;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.page-ribbon .rtab.active {
+    font-weight: 700;
+}
+
 .page-ribbon .ribbon-tabs-actions {
     display: flex;
     align-items: center;
@@ -43,43 +56,11 @@
     margin-left: auto;
 }
 
-.page-ribbon .ribbon-body {
-    padding: 4px 12px 4px 22px;
-    height: 92px;
-    min-height: 92px;
-    max-height: 92px;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-.page-ribbon .tab-panel.active {
-    height: 100%;
-    align-items: flex-start;
-}
-
-.page-ribbon .ribbon-group {
-    height: 100%;
-    box-sizing: border-box;
-    padding-left: 0;
-    padding-right: 10px;
-    gap: 2px;
-}
-
-.page-ribbon .rg-buttons {
-    align-items: flex-start;
-}
-
 .page-ribbon .ribbon-group + .ribbon-group {
     padding-left: 10px;
 }
 
-.page-ribbon .rtab {
-    padding: 4px 14px;
-    line-height: 1.2;
-    font-size: 17px;
-}
-
-/* Üst bar yazıları — ribbon.css tabanına göre +2px */
+/* Üst bar yazıları */
 .page-ribbon .brand-mark {
     width: 36px;
     height: 36px;
@@ -104,29 +85,104 @@
     font-size: 11px;
 }
 
-.page-ribbon .rg-label { font-size: 13px; padding-top: 0; }
-.page-ribbon .rbtn {
-    gap: 2px;
-    padding: 4px 8px;
+.page-ribbon .ribbon-body {
+    padding: 4px 12px 4px 22px;
+    height: 92px;
+    min-height: 92px;
+    max-height: 92px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
+
+.page-ribbon .tab-panel.active {
+    height: 100%;
+    align-items: flex-start;
+}
+
+.page-ribbon .ribbon-group {
+    height: 100%;
+    box-sizing: border-box;
+    padding-left: 0;
+    padding-right: 12px;
+    gap: 0;
+    justify-content: center;
+    border-right: none;
+}
+
+.page-ribbon .rg-buttons {
+    align-items: center;
+}
+
+.page-ribbon .rg-label {
+    display: none;
+}
+
+.page-ribbon .rbtn {
+    gap: 6px;
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    padding: 6px 4px;
+    box-sizing: border-box;
+    justify-content: center;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.page-ribbon .rbtn:hover:not(.active) {
+    background: var(--rb-surface);
+    border-color: var(--rb-border);
+    box-shadow: 0 1px 2px var(--rb-shadow);
+}
+
 .page-ribbon .rbtn i {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
+    color: var(--rb-text-secondary);
 }
-.page-ribbon .rbtn span { font-size: 14px; }
 
-/* Genel Bakış / Süreç — aynı kutu boyutu ve simge hizası */
-.page-ribbon #tab-genel .rbtn,
-.page-ribbon #tab-surec .rbtn {
-    min-width: 88px;
-    width: 88px;
-    padding: 4px 8px;
-    box-sizing: border-box;
+.page-ribbon .rbtn span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    line-height: 1.1;
+    max-width: 100%;
+}
+
+.page-ribbon .rbtn.active {
+    background: var(--rb-rbtn-active-bg);
+    border-color: var(--rb-rbtn-active-border);
+    box-shadow: 0 1px 2px var(--rb-shadow);
+}
+
+.page-ribbon .rbtn.active i,
+.page-ribbon .rbtn.active span {
+    font-weight: 700;
+    color: var(--rb-rbtn-active-text);
+}
+
+/* Portal — tek satır yazı biraz daha büyük */
+.page-ribbon #tab-portal .rbtn span {
+    font-size: 16px;
+}
+
+/* Kebir — üç satır, kutuya sığdır */
+.page-ribbon .rbtn[data-page="Kebir Hesapları Sorumluluk Listesi"] {
+    gap: 3px;
+}
+
+.page-ribbon .rbtn[data-page="Kebir Hesapları Sorumluluk Listesi"] span {
+    font-size: 10px;
+    line-height: 1.1;
 }
 
 /* Ayarlar sekmesi */
@@ -182,3 +238,142 @@
 .page-ribbon .team-load-header { font-size: 12px; }
 .page-ribbon .status-item { font-size: 13px; }
 .page-ribbon .status-badge { font-size: 11px; }
+
+/* Portal — dataset özeti kartı */
+.portal-dataset-card .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.portal-ds-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rb-accent);
+    text-decoration: none;
+}
+
+.portal-ds-link:hover {
+    text-decoration: underline;
+}
+
+.portal-ds-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0 16px;
+}
+
+.portal-ds-stat {
+    background: var(--rb-card);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+.portal-ds-stat strong {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--rb-text);
+    line-height: 1.2;
+}
+
+.portal-ds-stat span {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    font-weight: 600;
+}
+
+.portal-ds-layers {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.portal-ds-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.portal-ds-row-head strong {
+    font-size: 13px;
+    color: var(--rb-text);
+}
+
+.portal-ds-meta {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    margin-bottom: 6px;
+}
+
+.portal-ds-bar {
+    height: 6px;
+    background: var(--rb-filter-bg);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.portal-ds-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--rb-accent);
+    transition: width 0.3s ease;
+}
+
+.portal-ds-fill.theme-teal { background: #14b8a6; }
+.portal-ds-fill.theme-blue { background: #3b82f6; }
+.portal-ds-fill.theme-purple { background: #a855f7; }
+
+.portal-ds-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.portal-ds-badge.done {
+    background: rgba(34, 197, 94, 0.14);
+    color: #22c55e;
+}
+
+.portal-ds-badge.running {
+    background: rgba(139, 164, 255, 0.16);
+    color: var(--rb-accent);
+}
+
+.portal-ds-badge.pending {
+    background: rgba(132, 145, 168, 0.18);
+    color: var(--rb-text-muted);
+}
+
+.portal-ds-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--rb-border);
+}
+
+.portal-ds-footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    text-decoration: none;
+}
+
+.portal-ds-footer a:hover {
+    color: var(--rb-accent);
+}
+
+.portal-ds-footer a i {
+    font-size: 14px;
+}

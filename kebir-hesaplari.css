@@ -1,0 +1,37 @@
+/* Kebir Hesapları — filtre alanı */
+
+#view-kebir .filter-bar {
+    background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
+    border-bottom-color: color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));
+    padding: 10px 14px;
+    gap: 12px;
+}
+
+#view-kebir .filter-bar .fg {
+    align-items: center;
+    gap: 6px;
+}
+
+#view-kebir .filter-bar .fg label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rb-text);
+    text-align: center;
+    width: 100%;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+#view-kebir .filter-bar .fg input {
+    font-size: 13px;
+    height: 30px;
+}
+
+#view-kebir .filter-bar .filter-range {
+    justify-content: center;
+}
+
+#view-kebir .fg-name input {
+    width: 360px;
+    max-width: 100%;
+}

@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kullanıcı Yönetimi | Merkezi Güvenilir Finansal Veri</title>
+    <title>Veri Kalitesi Kuralları | Merkezi Güvenilir Finansal Veri</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="theme-menu.css">
-    <link rel="stylesheet" href="kullanici-yonetimi.css">
+    <link rel="stylesheet" href="veri-kalitesi.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
     </script>
 </head>
 <body>
 <div class="app">
-
     <div class="title-bar">
         <div class="title-bar-left">
             <div class="brand-mark" aria-hidden="true">
@@ -37,7 +36,6 @@
             </div>
         </div>
     </div>
-
     <div class="ribbon-tabs" id="ribbonTabs">
         <div class="ribbon-tab-list"></div>
         <div class="ribbon-tabs-actions">
@@ -46,75 +44,20 @@
                     <span class="theme-switch-track">
                         <i class="ti ti-sun theme-switch-icon theme-switch-icon-sun" aria-hidden="true"></i>
                         <i class="ti ti-moon theme-switch-icon theme-switch-icon-moon" aria-hidden="true"></i>
-                        <span class="theme-switch-knob">
-                            <i class="ti ti-moon theme-switch-knob-icon" aria-hidden="true"></i>
-                        </span>
+                        <span class="theme-switch-knob"><i class="ti ti-moon theme-switch-knob-icon" aria-hidden="true"></i></span>
                     </span>
                 </button>
             </div>
         </div>
     </div>
-
     <div class="ribbon-body" id="ribbonBody"></div>
-
     <div class="page-area">
-        <div class="page-body">
-            <div class="um-layout">
-
-                <div class="table-card">
-                    <div class="tc-head">
-                        <div>
-                            <h3>Yetkili Kullanıcılar</h3>
-                            <p>Sisteme erişimi olan kullanıcılar ve atanmış rolleri</p>
-                        </div>
-                        <button class="add-btn" type="button">+ Yeni Kullanıcı</button>
-                    </div>
-                    <div class="table-scroll">
-                        <table id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>Kullanıcı</th>
-                                    <th>Rol</th>
-                                    <th>Durum</th>
-                                    <th>Son Giriş</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="um-grid">
-                    <div class="table-card">
-                        <div class="tc-head">
-                            <div>
-                                <h3>Rol Listesi</h3>
-                                <p>Her rolün erişim kapsamı</p>
-                            </div>
-                        </div>
-                        <div class="um-role-list" id="roleList" style="padding:12px 14px"></div>
-                    </div>
-
-                    <div class="table-card um-access-panel">
-                        <div class="um-access-head">
-                            <h4 id="accessTitle">Sistem Yöneticisi</h4>
-                            <p id="accessDesc">Bu role atanmış kullanıcıların erişebileceği sayfalar</p>
-                        </div>
-                        <div class="um-menu-tree" id="accessMenu"></div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        <div class="page-body" data-vk-page="kurallar"></div>
     </div>
-
 </div>
-
 <script src="status-bar.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
-<script src="kullanici-shared.js"></script>
-<script src="kullanici-yonetimi.js"></script>
+<script src="veri-kalitesi-pages.js"></script>
 </body>
 </html>

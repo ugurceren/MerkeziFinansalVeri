@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="theme-menu.css">
+    <link rel="stylesheet" href="kebir-hesaplari.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
     </script>
@@ -41,7 +42,8 @@
         <div class="ribbon-tab-list">
         <button class="rtab" data-tab="genel">Genel</button>
         <button class="rtab" data-tab="surec">Süreç</button>
-        <button class="rtab active" data-tab="mutabakat">Mutabakat</button>
+        <button class="rtab" data-tab="mutabakat">Mutabakat</button>
+        <button class="rtab active" data-tab="parametre">Parametre Yönetimi</button>
         <button class="rtab" data-tab="raporlama">Raporlama</button>
         <button class="rtab" data-tab="ayarlar">Ayarlar</button>
         <button class="rtab" data-tab="yonetim">Yönetim</button>
@@ -85,43 +87,39 @@
             </div>
         </div>
 
-        <div class="tab-panel active" id="tab-mutabakat">
-            <div class="ribbon-group">
+        <div class="tab-panel" id="tab-mutabakat">
+            <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn active" type="button" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="MUTABAKAT">
-                        <i class="ti ti-notebook"></i>
-                        <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
-                    </button>
-                    <button class="rbtn" type="button" data-page="Mizan" data-section="MUTABAKAT">
+                    <button class="rbtn" type="button" data-href="mizan.html">
                         <i class="ti ti-scale"></i>
                         <span>Mizan</span>
-                    </button>
-                    <button class="rbtn" type="button" data-page="Yevmiye Defteri" data-section="MUTABAKAT">
-                        <i class="ti ti-book"></i>
-                        <span>Yevmiye Defteri</span>
-                    </button>
-                    <button class="rbtn" type="button" data-page="Masraf Hesapları" data-section="MUTABAKAT">
-                        <i class="ti ti-receipt"></i>
-                        <span>Masraf Hesapları</span>
                     </button>
                 </div>
                 <div class="rg-label">Mutabakat</div>
             </div>
         </div>
 
+        <div class="tab-panel active" id="tab-parametre">
+            <div class="ribbon-group" style="border-right:none">
+                <div class="rg-buttons">
+                    <button class="rbtn active" type="button" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="PARAMETRE YÖNETİMİ">
+                        <i class="ti ti-notebook"></i>
+                        <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
+                    </button>
+                </div>
+                <div class="rg-label">Parametre</div>
+            </div>
+        </div>
+
         <div class="tab-panel" id="tab-raporlama">
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-chart-bar"></i>
-                        <span>Bilanço</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-trending-up"></i>
-                        <span>Gelir Tablosu</span>
+                    <button class="rbtn" type="button" data-href="veritabani-sorgu.html">
+                        <i class="ti ti-database"></i>
+                        <span>Veritabanı<br>Sorgusu</span>
                     </button>
                 </div>
-                <div class="rg-label">Mali Tablolar</div>
+                <div class="rg-label">Sorgu</div>
             </div>
             <div class="ribbon-group">
                 <div class="rg-buttons">
@@ -136,24 +134,15 @@
                 </div>
                 <div class="rg-label">Özel Raporlar</div>
             </div>
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-file-spreadsheet"></i>
-                        <span>Excel Dışa Aktar</span>
-                    </button>
-                </div>
-                <div class="rg-label">Dışa Aktar</div>
-            </div>
         </div>
 
         <div class="tab-panel" id="tab-ayarlar">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <div class="rbtn rbtn-settings-title" aria-hidden="true">
+                    <button class="rbtn" type="button" data-href="ayarlar.html">
                         <i class="ti ti-settings"></i>
-                        <span>Ayarlar</span>
-                    </div>
+                        <span>Uygulama Ayarları</span>
+                    </button>
                 </div>
                 <div class="rg-label">Menü</div>
             </div>
@@ -165,6 +154,10 @@
                     <button class="rbtn" type="button" data-href="kullanici-yonetimi.html">
                         <i class="ti ti-users"></i>
                         <span>Kullanıcı Yönetimi</span>
+                    </button>
+                    <button class="rbtn" type="button" data-href="veritabani-baglantisi.html">
+                        <i class="ti ti-plug-connected"></i>
+                        <span>Veritabanı<br>Bağlantısı</span>
                     </button>
                 </div>
                 <div class="rg-label">Sistem</div>
@@ -178,7 +171,7 @@
             <div id="view-kebir">
             <div class="table-card">
                 <div class="filter-bar">
-                    <div class="fg">
+                    <div class="fg fg-name">
                         <label for="filterNameInput">Hesap Adı</label>
                         <input type="text" id="filterNameInput" placeholder="Hesap adı ara...">
                     </div>
@@ -290,16 +283,12 @@
                 </div>
             </div>
             </div>
-            <div id="view-placeholder" class="placeholder-page" hidden>
-                <i class="ti ti-notebook" id="placeholderIcon"></i>
-                <p id="placeholderTitle">Kebir Hesapları Sorumluluk Listesi</p>
-                <span>Bu sayfa için içerik buraya gelecek.</span>
-            </div>
         </div>
     </div>
 
 </div>
 
+<script src="status-bar.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
 <script>
@@ -418,29 +407,6 @@
     });
 
     bindDeleteButtons(tbody);
-
-    const pageIcons = {
-        'Kebir Hesapları Sorumluluk Listesi': 'ti-notebook',
-        'Mizan': 'ti-scale',
-        'Yevmiye Defteri': 'ti-book',
-        'Masraf Hesapları': 'ti-receipt'
-    };
-
-    window.handleRibbonPage = function(section, page) {
-        const viewKebir = document.getElementById('view-kebir');
-        const viewPlaceholder = document.getElementById('view-placeholder');
-
-        if (page === 'Kebir Hesapları Sorumluluk Listesi') {
-            viewKebir.hidden = false;
-            viewPlaceholder.hidden = true;
-            return;
-        }
-
-        viewKebir.hidden = true;
-        viewPlaceholder.hidden = false;
-        document.getElementById('placeholderTitle').textContent = page;
-        document.getElementById('placeholderIcon').className = 'ti ' + (pageIcons[page] || 'ti-file');
-    };
 </script>
 </body>
 </html>

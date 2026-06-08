@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genel Bakış | Merkezi Güvenilir Finansal Veri</title>
+    <title>Portal | Merkezi Güvenilir Finansal Veri</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="theme-menu.css">
+    <link rel="stylesheet" href="status-bar.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
@@ -32,11 +33,11 @@
 
             <div class="sidebar-section">
                 <button class="section-title" type="button" aria-expanded="true">
-                    <span>GENEL</span>
+                    <span>PORTAL</span>
                     <span class="section-chevron" aria-hidden="true"></span>
                 </button>
                 <div class="section-links">
-                    <a class="sidebar-link active" href="index.html" data-section="GENEL" data-page="Genel Bakış">Genel Bakış</a>
+                    <a class="sidebar-link active" href="HomePage.html" data-section="PORTAL" data-page="Portal">Portal</a>
                 </div>
             </div>
             <div class="sidebar-section">
@@ -45,10 +46,28 @@
                     <span class="section-chevron" aria-hidden="true"></span>
                 </button>
                 <div class="section-links">
-                    <a class="sidebar-link" href="kebir-hesaplari.html" data-section="MUTABAKAT" data-page="Kebir Hesapları Sorumluluk Listesi">Kebir Hesapları Sorumluluk Listesi</a>
-                    <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Mizan">Mizan</a>
-                    <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Yevmiye Defteri">Yevmiye Defteri</a>
-                    <a class="sidebar-link" href="#" data-section="MUTABAKAT" data-page="Masraf Hesapları">Masraf Hesapları</a>
+                    <a class="sidebar-link" href="mizan.html" data-section="MUTABAKAT" data-page="Mizan">Mizan</a>
+                    <a class="sidebar-link" href="mutabakat.html?view=donem" data-section="MUTABAKAT" data-page="Dönem">Dönem</a>
+                    <a class="sidebar-link" href="mutabakat.html?view=fark-veren" data-section="MUTABAKAT" data-page="Fark Veren Hesaplar">Fark Veren Hesaplar</a>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <button class="section-title" type="button" aria-expanded="true">
+                    <span>PARAMETRE YÖNETİMİ</span>
+                    <span class="section-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="section-links">
+                    <a class="sidebar-link" href="kebir-hesaplari.html" data-section="PARAMETRE YÖNETİMİ" data-page="Kebir Hesapları Sorumluluk Listesi">Kebir Hesapları Sorumluluk Listesi</a>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <button class="section-title" type="button" aria-expanded="true">
+                    <span>VERİ KALİTESİ</span>
+                    <span class="section-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="section-links">
+                    <a class="sidebar-link" href="veri-kalitesi-kurallari.html" data-section="VERİ KALİTESİ" data-page="Veri Kalitesi Kuralları">Veri Kalitesi Kuralları</a>
+                    <a class="sidebar-link" href="gunluk-kural-sonuclari.html" data-section="VERİ KALİTESİ" data-page="Günlük Kural Sonuçları">Günlük Kural Sonuçları</a>
                 </div>
             </div>
             <div class="sidebar-section">
@@ -57,11 +76,9 @@
                     <span class="section-chevron" aria-hidden="true"></span>
                 </button>
                 <div class="section-links">
-                    <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Bilanço">Bilanço</a>
-                    <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Gelir Tablosu">Gelir Tablosu</a>
+                    <a class="sidebar-link" href="veritabani-sorgu.html" data-section="RAPORLAMA" data-page="Veritabanı Sorgusu">Veritabanı Sorgusu</a>
                     <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Ters Bakiye Raporu">Ters Bakiye Raporu</a>
                     <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Nazım Hesapları Raporu">Nazım Hesapları Raporu</a>
-                    <a class="sidebar-link" href="#" data-section="RAPORLAMA" data-page="Excel Dışa Aktar">Excel Dışa Aktar</a>
                 </div>
             </div>
             <div class="sidebar-section">
@@ -70,7 +87,7 @@
                     <span class="section-chevron" aria-hidden="true"></span>
                 </button>
                 <div class="section-links">
-                    <a class="sidebar-link" href="#" data-section="AYARLAR" data-page="Ayarlar">Ayarlar</a>
+                    <a class="sidebar-link" href="ayarlar.html" data-section="AYARLAR" data-page="Ayarlar">Ayarlar</a>
                 </div>
             </div>
             <div class="sidebar-section">
@@ -80,6 +97,7 @@
                 </button>
                 <div class="section-links">
                     <a class="sidebar-link" href="kullanici-yonetimi.html" data-section="YÖNETİM" data-page="Kullanıcı Yönetimi">Kullanıcı Yönetimi</a>
+                    <a class="sidebar-link" href="veritabani-baglantisi.html" data-section="YÖNETİM" data-page="Veritabanı Bağlantısı">Veritabanı Bağlantısı</a>
                 </div>
             </div>
             <div class="sidebar-footer">
@@ -94,8 +112,8 @@
         <main class="page-content">
             <div class="page-header">
                 <div>
-                    <p class="breadcrumb"><span id="breadcrumbSection">GENEL</span> / <strong id="breadcrumbPage">Genel Bakış</strong></p>
-                    <h2 id="pageTitle">Genel Bakış</h2>
+                    <p class="breadcrumb"><span id="breadcrumbSection">PORTAL</span> / <strong id="breadcrumbPage">Portal</strong></p>
+                    <h2 id="pageTitle">Portal</h2>
                 </div>
                 <div class="header-actions">
                     <div class="tb-user-menu header-user-menu">
@@ -249,17 +267,17 @@
                                     <span class="quick-link-icon">≡</span>
                                     Kebir Hesapları Listesi
                                 </a>
-                                <a class="quick-link" href="#">
+                                <a class="quick-link" href="mizan.html">
                                     <span class="quick-link-icon">⊞</span>
                                     Mizan Görüntüle
                                 </a>
-                                <a class="quick-link" href="#">
+                                <a class="quick-link" href="veritabani-sorgu.html">
                                     <span class="quick-link-icon">◫</span>
-                                    Bilanço Raporu
+                                    Veritabanı Sorgusu
                                 </a>
                                 <a class="quick-link" href="#">
-                                    <span class="quick-link-icon">↓</span>
-                                    Excel Dışa Aktar
+                                    <span class="quick-link-icon">⇄</span>
+                                    Ters Bakiye Raporu
                                 </a>
                             </div>
                         </div>
@@ -319,6 +337,7 @@
         </main>
     </div>
 
+    <script src="status-bar.js"></script>
     <script src="theme-toggle.js"></script>
     <script src="script.js"></script>
 </body>

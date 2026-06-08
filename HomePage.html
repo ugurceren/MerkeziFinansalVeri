@@ -3,11 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genel Bakış | Merkezi Güvenilir Finansal Veri</title>
+<title>Portal | Merkezi Güvenilir Finansal Veri</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link rel="stylesheet" href="ribbon.css">
 <link rel="stylesheet" href="homepage.css">
 <link rel="stylesheet" href="theme-menu.css">
+<link rel="stylesheet" href="ayarlar.css">
+<link rel="stylesheet" href="mizan.css">
+<link rel="stylesheet" href="veri-kalitesi.css">
 <script>
 (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
 </script>
@@ -41,12 +44,7 @@
   <!-- Ribbon Tabs -->
   <div class="ribbon-tabs" id="ribbonTabs">
     <div class="ribbon-tab-list">
-    <button class="rtab active" data-tab="genel">Genel</button>
-    <button class="rtab" data-tab="surec">Süreç</button>
-    <button class="rtab" data-tab="mutabakat">Mutabakat</button>
-    <button class="rtab" data-tab="raporlama">Raporlama</button>
-    <button class="rtab" data-tab="ayarlar">Ayarlar</button>
-    <button class="rtab" data-tab="yonetim">Yönetim</button>
+    <div class="ribbon-tab-list"></div>
     </div>
     <div class="ribbon-tabs-actions">
       <div class="theme-switch-wrap">
@@ -63,124 +61,7 @@
     </div>
   </div>
 
-  <!-- Ribbon Body -->
-  <div class="ribbon-body" id="ribbonBody">
-
-    <!-- GENEL -->
-    <div class="tab-panel active" id="tab-genel">
-      <div class="ribbon-group" style="border-right:none">
-        <div class="rg-buttons">
-          <button class="rbtn active" data-page="Genel Bakış" data-section="GENEL">
-            <i class="ti ti-home"></i>
-            <span>Genel Bakış</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SÜREÇ -->
-    <div class="tab-panel" id="tab-surec">
-      <div class="ribbon-group" style="border-right:none">
-        <div class="rg-buttons">
-          <button class="rbtn" data-href="surec.html" data-section="SÜREÇ">
-            <i class="ti ti-timeline"></i>
-            <span>Süreç</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MUTABAKAT -->
-    <div class="tab-panel" id="tab-mutabakat">
-      <div class="ribbon-group">
-        <div class="rg-buttons">
-          <button class="rbtn" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="MUTABAKAT" data-href="kebir-hesaplari.html">
-            <i class="ti ti-notebook"></i>
-            <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
-          </button>
-          <button class="rbtn" data-page="Mizan" data-section="MUTABAKAT">
-            <i class="ti ti-scale"></i>
-            <span>Mizan</span>
-          </button>
-          <button class="rbtn" data-page="Yevmiye Defteri" data-section="MUTABAKAT">
-            <i class="ti ti-book"></i>
-            <span>Yevmiye Defteri</span>
-          </button>
-          <button class="rbtn" data-page="Masraf Hesapları" data-section="MUTABAKAT">
-            <i class="ti ti-receipt"></i>
-            <span>Masraf Hesapları</span>
-          </button>
-        </div>
-        <div class="rg-label">Mutabakat</div>
-      </div>
-    </div>
-
-    <!-- RAPORLAMA -->
-    <div class="tab-panel" id="tab-raporlama">
-      <div class="ribbon-group">
-        <div class="rg-buttons">
-          <button class="rbtn" data-page="Bilanço" data-section="RAPORLAMA">
-            <i class="ti ti-chart-bar"></i>
-            <span>Bilanço</span>
-          </button>
-          <button class="rbtn" data-page="Gelir Tablosu" data-section="RAPORLAMA">
-            <i class="ti ti-trending-up"></i>
-            <span>Gelir Tablosu</span>
-          </button>
-        </div>
-        <div class="rg-label">Mali Tablolar</div>
-      </div>
-      <div class="ribbon-group">
-        <div class="rg-buttons">
-          <button class="rbtn" data-page="Ters Bakiye Raporu" data-section="RAPORLAMA">
-            <i class="ti ti-arrows-exchange"></i>
-            <span>Ters Bakiye Raporu</span>
-          </button>
-          <button class="rbtn" data-page="Nazım Hesapları Raporu" data-section="RAPORLAMA">
-            <i class="ti ti-file-analytics"></i>
-            <span>Nazım Hesapları Raporu</span>
-          </button>
-        </div>
-        <div class="rg-label">Özel Raporlar</div>
-      </div>
-      <div class="ribbon-group">
-        <div class="rg-buttons">
-          <button class="rbtn" data-page="Excel Dışa Aktar" data-section="RAPORLAMA">
-            <i class="ti ti-file-spreadsheet"></i>
-            <span>Excel Dışa Aktar</span>
-          </button>
-        </div>
-        <div class="rg-label">Dışa Aktar</div>
-      </div>
-    </div>
-
-    <!-- AYARLAR -->
-    <div class="tab-panel" id="tab-ayarlar">
-      <div class="ribbon-group" style="border-right:none">
-        <div class="rg-buttons">
-          <div class="rbtn rbtn-settings-title" aria-hidden="true">
-            <i class="ti ti-settings"></i>
-            <span>Ayarlar</span>
-          </div>
-        </div>
-        <div class="rg-label">Menü</div>
-      </div>
-    </div>
-
-    <!-- YÖNETİM -->
-    <div class="tab-panel" id="tab-yonetim">
-      <div class="ribbon-group" style="border-right:none">
-        <div class="rg-buttons">
-          <button class="rbtn" data-page="Kullanıcı Yönetimi" data-section="YÖNETİM" data-href="kullanici-yonetimi.html">
-            <i class="ti ti-users"></i>
-            <span>Kullanıcı Yönetimi</span>
-          </button>
-        </div>
-        <div class="rg-label">Sistem</div>
-      </div>
-    </div>
-
-  </div>
+  <div class="ribbon-body" id="ribbonBody"></div>
 
   <!-- Page Area -->
   <div class="page-area">
@@ -189,31 +70,15 @@
 
 </div>
 
+<script src="status-bar.js"></script>
 <script src="theme-toggle.js"></script>
+<script src="ribbon-shell.js"></script>
+<script src="ayarlar.js"></script>
+<script src="mizan.js"></script>
+<script src="surec-cockpit.js"></script>
+<script src="veri-kalitesi-pages.js"></script>
 <script>
-const tabs = document.querySelectorAll('.rtab');
-const panels = document.querySelectorAll('.tab-panel');
-const btns = document.querySelectorAll('.rbtn');
 const pageBody = document.getElementById('pageBody');
-
-const tabMap = {
-  GENEL: 'genel',
-  MUTABAKAT: 'mutabakat',
-  RAPORLAMA: 'raporlama',
-  AYARLAR: 'ayarlar',
-  'YÖNETİM': 'yonetim'
-};
-
-function initUserBar() {
-  const userName = localStorage.getItem('userName') || 'Ahmet Yılmaz';
-  const tbUser = document.getElementById('tbUser');
-  const tbAvatar = document.getElementById('tbAvatar');
-  if (tbUser) tbUser.textContent = userName;
-  if (tbAvatar) {
-    tbAvatar.textContent = userName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) || 'K';
-  }
-  return userName;
-}
 
 function buildDashboardHTML() {
   return `<section class="dashboard">
@@ -234,6 +99,7 @@ function buildDashboardHTML() {
             <div class="chart-row"><label>Merkezi Kontrol</label><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="pct">96%</span></div>
           </div>
         </div>
+        ${buildPortalDatasetCardHTML()}
         <div class="dashboard-panel">
           <div class="panel-head"><h4>Son Aktiviteler</h4><span>Canlı akış</span></div>
           <ul class="activity-list">
@@ -249,9 +115,9 @@ function buildDashboardHTML() {
           <div class="panel-head"><h4>Hızlı Erişim</h4></div>
           <div class="quick-links">
             <a class="quick-link" href="kebir-hesaplari.html"><span class="quick-link-icon">≡</span>Kebir Hesapları Listesi</a>
-            <a class="quick-link" href="#" data-quick-page="Mizan" data-quick-section="MUTABAKAT"><span class="quick-link-icon">⊞</span>Mizan Görüntüle</a>
-            <a class="quick-link" href="#" data-quick-page="Bilanço" data-quick-section="RAPORLAMA"><span class="quick-link-icon">◫</span>Bilanço Raporu</a>
-            <a class="quick-link" href="#" data-quick-page="Excel Dışa Aktar" data-quick-section="RAPORLAMA"><span class="quick-link-icon">↓</span>Excel Dışa Aktar</a>
+            <a class="quick-link" href="mizan.html"><span class="quick-link-icon">⊞</span>Mizan Görüntüle</a>
+            <a class="quick-link" href="veritabani-sorgu.html"><span class="quick-link-icon">◫</span>Veritabanı Sorgusu</a>
+            <a class="quick-link" href="#" data-quick-page="Ters Bakiye Raporu" data-quick-section="RAPORLAMA"><span class="quick-link-icon">⇄</span>Ters Bakiye Raporu</a>
           </div>
         </div>
         <div class="dashboard-panel">
@@ -344,25 +210,23 @@ function applyFilter() {
 }
 
 const iconMap = {
-  'Genel Bakış': 'ti-home',
+  'Portal': 'ti-home',
   'Kebir Hesapları Sorumluluk Listesi': 'ti-notebook',
   'Mizan': 'ti-scale',
-  'Yevmiye Defteri': 'ti-book',
-  'Masraf Hesapları': 'ti-receipt',
-  'Bilanço': 'ti-chart-bar',
-  'Gelir Tablosu': 'ti-trending-up',
+  'Veritabanı Sorgusu': 'ti-database',
+  'Veri Kalitesi Kuralları': 'ti-list-check',
+  'Günlük Kural Sonuçları': 'ti-calendar-stats',
   'Ters Bakiye Raporu': 'ti-arrows-exchange',
   'Nazım Hesapları Raporu': 'ti-file-analytics',
-  'Excel Dışa Aktar': 'ti-file-spreadsheet',
   'Kullanıcı Yönetimi': 'ti-users',
-  'Ayarlar': 'ti-settings'
+  'Veritabanı Bağlantısı': 'ti-plug-connected',
+  'Uygulama Ayarları': 'ti-settings'
 };
 
 function activateTab(section) {
-  const tabId = tabMap[section];
-  if (!tabId) return;
-  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-  panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
+  if (typeof window.activateRibbonSection === 'function') {
+    window.activateRibbonSection(section);
+  }
 }
 
 function setPage(section, page, options = {}) {
@@ -373,7 +237,7 @@ function setPage(section, page, options = {}) {
 
   activateTab(section);
 
-  if (page === 'Genel Bakış') {
+  if (page === 'Portal') {
     pageBody.innerHTML = buildDashboardHTML();
     bindQuickLinks();
     return;
@@ -381,6 +245,27 @@ function setPage(section, page, options = {}) {
 
   if (page === 'Kebir Hesapları Sorumluluk Listesi') {
     pageBody.innerHTML = buildTableHTML(tableData);
+    return;
+  }
+
+  if (page === 'Mizan') {
+    initMizanPage(pageBody);
+    return;
+  }
+
+  if (page === 'Veri Kalitesi Kuralları') {
+    initVeriKalitesiKurallariPage(pageBody);
+    return;
+  }
+
+  if (page === 'Günlük Kural Sonuçları') {
+    initGunlukKuralSonuclariPage(pageBody);
+    return;
+  }
+
+  if (page === 'Uygulama Ayarları') {
+    pageBody.innerHTML = buildAyarlarHTML();
+    initAyarlarPage(pageBody);
     return;
   }
 
@@ -399,40 +284,26 @@ function bindQuickLinks() {
       const page = link.dataset.quickPage;
       const section = link.dataset.quickSection;
       activateTab(section);
-      btns.forEach(b => b.classList.toggle('active', b.dataset.page === page));
+      if (typeof window.activateRibbonButton === 'function') {
+        window.activateRibbonButton(page);
+      }
       setPage(section, page);
     });
   });
 }
 
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    panels.forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-  });
+window.handleRibbonPage = function(section, page) {
+  setPage(section, page);
+};
+
+document.addEventListener('ribbon-ready', function(e) {
+  initUserBar();
+  initThemeMenu();
+  const state = e.detail || (typeof detectRibbonState === 'function' ? detectRibbonState() : null);
+  const section = state?.section || 'PORTAL';
+  const page = state?.page || 'Portal';
+  setPage(section, page);
 });
-
-btns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.classList.contains('ribbon-dropdown-trigger')) return;
-    if (btn.classList.contains('theme-option')) return;
-
-    const href = btn.dataset.href;
-    if (href) {
-      window.location.href = href;
-      return;
-    }
-    btns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    setPage(btn.dataset.section, btn.dataset.page);
-  });
-});
-
-const userName = initUserBar();
-initThemeMenu();
-setPage('GENEL', 'Genel Bakış');
 </script>
 </body>
 </html>

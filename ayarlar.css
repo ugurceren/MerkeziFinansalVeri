@@ -1,0 +1,232 @@
+/* Ayarlar sayfası */
+
+.ay-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 960px;
+}
+
+.ay-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-items: stretch;
+}
+
+.ay-row .ay-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.ay-row .ay-card-body {
+    flex: 1;
+}
+
+@media (max-width: 760px) {
+    .ay-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ay-card {
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ay-card-head {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+}
+
+.ay-card-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--rb-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ay-card-head h3 i {
+    font-size: 18px;
+    color: var(--rb-accent);
+}
+
+.ay-card-head p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.ay-card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ay-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ay-field select,
+.ay-field .ay-month-input {
+    width: 100%;
+    max-width: 320px;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+}
+
+.ay-field select:focus,
+.ay-field .ay-month-input:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.ay-theme-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ay-theme-option {
+    flex: 1;
+    min-width: 140px;
+    max-width: 200px;
+    padding: 12px 14px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    background: var(--rb-card);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ay-theme-option:hover {
+    background: var(--rb-rbtn-hover);
+}
+
+.ay-theme-option.active {
+    background: var(--rb-rbtn-active-bg);
+    border-color: var(--rb-rbtn-active-border);
+}
+
+.ay-theme-option i {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 6px;
+    color: var(--rb-accent);
+}
+
+.ay-theme-option.active i {
+    color: var(--rb-rbtn-active-text);
+}
+
+.ay-theme-option strong {
+    display: block;
+    font-size: 13px;
+    color: var(--rb-text);
+    margin-bottom: 2px;
+}
+
+.ay-theme-option span {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.ay-hint {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.ay-about-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px 16px;
+    font-size: 13px;
+}
+
+.ay-about-grid dt {
+    color: var(--rb-text-muted);
+    font-weight: 500;
+}
+
+.ay-about-grid dd {
+    margin: 0;
+    color: var(--rb-text);
+    font-weight: 500;
+}
+
+.ay-env-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.ay-save-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.ay-save-btn {
+    height: 34px;
+    padding: 0 16px;
+    background: var(--rb-header);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.ay-save-btn:hover {
+    opacity: 0.9;
+}
+
+.ay-save-msg {
+    font-size: 12px;
+    color: #22c55e;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.ay-save-msg.visible {
+    opacity: 1;
+}
+
+.ay-card:target {
+    outline: 2px solid var(--rb-accent);
+    outline-offset: 2px;
+}
+
+.page-ribbon .ay-card-head h3 { font-size: 15px; }
+.page-ribbon .ay-field select { font-size: 14px; }

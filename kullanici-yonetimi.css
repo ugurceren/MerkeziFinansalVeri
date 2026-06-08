@@ -212,6 +212,7 @@
 .um-badge.role-mutabakat { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
 .um-badge.role-rapor { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
 .um-badge.role-surec { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.um-badge.role-veri-kalitesi { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
 .um-badge.role-viewer { background: var(--rb-accent-soft); color: var(--rb-text-muted); }
 
 .um-badge.status-active { background: rgba(34, 197, 94, 0.12); color: #22c55e; }

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="surec-cockpit.css">
+    <link rel="stylesheet" href="task-listesi.css">
     <link rel="stylesheet" href="theme-menu.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
@@ -39,14 +40,7 @@
     </div>
 
     <div class="ribbon-tabs" id="ribbonTabs">
-        <div class="ribbon-tab-list">
-        <button class="rtab" data-tab="genel">Genel</button>
-        <button class="rtab active" data-tab="surec">Süreç</button>
-        <button class="rtab" data-tab="mutabakat">Mutabakat</button>
-        <button class="rtab" data-tab="raporlama">Raporlama</button>
-        <button class="rtab" data-tab="ayarlar">Ayarlar</button>
-        <button class="rtab" data-tab="yonetim">Yönetim</button>
-        </div>
+        <div class="ribbon-tab-list"></div>
         <div class="ribbon-tabs-actions">
             <div class="theme-switch-wrap">
                 <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
@@ -62,117 +56,7 @@
         </div>
     </div>
 
-    <div class="ribbon-body" id="ribbonBody">
-
-        <div class="tab-panel" id="tab-genel">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-home"></i>
-                        <span>Genel Bakış</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-panel active" id="tab-surec">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn active" type="button" data-page="Süreç" data-section="SÜREÇ">
-                        <i class="ti ti-timeline"></i>
-                        <span>Süreç</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-mutabakat">
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="kebir-hesaplari.html">
-                        <i class="ti ti-notebook"></i>
-                        <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="kebir-hesaplari.html">
-                        <i class="ti ti-scale"></i>
-                        <span>Mizan</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="kebir-hesaplari.html">
-                        <i class="ti ti-book"></i>
-                        <span>Yevmiye Defteri</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="kebir-hesaplari.html">
-                        <i class="ti ti-receipt"></i>
-                        <span>Masraf Hesapları</span>
-                    </button>
-                </div>
-                <div class="rg-label">Mutabakat</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-raporlama">
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-chart-bar"></i>
-                        <span>Bilanço</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-trending-up"></i>
-                        <span>Gelir Tablosu</span>
-                    </button>
-                </div>
-                <div class="rg-label">Mali Tablolar</div>
-            </div>
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-arrows-exchange"></i>
-                        <span>Ters Bakiye Raporu</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-file-analytics"></i>
-                        <span>Nazım Hesapları Raporu</span>
-                    </button>
-                </div>
-                <div class="rg-label">Özel Raporlar</div>
-            </div>
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-file-spreadsheet"></i>
-                        <span>Excel Dışa Aktar</span>
-                    </button>
-                </div>
-                <div class="rg-label">Dışa Aktar</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-ayarlar">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <div class="rbtn rbtn-settings-title" aria-hidden="true">
-                        <i class="ti ti-settings"></i>
-                        <span>Ayarlar</span>
-                    </div>
-                </div>
-                <div class="rg-label">Menü</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-yonetim">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="kullanici-yonetimi.html">
-                        <i class="ti ti-users"></i>
-                        <span>Kullanıcı Yönetimi</span>
-                    </button>
-                </div>
-                <div class="rg-label">Sistem</div>
-            </div>
-        </div>
-
-    </div>
+    <div class="ribbon-body" id="ribbonBody"></div>
 
     <div class="page-area">
         <div class="page-body" id="pageBody"></div>
@@ -180,14 +64,23 @@
 
 </div>
 
+<script src="status-bar.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
 <script src="surec-cockpit.js"></script>
 <script>
     window.handleRibbonPage = function(section, page) {
         if (page === 'Süreç') initSurecCockpit();
+        if (page === 'Datasetler') initDatasetCatalog();
+        if (page === 'Task Listesi') initTaskListesi();
     };
-    initSurecCockpit();
+
+    document.addEventListener('ribbon-ready', function() {
+        const view = new URLSearchParams(window.location.search).get('view');
+        if (view === 'datasetler') initDatasetCatalog();
+        else if (view === 'task-listesi') initTaskListesi();
+        else initSurecCockpit();
+    });
 </script>
 </body>
 </html>

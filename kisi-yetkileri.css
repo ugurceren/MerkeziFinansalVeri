@@ -1,0 +1,344 @@
+/* Kişi Bazlı Yetkiler */
+
+.ky-layout {
+    display: grid;
+    grid-template-columns: minmax(420px, 510px) 1fr;
+    gap: 14px;
+    align-items: start;
+    min-height: calc(100vh - 200px);
+}
+
+.ky-user-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 180px);
+}
+
+.ky-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-filter-bg);
+}
+
+.ky-search i {
+    font-size: 16px;
+    color: var(--rb-text-muted);
+}
+
+.ky-search input {
+    flex: 1;
+    height: 32px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+}
+
+.ky-search input:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.ky-user-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.ky-user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.ky-user-item:hover {
+    background: var(--rb-rbtn-hover);
+}
+
+.ky-user-item.active {
+    background: var(--rb-rbtn-active-bg);
+    border-color: var(--rb-rbtn-active-border);
+}
+
+.ky-user-item .um-user-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+}
+
+.ky-user-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.ky-user-meta strong {
+    display: block;
+    font-size: 13px;
+    color: var(--rb-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ky-user-meta span {
+    display: block;
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ky-user-item .um-badge {
+    flex-shrink: 0;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ky-empty {
+    padding: 24px 14px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--rb-text-muted);
+}
+
+.ky-perm-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+    max-height: calc(100vh - 180px);
+}
+
+.ky-perm-head {
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ky-perm-head-main h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--rb-text);
+}
+
+.ky-perm-head-main p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.ky-perm-head-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ky-custom-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.14);
+    color: #f59e0b;
+}
+
+.ky-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-filter-bg);
+    flex-wrap: wrap;
+}
+
+.ky-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-surface);
+    color: var(--rb-text-secondary);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.ky-tool-btn:hover {
+    background: var(--rb-rbtn-hover);
+    color: var(--rb-text);
+}
+
+.ky-tool-btn.primary {
+    margin-left: auto;
+    background: var(--rb-header);
+    color: #fff;
+    border-color: transparent;
+}
+
+.ky-tool-btn.primary:hover {
+    opacity: 0.9;
+}
+
+.ky-tree-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px 14px;
+}
+
+.ky-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ky-tree-section {
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    background: var(--rb-filter-bg);
+    overflow: hidden;
+}
+
+.ky-tree-section-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--rb-card);
+    border-bottom: 0.5px solid var(--rb-group-divider, var(--rb-border));
+}
+
+.ky-tree-toggle {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--rb-text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.12s, transform 0.15s;
+}
+
+.ky-tree-toggle:hover {
+    background: var(--rb-rbtn-hover);
+}
+
+.ky-tree-section.collapsed .ky-tree-toggle i {
+    transform: rotate(-90deg);
+}
+
+.ky-tree-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--rb-text-secondary);
+    user-select: none;
+}
+
+.ky-tree-section-label input {
+    accent-color: var(--rb-accent);
+}
+
+.ky-tree-section-label i {
+    font-size: 15px;
+    color: var(--rb-accent);
+}
+
+.ky-tree-children {
+    padding: 4px 0 6px;
+}
+
+.ky-tree-section.collapsed .ky-tree-children {
+    display: none;
+}
+
+.ky-tree-leaf {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px 7px 42px;
+    font-size: 12px;
+    color: var(--rb-text);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+}
+
+.ky-tree-leaf:hover {
+    background: var(--rb-row-hover);
+}
+
+.ky-tree-leaf input {
+    accent-color: var(--rb-accent);
+    flex-shrink: 0;
+}
+
+.ky-tree-leaf span {
+    flex: 1;
+}
+
+.ky-tree-leaf.is-custom span::after {
+    content: ' · özel';
+    font-size: 10px;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.ky-save-hint {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    padding: 0 14px 10px;
+}
+
+.ky-save-hint.saved {
+    color: #22c55e;
+}
+
+@media (max-width: 960px) {
+    .ky-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .ky-user-panel,
+    .ky-perm-panel {
+        max-height: none;
+    }
+}

@@ -1,0 +1,94 @@
+/* Sabit alt durum çubuğu */
+
+.status-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    height: 36px;
+    min-height: 36px;
+    box-sizing: border-box;
+    background: var(--rb-header, #111827);
+    border-top: 1px solid var(--rb-border, rgba(255, 255, 255, 0.08));
+    font-size: 12px;
+    color: var(--rb-header-muted, #9aa2b8);
+    z-index: 30;
+}
+
+.status-bar-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+}
+
+.status-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--rb-accent, #7c9aff);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.status-user-name {
+    color: var(--rb-header-text, #e5e9f0);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-bar-app {
+    flex: 1.4;
+    text-align: center;
+    color: var(--rb-header-text, #e5e9f0);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-bar-about {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.status-sep {
+    opacity: 0.5;
+}
+
+.status-env {
+    font-weight: 600;
+    color: var(--rb-header-muted, #9aa2b8);
+}
+
+.page-ribbon .title-bar-right .tb-user-menu {
+    display: none;
+}
+
+.app-shell .status-bar {
+    background: var(--header-bg, var(--rb-header, #1e3a5f));
+    border-top-color: var(--border, rgba(255, 255, 255, 0.08));
+    color: var(--text-secondary, #9aa2b8);
+}
+
+.app-shell .status-user-name,
+.app-shell .status-bar-app {
+    color: var(--text-primary, #e5e9f0);
+}
+
+.app-shell .status-avatar {
+    background: var(--accent, #7c9aff);
+}

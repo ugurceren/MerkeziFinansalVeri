@@ -33,7 +33,7 @@
 .theme-switch-track {
     position: relative;
     display: block;
-    width: 96px;
+    width: 72px;
     height: 46px;
     border-radius: 999px;
     transition: background 0.35s ease, box-shadow 0.35s ease;
@@ -56,8 +56,8 @@
 .theme-switch-knob {
     position: absolute;
     top: 5px;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: grid;
     place-items: center;
@@ -70,7 +70,7 @@
 }
 
 .theme-switch.is-dark .theme-switch-knob {
-    left: calc(100% - 41px);
+    left: calc(100% - 39px);
     background: #ffffff;
     color: #1e293b;
 }
@@ -98,7 +98,7 @@
 }
 
 .theme-switch-icon-sun {
-    left: 13px;
+    left: 10px;
     color: #fbbf24;
 }
 
@@ -111,7 +111,7 @@
 }
 
 .theme-switch-icon-moon {
-    right: 13px;
+    right: 10px;
     color: rgba(148, 163, 184, 0.55);
 }
 
@@ -182,24 +182,24 @@
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch-track {
-    width: 88px;
+    width: 58px;
     height: 28px;
     flex: none;
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch-knob {
     top: 50%;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     transform: translateY(-50%);
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch.is-dark .theme-switch-knob {
-    left: calc(100% - 25px);
+    left: calc(100% - 24px);
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch.is-light .theme-switch-knob {
-    left: 3px;
+    left: 4px;
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch:active .theme-switch-knob {
@@ -215,9 +215,9 @@
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch-icon-sun {
-    left: 10px;
+    left: 7px;
 }
 
 .page-ribbon .ribbon-tabs-actions .theme-switch-icon-moon {
-    right: 10px;
+    right: 7px;
 }

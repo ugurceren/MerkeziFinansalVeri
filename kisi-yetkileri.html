@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kullanıcı Yönetimi | Merkezi Güvenilir Finansal Veri</title>
+    <title>Kişi Bazlı Yetkiler | Merkezi Güvenilir Finansal Veri</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="theme-menu.css">
     <link rel="stylesheet" href="kullanici-yonetimi.css">
+    <link rel="stylesheet" href="kisi-yetkileri.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
     </script>
@@ -59,50 +60,48 @@
 
     <div class="page-area">
         <div class="page-body">
-            <div class="um-layout">
+            <div class="ky-layout">
 
-                <div class="table-card">
+                <div class="table-card ky-user-panel">
                     <div class="tc-head">
                         <div>
-                            <h3>Yetkili Kullanıcılar</h3>
-                            <p>Sisteme erişimi olan kullanıcılar ve atanmış rolleri</p>
+                            <h3>Kullanıcı Ara</h3>
+                            <p>Yetki tanımlanacak kişiyi seçin</p>
                         </div>
-                        <button class="add-btn" type="button">+ Yeni Kullanıcı</button>
                     </div>
-                    <div class="table-scroll">
-                        <table id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>Kullanıcı</th>
-                                    <th>Rol</th>
-                                    <th>Durum</th>
-                                    <th>Son Giriş</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="ky-search">
+                        <i class="ti ti-search" aria-hidden="true"></i>
+                        <input type="search" id="kyUserSearch" placeholder="Ad, e-posta veya rol ara…" autocomplete="off">
                     </div>
+                    <ul class="ky-user-list" id="kyUserList"></ul>
                 </div>
 
-                <div class="um-grid">
-                    <div class="table-card">
-                        <div class="tc-head">
-                            <div>
-                                <h3>Rol Listesi</h3>
-                                <p>Her rolün erişim kapsamı</p>
-                            </div>
+                <div class="table-card ky-perm-panel">
+                    <div class="ky-perm-head">
+                        <div class="ky-perm-head-main">
+                            <h4 id="kyPermTitle">—</h4>
+                            <p id="kyPermDesc">Menü ve alt menü erişimlerini düzenleyin</p>
                         </div>
-                        <div class="um-role-list" id="roleList" style="padding:12px 14px"></div>
+                        <div class="ky-perm-head-badges" id="kyPermBadges"></div>
                     </div>
-
-                    <div class="table-card um-access-panel">
-                        <div class="um-access-head">
-                            <h4 id="accessTitle">Sistem Yöneticisi</h4>
-                            <p id="accessDesc">Bu role atanmış kullanıcıların erişebileceği sayfalar</p>
-                        </div>
-                        <div class="um-menu-tree" id="accessMenu"></div>
+                    <div class="ky-toolbar">
+                        <button type="button" class="ky-tool-btn" id="kyExpandAll">
+                            <i class="ti ti-chevrons-down"></i> Tümünü aç
+                        </button>
+                        <button type="button" class="ky-tool-btn" id="kyCollapseAll">
+                            <i class="ti ti-chevrons-up"></i> Tümünü kapat
+                        </button>
+                        <button type="button" class="ky-tool-btn" id="kyResetRole">
+                            <i class="ti ti-refresh"></i> Rol varsayılanına dön
+                        </button>
+                        <button type="button" class="ky-tool-btn primary" id="kySaveBtn">
+                            <i class="ti ti-device-floppy"></i> Kaydet
+                        </button>
                     </div>
+                    <div class="ky-tree-wrap">
+                        <div class="ky-tree" id="kyPermTree"></div>
+                    </div>
+                    <p class="ky-save-hint" id="kySaveHint"></p>
                 </div>
 
             </div>
@@ -115,6 +114,6 @@
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
 <script src="kullanici-shared.js"></script>
-<script src="kullanici-yonetimi.js"></script>
+<script src="kisi-yetkileri.js"></script>
 </body>
 </html>
