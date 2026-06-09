@@ -73,6 +73,7 @@
 <script src="status-bar.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
+<script src="api-client.js"></script>
 <script src="ayarlar.js"></script>
 <script src="mizan.js"></script>
 <script src="surec-cockpit.js"></script>
@@ -80,34 +81,89 @@
 <script>
 const pageBody = document.getElementById('pageBody');
 
-function buildDashboardHTML() {
-  return `<section class="dashboard">
+function formatRelativeTime(dateStr) {
+    const d = new Date(dateStr);
+    const diff = Date.now() - d.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} dk önce`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} saat önce`;
+    return d.toLocaleDateString('tr-TR');
+}
+
+function activityDotClass(olayTipi) {
+    if (olayTipi === 'alert' || olayTipi === 'uyari') return 'alert';
+    if (olayTipi === 'ok' || olayTipi === 'onay') return 'ok';
+    if (olayTipi === 'export') return 'export';
+    return 'edit';
+}
+
+async function buildDashboardHTML() {
+    let ozet = null;
+    try {
+        ozet = await ApiClient.getPortalOzet();
+    } catch (err) {
+        console.warn('Portal özeti yüklenemedi:', err.message);
+    }
+
+    if (typeof loadSurecData === 'function') {
+        await loadSurecData();
+    }
+
+    const kpi = ozet?.kpi || {};
+    const ekipIlerleme = ozet?.ekipIlerleme || [];
+    const ekipIsYuku = ozet?.ekipIsYuku || [];
+    const aktiviteler = ozet?.sonAktiviteler || [];
+    const veriKaynaklari = ozet?.sistemDurumu?.veriKaynaklari || [];
+
+    const mutabakatPct = ekipIlerleme.length
+        ? Math.round(ekipIlerleme.reduce((s, e) => s + e.ilerlemeYuzde, 0) / ekipIlerleme.length)
+        : 94;
+
+    const chartRows = ekipIlerleme.map(e => `
+        <div class="chart-row"><label>${e.ekipAdi}</label><div class="bar-track"><div class="bar-fill" style="width:${e.ilerlemeYuzde}%"></div></div><span class="pct">${e.ilerlemeYuzde}%</span></div>
+    `).join('') || `
+        <div class="chart-row"><label>Banka Ekip 1</label><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="pct">92%</span></div>`;
+
+    const maxIsYuku = Math.max(...ekipIsYuku.map(e => e.acikFarkSayisi + e.bekleyenAksiyonSayisi), 1);
+    const isYukuRows = ekipIsYuku.map(e => {
+        const total = e.acikFarkSayisi + e.bekleyenAksiyonSayisi;
+        const pct = Math.round(total / maxIsYuku * 100);
+        const level = pct > 70 ? 'high' : pct > 40 ? 'medium' : 'low';
+        return `<div class="team-load-item"><div class="team-load-header"><span>${e.ekipAdi}</span><span>${total} görev</span></div><div class="load-track"><div class="load-fill ${level}" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+
+    const activityRows = aktiviteler.slice(0, 4).map(a => `
+        <li class="activity-item">
+            <div class="activity-dot ${activityDotClass(a.olayTipi)}">${a.olayTipi === 'ok' ? '✓' : a.olayTipi === 'alert' ? '!' : a.olayTipi === 'export' ? '↓' : '✎'}</div>
+            <div class="activity-body"><strong>${a.baslik}</strong><span>${a.detay || ''}${a.kullaniciAdi ? ' — ' + a.kullaniciAdi : ''}</span></div>
+            <span class="activity-time">${formatRelativeTime(a.olusturmaZamani)}</span>
+        </li>
+    `).join('') || '<li class="activity-item"><div class="activity-body"><span>Aktivite kaydı yok</span></div></li>';
+
+    const statusRows = veriKaynaklari.map(v => {
+        const online = v.durum === 'connected';
+        return `<div class="status-item"><span>${v.katmanKodu}</span><span class="status-badge ${online ? 'online' : 'syncing'}">${online ? 'Çevrimiçi' : 'Bağlantı yok'}</span></div>`;
+    }).join('') || `
+        <div class="status-item"><span>TDMAIN</span><span class="status-badge syncing">Yapılandırılıyor</span></div>`;
+
+    return `<section class="dashboard">
     <div class="stat-grid">
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon blue">◈</div><span class="stat-trend up">+8%</span></div><p class="stat-value">248</p><p class="stat-label">Toplam Kurumsal Hesap</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon amber">!</div><span class="stat-trend down">-3</span></div><p class="stat-value">37</p><p class="stat-label">Bekleyen Aksiyon</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon green">✓</div><span class="stat-trend up">+2%</span></div><p class="stat-value">94%</p><p class="stat-label">Mutabakat Tamamlanma</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon purple">◉</div><span class="stat-trend neutral">Aktif</span></div><p class="stat-value">12</p><p class="stat-label">Sorumlu Ekip</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon blue">◈</div></div><p class="stat-value">${kpi.kurumsalHesapSayisi ?? '—'}</p><p class="stat-label">Toplam Kurumsal Hesap</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon amber">!</div></div><p class="stat-value">${kpi.acikFarkSayisi ?? '—'}</p><p class="stat-label">Açık Fark</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon green">✓</div></div><p class="stat-value">${mutabakatPct}%</p><p class="stat-label">Mutabakat Tamamlanma</p></article>
+      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon purple">◉</div></div><p class="stat-value">${kpi.bekleyenGorevSayisi ?? '—'}</p><p class="stat-label">Bekleyen Görev</p></article>
     </div>
     <div class="dashboard-grid">
       <div class="dashboard-main">
         <div class="dashboard-panel">
           <div class="panel-head"><h4>Mutabakat İlerlemesi — Ekip Bazlı</h4><span>Son 30 gün</span></div>
-          <div class="chart-bars">
-            <div class="chart-row"><label>Banka Ekip 1</label><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="pct">92%</span></div>
-            <div class="chart-row"><label>Banka Ekip 2</label><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><span class="pct">78%</span></div>
-            <div class="chart-row"><label>Banka Ekip 3</label><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><span class="pct">85%</span></div>
-            <div class="chart-row"><label>Merkezi Kontrol</label><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="pct">96%</span></div>
-          </div>
+          <div class="chart-bars">${chartRows}</div>
         </div>
         ${buildPortalDatasetCardHTML()}
         <div class="dashboard-panel">
           <div class="panel-head"><h4>Son Aktiviteler</h4><span>Canlı akış</span></div>
-          <ul class="activity-list">
-            <li class="activity-item"><div class="activity-dot edit">✎</div><div class="activity-body"><strong>Kurumsal Hesap 3 güncellendi</strong><span>Mehmet Kara — Sorumlu ekip değişikliği</span></div><span class="activity-time">12 dk önce</span></li>
-            <li class="activity-item"><div class="activity-dot alert">!</div><div class="activity-body"><strong>7 hesapta aksiyon bekleniyor</strong><span>Banka Ekip 2 — Doğrulama süreci</span></div><span class="activity-time">1 saat önce</span></li>
-            <li class="activity-item"><div class="activity-dot ok">✓</div><div class="activity-body"><strong>Ocak mutabakatı onaylandı</strong><span>Merkezi Kontrol — Mizan eşleşmesi tamam</span></div><span class="activity-time">3 saat önce</span></li>
-            <li class="activity-item"><div class="activity-dot export">↓</div><div class="activity-body"><strong>Excel dışa aktarım tamamlandı</strong><span>Ayşe Demir — Gelir tablosu raporu</span></div><span class="activity-time">Dün 16:42</span></li>
-          </ul>
+          <ul class="activity-list">${activityRows}</ul>
         </div>
       </div>
       <div class="dashboard-side">
@@ -122,19 +178,11 @@ function buildDashboardHTML() {
         </div>
         <div class="dashboard-panel">
           <div class="panel-head"><h4>Ekip İş Yükü</h4><span>Bekleyen görev</span></div>
-          <div class="team-load-list">
-            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 1</span><span>14 görev</span></div><div class="load-track"><div class="load-fill high" style="width:82%"></div></div></div>
-            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 2</span><span>11 görev</span></div><div class="load-track"><div class="load-fill medium" style="width:65%"></div></div></div>
-            <div class="team-load-item"><div class="team-load-header"><span>Banka Ekip 3</span><span>8 görev</span></div><div class="load-track"><div class="load-fill low" style="width:48%"></div></div></div>
-          </div>
+          <div class="team-load-list">${isYukuRows || '<div class="team-load-item"><span>Veri yükleniyor…</span></div>'}</div>
         </div>
         <div class="dashboard-panel">
           <div class="panel-head"><h4>Sistem Durumu</h4></div>
-          <div class="status-list">
-            <div class="status-item"><span>Banka Sistemi</span><span class="status-badge online">Çevrimiçi</span></div>
-            <div class="status-item"><span>Merkezi Sistem</span><span class="status-badge online">Çevrimiçi</span></div>
-            <div class="status-item"><span>Veri Senkronizasyonu</span><span class="status-badge syncing">Senkronize</span></div>
-          </div>
+          <div class="status-list">${statusRows}</div>
         </div>
       </div>
     </div>
@@ -238,8 +286,10 @@ function setPage(section, page, options = {}) {
   activateTab(section);
 
   if (page === 'Portal') {
-    pageBody.innerHTML = buildDashboardHTML();
-    bindQuickLinks();
+    buildDashboardHTML().then(html => {
+      pageBody.innerHTML = html;
+      bindQuickLinks();
+    });
     return;
   }
 

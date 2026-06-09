@@ -12,14 +12,23 @@ Banka ve merkezi sistemlerden gelen finansal verilerin tek bir merkezde toplanma
 
 ## Mimari Genel Bakış
 
-Proje iki ana yüzeyden oluşur:
+> **Önemli:** Proje **SQL Server veritabanı altyapısına** dönmüştür. İş verisi (kurumsal hesaplar, mutabakat dönemleri, kullanıcı/yetki, süreç görevleri, veri kalitesi kuralları vb.) artık veritabanında tutulur; önyüz `api-client.js` üzerinden ASP.NET Core Web API ile konuşur. Yalnızca tema ve kullanıcı tercihleri istemci tarafında (`localStorage`) kalabilir.
+
+```
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────────┐
+│  HTML/JS Sayfalar│────▶│  MerkeziFinansalVeri │────▶│  SQL Server         │
+│  api-client.js  │     │  .Api (ASP.NET Core 8)│     │  TDUTIL.VIB (uygulama)│
+└─────────────────┘     └──────────────────────┘     │  TDMAIN/TDREPORT (DW)│
+                                                        └─────────────────────┘
+```
 
 | Katman | Teknoloji | Açıklama |
 |--------|-----------|----------|
-| **Web arayüzü** | HTML, CSS, JavaScript | Statik sayfalar; ribbon ve sidebar olmak üzere iki kabuk |
-| **Masaüstü uygulaması** | .NET 8 WPF (C#) | Kurumsal hesap CRUD ve filtreleme prototipi |
-
-Web tarafında backend/API yoktur; veriler JavaScript içinde statik/örnek olarak tutulur. Tema tercihi `localStorage` ile saklanır.
+| **Web arayüzü** | HTML, CSS, JavaScript | Statik sayfalar; ribbon kabuk |
+| **API** | ASP.NET Core 8, EF Core | REST endpoint'leri, JWT-ready middleware |
+| **Uygulama DB** | SQL Server — `TDUTIL.VIB` | ref/ops/sec/cfg/audit tabloları (İngilizce adlar) |
+| **Kaynak DW** | SQL Server — TDSTG/TDMAIN/TDREPORT | Salt okunur finansal bakiyeler ve rapor verisi |
+| **Masaüstü (eski)** | .NET 8 WPF (C#) | Bağımsız prototip; API'ye henüz bağlı değil |
 
 ---
 
@@ -89,31 +98,51 @@ Her dataset için task durumları: **tamamlandı (✓)**, **devam ediyor (◉)**
 
 ---
 
+## Veritabanı Şeması (TDUTIL.VIB)
+
+Uygulama verisi tek şemada toplanır. Tam CREATE scriptleri: `database/migrations/002_tdutil_vib_schema_en.sql`
+
+| Grup | Tablolar | Açıklama |
+|------|----------|----------|
+| Referans | `Team`, `Page`, `DataLayer`, `DataDomain` | Ekipler, menü sayfaları, veri katmanları |
+| Güvenlik | `Role`, `User`, `RolePagePermission`, `UserPagePermission` | RBAC ve kişi bazlı yetki override |
+| Konfigürasyon | `DataSource`, `SystemParameter` | TD bağlantıları, sistem parametreleri |
+| Operasyon | `CorporateAccount`, `ReconciliationPeriod`, `VarianceAccount`, `ProcessDataset`, `ProcessTaskDefinition`, `ProcessTaskStatus`, `DataQualityRule`, `DataQualityRuleResult`, `SavedQuery`, `ReportDefinition` | İş verisi |
+| Audit | `ActivityLog`, `QueryExecutionLog` | Aktivite ve sorgu logları |
+| View | `vw_PortalSummary`, `vw_TeamReconciliationProgress`, `vw_TeamWorkload` | Portal aggregate sorguları |
+
+Seed scriptleri (`database/seeds/`) demo kullanıcı, rol, süreç dataset ve mutabakat verilerini yükler.
+
 ## Dosya Yapısı
 
 ```
 MerkeziFinansalVeri/
-├── HomePage.html              # Ribbon — Genel Bakış
+├── MerkeziFinansalVeri.sln
+├── api-client.js              # Önyüz HTTP katmanı (fetch wrapper)
+│
+├── database/
+│   ├── migrations/            # SQL şema scriptleri
+│   ├── seeds/                 # Demo seed verileri
+│   └── setup.ps1              # Kurulum scripti
+│
+├── src/
+│   ├── MerkeziFinansalVeri.Api/           # ASP.NET Core Web API
+│   ├── MerkeziFinansalVeri.Domain/        # Entity modelleri
+│   └── MerkeziFinansalVeri.Infrastructure/ # EF Core, TD servisleri
+│
+├── HomePage.html              # Ribbon — Genel Bakış (portal API)
 ├── surec.html                 # Ribbon — Süreç Kokpiti
-├── kebir-hesaplari.html       # Ribbon — Mutabakat tablosu
-├── kullanici-yonetimi.html    # Ribbon — Kullanıcı & rol yönetimi
-├── index.html                 # Sidebar — Genel Bakış
-├── logo-secim.html            # Logo karşılaştırma
+├── kebir-hesaplari.html/js    # Kurumsal hesap CRUD (API)
+├── mutabakat-pages.js         # Dönem + fark veren (API)
+├── mizan.js                   # Mizan görev durumu (API)
+├── kullanici-yonetimi.js      # Kullanıcı/rol (API)
+├── kisi-yetkileri.js          # Kişi bazlı yetki (API)
+├── veri-kalitesi-pages.js     # VK kurallar/sonuçlar (API)
+├── veritabani-baglantisi.js   # Veri kaynağı yönetimi (API)
 │
-├── ribbon.css                 # Ribbon ortak stiller
-├── ribbon-shell.js            # Ribbon navigasyon ve kullanıcı çubuğu
-├── homepage.css               # Ribbon sayfa özelleştirmeleri
-├── surec-cockpit.js / .css    # Süreç kokpiti mantığı ve stilleri
-├── kullanici-yonetimi.js / .css
-├── theme-toggle.js / theme-menu.css   # Koyu/açık tema
-├── styles.css / dashboard.css / script.js   # Sidebar arayüzü
+├── FinansalVeriApp/           # WPF masaüstü prototipi (eski)
 │
-├── FinansalVeriApp/           # WPF masaüstü uygulaması
-│   ├── MainWindow.xaml(.cs)
-│   ├── CorporateAccount.cs
-│   └── FinansalVeriApp.csproj
-│
-├── README.md                  # WPF çalıştırma kılavuzu
+├── README.md
 └── PROJE-OZETI.md             # Bu dosya
 ```
 
@@ -130,21 +159,35 @@ MerkeziFinansalVeri/
 
 ## Çalıştırma
 
-### Web arayüzü
+### 1. Veritabanı
 
-Statik dosyalar olduğu için herhangi bir HTTP sunucusu yeterlidir:
+```powershell
+cd database
+.\setup.ps1
+```
+
+### 2. API
+
+```powershell
+dotnet build MerkeziFinansalVeri.sln
+dotnet run --project src/MerkeziFinansalVeri.Api
+```
+
+Swagger: `http://localhost:5038/swagger`
+
+### 3. Web arayüzü
+
+Statik dosyalar için HTTP sunucusu gerekir. API çalışır durumda olmalıdır:
 
 ```bash
-# Örnek: Python ile yerel sunucu
 python -m http.server 8080
 ```
 
-Tarayıcıda `http://localhost:8080/HomePage.html` adresini açın.
+Tarayıcıda `http://localhost:8080/HomePage.html` açın.
 
-### WPF masaüstü uygulaması
+### WPF masaüstü uygulaması (eski prototip)
 
 ```bash
-dotnet build FinansalVeriApp/FinansalVeriApp.csproj
 dotnet run --project FinansalVeriApp/FinansalVeriApp.csproj
 ```
 
@@ -152,10 +195,11 @@ dotnet run --project FinansalVeriApp/FinansalVeriApp.csproj
 
 ## Geliştirme Notları
 
-- Ribbon sayfaları birbirine `data-href` ile bağlanır; `HomePage.html` tek sayfa uygulama (SPA) davranışı da içerir.
-- Mutabakat tablosu (`kebir-hesaplari.html`) satır ekleme, düzenleme, silme ve filtreleme destekler.
-- Süreç kokpiti canlı saat gösterir; task durumları şu an statik örnek veridir — ileride API/WebSocket ile beslenebilir.
-- Kullanıcı ve rol verileri demo amaçlıdır; gerçek ortamda kimlik doğrulama servisi gerekir.
+- **SQL altyapısı:** Tüm iş modülleri `TDUTIL.VIB` şemasındaki tablolardan beslenir; önyüz `api-client.js` ile REST API'ye bağlanır.
+- Ribbon sayfaları birbirine `data-href` ile bağlanır; `HomePage.html` portal özetini `/api/portal/ozet` endpoint'inden alır.
+- Mutabakat, mizan, süreç kokpiti ve kullanıcı yönetimi sayfaları API entegrasyonu tamamlanmıştır.
+- TDMAIN/TDREPORT bağlantıları `VIB.DataSource` tablosundan okunur; fark veren bakiyeler `FarkVerenSyncService` ile senkronize edilir.
+- Tema tercihi istemci tarafında kalır; gerçek ortamda JWT veya AD kimlik doğrulama önerilir.
 
 ---
 

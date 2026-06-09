@@ -1,50 +1,33 @@
 (function () {
-    const STORAGE_KEY = 'dbConnections';
+    const KATMAN_ROL = {
+        TDSTG: 'Staging — ham veri katmanı',
+        TDMAIN: 'Ana veri — kurumsal çekirdek',
+        TDREPORT: 'Raporlama — analitik katman'
+    };
 
-    const DATABASES = [
-        {
-            id: 'tdstg',
-            name: 'TDSTG',
-            role: 'Staging — ham veri katmanı',
-            theme: 'stg',
-            defaults: { server: 'sql-stg-01.sirket.local', database: 'TDSTG', port: '1433', auth: 'sql' }
-        },
-        {
-            id: 'tdmain',
-            name: 'TDMAIN',
-            role: 'Ana veri — kurumsal çekirdek',
-            theme: 'main',
-            defaults: { server: 'sql-main-01.sirket.local', database: 'TDMAIN', port: '1433', auth: 'sql' }
-        },
-        {
-            id: 'tdreport',
-            name: 'TDREPORT',
-            role: 'Raporlama — analitik katman',
-            theme: 'report',
-            defaults: { server: 'sql-rpt-01.sirket.local', database: 'TDREPORT', port: '1433', auth: 'sql' }
-        }
-    ];
+    const KATMAN_TEMA = {
+        TDSTG: 'stg',
+        TDMAIN: 'main',
+        TDREPORT: 'report'
+    };
 
-    function loadConnections() {
+    let veriKaynaklari = [];
+    let currentKaynakId = null;
+
+    async function loadVeriKaynaklari() {
         try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-        } catch {
-            return {};
+            veriKaynaklari = await ApiClient.getVeriKaynaklari();
+            if (veriKaynaklari.length && !currentKaynakId) {
+                currentKaynakId = veriKaynaklari[0].kaynakId;
+            }
+        } catch (err) {
+            console.error('Veri kaynakları yüklenemedi:', err);
+            veriKaynaklari = [];
         }
     }
 
-    function saveConnections(data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function getConn(id) {
-        const saved = loadConnections()[id];
-        const db = DATABASES.find(d => d.id === id);
-        return { ...db.defaults, ...saved };
-    }
-
-    function getDb(id) {
-        return DATABASES.find(d => d.id === id) || DATABASES[0];
+    function getKaynak(id) {
+        return veriKaynaklari.find(v => v.kaynakId === id) || veriKaynaklari[0];
     }
 
     function statusLabel(status) {
@@ -60,53 +43,53 @@
     }
 
     function buildDbOptions(selectedId) {
-        return DATABASES.map(db => {
-            const conn = getConn(db.id);
-            const status = conn._status || 'unknown';
-            const label = `${db.name} — ${statusLabel(status)}`;
-            return `<option value="${db.id}" ${db.id === selectedId ? 'selected' : ''}>${label}</option>`;
+        return veriKaynaklari.map(v => {
+            const label = `${v.katmanKodu} — ${statusLabel(v.durum)}`;
+            return `<option value="${v.kaynakId}" ${v.kaynakId === selectedId ? 'selected' : ''}>${label}</option>`;
         }).join('');
     }
 
     function buildPageHTML(selectedId) {
-        const db = getDb(selectedId || DATABASES[0].id);
-        const conn = getConn(db.id);
-        const status = conn._status || 'unknown';
+        const kaynak = getKaynak(selectedId);
+        if (!kaynak) return '<p>Veri kaynağı bulunamadı.</p>';
+
+        const tema = KATMAN_TEMA[kaynak.katmanKodu] || 'main';
+        const rol = KATMAN_ROL[kaynak.katmanKodu] || kaynak.katmanKodu;
 
         return `<div class="dbc-layout">
-            <article class="dbc-panel theme-${db.theme}" data-dbc-panel>
+            <article class="dbc-panel theme-${tema}" data-dbc-panel>
                 <div class="dbc-panel-head">
                     <div>
                         <h3><i class="ti ti-plug-connected" aria-hidden="true"></i> Veritabanı Bağlantısı</h3>
                         <p>TDSTG, TDMAIN ve TDREPORT ortamları için bağlantı parametrelerini yönetin.</p>
                     </div>
-                    <span class="dbc-status ${statusClass(status)}" data-status>${statusLabel(status)}</span>
+                    <span class="dbc-status ${statusClass(kaynak.durum)}" data-status>${statusLabel(kaynak.durum)}</span>
                 </div>
                 <div class="dbc-panel-body">
                     <div class="dbc-field">
                         <label for="dbc-db-select">Veritabanı Seçimi</label>
-                        <select id="dbc-db-select" data-db-select>${buildDbOptions(db.id)}</select>
-                        <p class="dbc-db-role" data-db-role>${db.role}</p>
+                        <select id="dbc-db-select" data-db-select>${buildDbOptions(kaynak.kaynakId)}</select>
+                        <p class="dbc-db-role" data-db-role>${rol}</p>
                     </div>
                     <div class="dbc-field">
                         <label for="dbc-server">Sunucu</label>
-                        <input type="text" id="dbc-server" data-field="server" value="${conn.server}" placeholder="sql-server.sirket.local">
+                        <input type="text" id="dbc-server" data-field="server" value="${kaynak.sunucu}" placeholder="sql-server.sirket.local">
                     </div>
                     <div class="dbc-row">
                         <div class="dbc-field">
                             <label for="dbc-database">Veritabanı</label>
-                            <input type="text" id="dbc-database" data-field="database" value="${conn.database}">
+                            <input type="text" id="dbc-database" data-field="database" value="${kaynak.veritabani}">
                         </div>
                         <div class="dbc-field">
                             <label for="dbc-port">Port</label>
-                            <input type="text" id="dbc-port" data-field="port" value="${conn.port}">
+                            <input type="text" id="dbc-port" data-field="port" value="${kaynak.port}">
                         </div>
                     </div>
                     <div class="dbc-field">
                         <label for="dbc-auth">Kimlik Doğrulama</label>
                         <select id="dbc-auth" data-field="auth">
-                            <option value="sql" ${conn.auth === 'sql' ? 'selected' : ''}>SQL Server</option>
-                            <option value="windows" ${conn.auth === 'windows' ? 'selected' : ''}>Windows (Entegre)</option>
+                            <option value="sql" ${kaynak.kimlikDogrulama === 'sql' ? 'selected' : ''}>SQL Server</option>
+                            <option value="windows" ${kaynak.kimlikDogrulama === 'windows' ? 'selected' : ''}>Windows (Entegre)</option>
                         </select>
                     </div>
                     <div class="dbc-actions">
@@ -115,7 +98,7 @@
                     </div>
                 </div>
             </article>
-            <p class="dbc-hint">Bağlantı bilgileri yalnızca tarayıcıda (localStorage) saklanır. Üretim ortamında güvenli bir secret store kullanılmalıdır.</p>
+            <p class="dbc-hint">Bağlantı bilgileri sunucu tarafında (cfg.VeriKaynagi) saklanır. Şifreler maskelenmiş olarak tutulur.</p>
             <div class="dbc-footer">
                 <span class="dbc-footer-msg" id="dbcSaveMsg" role="status">Kaydedildi</span>
             </div>
@@ -125,7 +108,11 @@
     function readFormFields(scope) {
         const data = {};
         scope.querySelectorAll('[data-field]').forEach(el => {
-            data[el.dataset.field] = el.value.trim();
+            const key = el.dataset.field;
+            if (key === 'database') data.veritabani = el.value.trim();
+            else if (key === 'server') data.sunucu = el.value.trim();
+            else if (key === 'port') data.port = parseInt(el.value.trim(), 10) || 1433;
+            else if (key === 'auth') data.kimlikDogrulama = el.value.trim();
         });
         return data;
     }
@@ -137,80 +124,54 @@
         badge.textContent = statusLabel(status);
     }
 
-    function updateSelectOptions(scope, selectedId) {
-        const select = scope.querySelector('[data-db-select]');
-        if (!select) return;
-        select.innerHTML = buildDbOptions(selectedId);
-        select.value = selectedId;
-    }
-
-    function applyDbTheme(scope, dbId) {
-        const panel = scope.querySelector('[data-dbc-panel]');
-        const db = getDb(dbId);
-        if (!panel) return;
-        panel.className = `dbc-panel theme-${db.theme}`;
-        const roleEl = scope.querySelector('[data-db-role]');
-        if (roleEl) roleEl.textContent = db.role;
-    }
-
-    function loadFormForDb(scope, dbId, draft) {
-        const conn = draft || getConn(dbId);
-        const server = scope.querySelector('[data-field="server"]');
-        const database = scope.querySelector('[data-field="database"]');
-        const port = scope.querySelector('[data-field="port"]');
-        const auth = scope.querySelector('[data-field="auth"]');
-        if (server) server.value = conn.server || '';
-        if (database) database.value = conn.database || '';
-        if (port) port.value = conn.port || '';
-        if (auth) auth.value = conn.auth || 'sql';
-        updateStatus(scope, conn._status || 'unknown');
-        applyDbTheme(scope, dbId);
-        updateSelectOptions(scope, dbId);
-    }
-
-    function saveCurrentDb(scope, dbId) {
-        const fields = readFormFields(scope);
-        const all = loadConnections();
-        all[dbId] = { ...all[dbId], ...fields };
-        delete all[dbId]._status;
-        saveConnections(all);
-    }
-
     function bindEvents(root) {
         const scope = root || document;
-        const drafts = {};
-        let currentId = scope.querySelector('[data-db-select]')?.value || DATABASES[0].id;
+        let currentId = parseInt(scope.querySelector('[data-db-select]')?.value, 10) || currentKaynakId;
 
         scope.querySelector('[data-db-select]')?.addEventListener('change', (e) => {
-            const nextId = e.target.value;
-            drafts[currentId] = { ...readFormFields(scope), _status: loadConnections()[currentId]?._status };
-            currentId = nextId;
-            loadFormForDb(scope, nextId, drafts[nextId]);
+            currentId = parseInt(e.target.value, 10);
+            currentKaynakId = currentId;
+            const kaynak = getKaynak(currentId);
+            scope.querySelector('[data-field="server"]').value = kaynak.sunucu;
+            scope.querySelector('[data-field="database"]').value = kaynak.veritabani;
+            scope.querySelector('[data-field="port"]').value = kaynak.port;
+            scope.querySelector('[data-field="auth"]').value = kaynak.kimlikDogrulama;
+            updateStatus(scope, kaynak.durum);
+            const panel = scope.querySelector('[data-dbc-panel]');
+            if (panel) panel.className = `dbc-panel theme-${KATMAN_TEMA[kaynak.katmanKodu] || 'main'}`;
+            const roleEl = scope.querySelector('[data-db-role]');
+            if (roleEl) roleEl.textContent = KATMAN_ROL[kaynak.katmanKodu] || kaynak.katmanKodu;
         });
 
-        scope.querySelector('[data-test]')?.addEventListener('click', (btn) => {
+        scope.querySelector('[data-test]')?.addEventListener('click', async (btn) => {
             const button = btn.currentTarget;
             button.disabled = true;
             button.textContent = 'Test ediliyor…';
-            setTimeout(() => {
-                const ok = scope.querySelector('[data-field="server"]')?.value.trim();
-                const status = ok ? 'connected' : 'error';
+            try {
+                const result = await ApiClient.testVeriKaynagi(currentId);
+                const status = result.basarili ? 'connected' : 'error';
                 updateStatus(scope, status);
-                const all = loadConnections();
-                all[currentId] = { ...all[currentId], ...readFormFields(scope), _status: status };
-                saveConnections(all);
-                delete drafts[currentId];
-                updateSelectOptions(scope, currentId);
-                button.disabled = false;
-                button.textContent = 'Bağlantıyı Test Et';
-            }, 800);
+                const idx = veriKaynaklari.findIndex(v => v.kaynakId === currentId);
+                if (idx >= 0) veriKaynaklari[idx].durum = status;
+                scope.querySelector('[data-db-select]').innerHTML = buildDbOptions(currentId);
+            } catch (err) {
+                updateStatus(scope, 'error');
+                console.error('Bağlantı testi başarısız:', err);
+            }
+            button.disabled = false;
+            button.textContent = 'Bağlantıyı Test Et';
         });
 
-        scope.querySelector('[data-save]')?.addEventListener('click', () => {
-            saveCurrentDb(scope, currentId);
-            delete drafts[currentId];
-            updateSelectOptions(scope, currentId);
-            showSaveMsg(scope);
+        scope.querySelector('[data-save]')?.addEventListener('click', async () => {
+            try {
+                const data = readFormFields(scope);
+                const updated = await ApiClient.updateVeriKaynagi(currentId, data);
+                const idx = veriKaynaklari.findIndex(v => v.kaynakId === currentId);
+                if (idx >= 0) veriKaynaklari[idx] = { ...veriKaynaklari[idx], ...updated };
+                showSaveMsg(scope);
+            } catch (err) {
+                alert('Kaydetme başarısız: ' + err.message);
+            }
         });
     }
 
@@ -222,15 +183,19 @@
         showSaveMsg._timer = setTimeout(() => msg.classList.remove('visible'), 2200);
     }
 
-    function initVeritabaniBaglantisi(container) {
+    async function initVeritabaniBaglantisi(container) {
+        await loadVeriKaynaklari();
         const root = container || document;
         if (root === document && !root.querySelector('.dbc-layout')) {
             const pageBody = root.querySelector('.page-body');
             if (pageBody) {
-                pageBody.innerHTML = buildPageHTML();
+                pageBody.innerHTML = buildPageHTML(currentKaynakId);
                 bindEvents(pageBody);
             }
             return;
+        }
+        if (!root.querySelector('.dbc-layout')) {
+            root.innerHTML = buildPageHTML(currentKaynakId);
         }
         bindEvents(root);
     }
@@ -241,12 +206,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         const host = document.querySelector('[data-db-page]');
         if (host) {
-            host.innerHTML = buildPageHTML();
-            bindEvents(host);
+            initVeritabaniBaglantisi(host);
             return;
         }
         if (document.querySelector('.dbc-layout')) {
-            bindEvents(document);
+            initVeritabaniBaglantisi(document);
         }
     });
 })();

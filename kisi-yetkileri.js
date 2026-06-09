@@ -1,8 +1,10 @@
 (function () {
-    const { PAGE_MENU, USERS, roleMap, userInitials, getRolePages } = window.KullaniciShared;
+    const { PAGE_MENU, userInitials } = window.KullaniciShared;
 
-    const userOverrides = {};
-    let selectedUserId = USERS[0]?.id || 1;
+    let USERS = [];
+    let roleMap = {};
+    let userOverrides = {};
+    let selectedUserId = 9;
     let searchQuery = '';
     let saveHintTimer = null;
 
@@ -14,8 +16,30 @@
     const treeEl = document.getElementById('kyPermTree');
     const saveHintEl = document.getElementById('kySaveHint');
 
+    async function loadUsers() {
+        try {
+            const [users, roles] = await Promise.all([
+                ApiClient.getKullanicilar(),
+                ApiClient.getRoller()
+            ]);
+            USERS = users;
+            roleMap = Object.fromEntries(roles.map(r => [r.rolId, {
+                id: r.rolId,
+                name: r.ad,
+                badgeClass: r.rozetSinifi
+            }]));
+            if (USERS.length && !USERS.find(u => u.kullaniciId === selectedUserId)) {
+                selectedUserId = USERS[0].kullaniciId;
+            }
+        } catch (err) {
+            console.error('Kullanıcılar yüklenemedi:', err);
+            USERS = window.KullaniciShared?.USERS || [];
+            roleMap = window.KullaniciShared?.roleMap || {};
+        }
+    }
+
     function getUser(userId) {
-        return USERS.find(u => u.id === userId);
+        return USERS.find(u => u.kullaniciId === userId);
     }
 
     function hasCustomPermissions(userId) {
@@ -26,22 +50,37 @@
         if (hasCustomPermissions(userId)) {
             return new Set(userOverrides[userId]);
         }
-        const user = getUser(userId);
-        return new Set(getRolePages(user?.roleId));
+        return new Set();
     }
 
-    function getRoleDefaultPages(userId) {
+    async function loadEffectivePages(userId) {
+        try {
+            const yetkiler = await ApiClient.getKullaniciYetkiler(userId);
+            return new Set(yetkiler.filter(y => y.izinVerildi).map(y => y.sayfaId));
+        } catch (err) {
+            console.error('Yetkiler yüklenemedi:', err);
+            return new Set();
+        }
+    }
+
+    async function getRoleDefaultPages(userId) {
         const user = getUser(userId);
-        return new Set(getRolePages(user?.roleId));
+        if (!user) return new Set();
+        try {
+            const yetkiler = await ApiClient.getRolYetkiler(user.rolId);
+            return new Set(yetkiler.filter(y => y.izinVerildi && y.rolVarsayilan).map(y => y.sayfaId));
+        } catch {
+            return new Set();
+        }
     }
 
     function filterUsers() {
         const q = searchQuery.trim().toLocaleLowerCase('tr-TR');
         if (!q) return USERS;
         return USERS.filter(u =>
-            u.name.toLocaleLowerCase('tr-TR').includes(q) ||
-            u.email.toLocaleLowerCase('tr-TR').includes(q) ||
-            (roleMap[u.roleId]?.name || '').toLocaleLowerCase('tr-TR').includes(q)
+            u.ad.toLocaleLowerCase('tr-TR').includes(q) ||
+            u.eposta.toLocaleLowerCase('tr-TR').includes(q) ||
+            (roleMap[u.rolId]?.name || '').toLocaleLowerCase('tr-TR').includes(q)
         );
     }
 
@@ -53,17 +92,17 @@
         }
 
         userListEl.innerHTML = users.map(user => {
-            const role = roleMap[user.roleId];
-            const custom = hasCustomPermissions(user.id);
+            const role = roleMap[user.rolId];
+            const custom = hasCustomPermissions(user.kullaniciId);
             return `
                 <li>
-                    <button type="button" class="ky-user-item${user.id === selectedUserId ? ' active' : ''}" data-user-id="${user.id}">
-                        <div class="um-user-avatar">${userInitials(user.name)}</div>
+                    <button type="button" class="ky-user-item${user.kullaniciId === selectedUserId ? ' active' : ''}" data-user-id="${user.kullaniciId}">
+                        <div class="um-user-avatar">${userInitials(user.ad)}</div>
                         <div class="ky-user-meta">
-                            <strong>${user.name}</strong>
-                            <span>${user.email}</span>
+                            <strong>${user.ad}</strong>
+                            <span>${user.eposta}</span>
                         </div>
-                        <span class="um-badge ${role.badgeClass}">${role.name}</span>
+                        <span class="um-badge ${role?.badgeClass || ''}">${role?.name || user.rolId}</span>
                         ${custom ? '<span class="ky-custom-badge">Özel</span>' : ''}
                     </button>
                 </li>
@@ -86,21 +125,24 @@
         return { checked: false, indeterminate: true };
     }
 
-    function renderPermissionPanel() {
+    async function renderPermissionPanel() {
         const user = getUser(selectedUserId);
         if (!user) return;
 
-        const role = roleMap[user.roleId];
-        const effective = getEffectivePages(user.id);
-        const custom = hasCustomPermissions(user.id);
+        const role = roleMap[user.rolId];
+        const effective = hasCustomPermissions(user.kullaniciId)
+            ? getEffectivePages(user.kullaniciId)
+            : await loadEffectivePages(user.kullaniciId);
+        const roleDefault = await getRoleDefaultPages(user.kullaniciId);
+        const custom = hasCustomPermissions(user.kullaniciId);
         const allowedCount = PAGE_MENU.flatMap(g => g.pages).filter(p => effective.has(p.id)).length;
         const totalCount = PAGE_MENU.flatMap(g => g.pages).length;
 
-        permTitleEl.textContent = user.name;
-        permDescEl.textContent = `${role.name} rolü · ${allowedCount}/${totalCount} sayfa erişimi`;
+        permTitleEl.textContent = user.ad;
+        permDescEl.textContent = `${role?.name || user.rolId} rolü · ${allowedCount}/${totalCount} sayfa erişimi`;
         permBadgesEl.innerHTML = `
-            <span class="um-badge ${role.badgeClass}">${role.name}</span>
-            <span class="um-badge status-${user.status}">${user.status === 'active' ? 'Aktif' : 'Pasif'}</span>
+            <span class="um-badge ${role?.badgeClass || ''}">${role?.name || user.rolId}</span>
+            <span class="um-badge status-${user.durum}">${user.durum === 'active' ? 'Aktif' : 'Pasif'}</span>
             ${custom ? '<span class="ky-custom-badge">Kişiye özel yetki</span>' : '<span class="ky-custom-badge" style="opacity:0.5;background:var(--rb-accent-soft);color:var(--rb-text-muted)">Rol varsayılanı</span>'}
         `;
 
@@ -111,8 +153,8 @@
 
             const leaves = group.pages.map(page => {
                 const isAllowed = effective.has(page.id);
-                const roleDefault = getRoleDefaultPages(user.id).has(page.id);
-                const isCustom = custom && isAllowed !== roleDefault;
+                const isRoleDefault = roleDefault.has(page.id);
+                const isCustom = custom && isAllowed !== isRoleDefault;
                 return `
                     <label class="ky-tree-leaf${isCustom ? ' is-custom' : ''}">
                         <input type="checkbox" data-page-id="${page.id}" ${isAllowed ? 'checked' : ''}>
@@ -139,8 +181,7 @@
         }).join('');
 
         treeEl.querySelectorAll('.ky-tree-section').forEach(section => {
-            const toggle = section.querySelector('.ky-tree-toggle');
-            toggle.addEventListener('click', () => {
+            section.querySelector('.ky-tree-toggle').addEventListener('click', () => {
                 section.classList.toggle('collapsed');
                 section.classList.toggle('expanded');
             });
@@ -162,15 +203,16 @@
         });
     }
 
-    function ensureOverrideSet(userId) {
+    async function ensureOverrideSet(userId) {
         if (!hasCustomPermissions(userId)) {
-            userOverrides[userId] = [...getEffectivePages(userId)];
+            const effective = await loadEffectivePages(userId);
+            userOverrides[userId] = [...effective];
         }
         return new Set(userOverrides[userId]);
     }
 
-    function togglePagePermission(userId, pageId, allowed) {
-        const set = ensureOverrideSet(userId);
+    async function togglePagePermission(userId, pageId, allowed) {
+        const set = await ensureOverrideSet(userId);
         if (allowed) set.add(pageId);
         else set.delete(pageId);
         userOverrides[userId] = [...set];
@@ -179,8 +221,8 @@
         showSaveHint(false);
     }
 
-    function setPagePermissions(userId, pageIds, allowed) {
-        const set = ensureOverrideSet(userId);
+    async function setPagePermissions(userId, pageIds, allowed) {
+        const set = await ensureOverrideSet(userId);
         pageIds.forEach(id => {
             if (allowed) set.add(id);
             else set.delete(id);
@@ -191,8 +233,13 @@
         showSaveHint(false);
     }
 
-    function resetToRoleDefault() {
+    async function resetToRoleDefault() {
         delete userOverrides[selectedUserId];
+        try {
+            await ApiClient.sifirlaKullaniciYetkiler(selectedUserId);
+        } catch (err) {
+            console.error('Yetki sıfırlama başarısız:', err);
+        }
         renderUserList();
         renderPermissionPanel();
         showSaveHint(false);
@@ -224,7 +271,28 @@
         document.getElementById('kyExpandAll')?.addEventListener('click', () => expandAll(true));
         document.getElementById('kyCollapseAll')?.addEventListener('click', () => expandAll(false));
         document.getElementById('kyResetRole')?.addEventListener('click', resetToRoleDefault);
-        document.getElementById('kySaveBtn')?.addEventListener('click', () => showSaveHint(true));
+        document.getElementById('kySaveBtn')?.addEventListener('click', async () => {
+            if (!hasCustomPermissions(selectedUserId)) {
+                showSaveHint(true);
+                return;
+            }
+            try {
+                const yetkiler = userOverrides[selectedUserId].map(sayfaId => ({
+                    sayfaId,
+                    izinVerildi: true
+                }));
+                const allPages = PAGE_MENU.flatMap(g => g.pages.map(p => p.id));
+                allPages.forEach(sayfaId => {
+                    if (!userOverrides[selectedUserId].includes(sayfaId)) {
+                        yetkiler.push({ sayfaId, izinVerildi: false });
+                    }
+                });
+                await ApiClient.updateKullaniciYetkiler(selectedUserId, yetkiler);
+                showSaveHint(true);
+            } catch (err) {
+                alert('Kaydetme başarısız: ' + err.message);
+            }
+        });
 
         searchEl?.addEventListener('input', () => {
             searchQuery = searchEl.value;
@@ -232,9 +300,10 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         bindToolbar();
+        await loadUsers();
         renderUserList();
-        renderPermissionPanel();
+        await renderPermissionPanel();
     });
 })();

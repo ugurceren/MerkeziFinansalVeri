@@ -1,4 +1,4 @@
-const COCKPIT_COLUMNS = [
+const COCKPIT_COLUMNS_FALLBACK = [
     {
         name: 'TDSTG',
         role: 'Staging — ham veri katmanı',
@@ -82,7 +82,7 @@ const COCKPIT_COLUMNS = [
     }
 ];
 
-const DATASET_DOMAINS = [
+const DATASET_DOMAINS_FALLBACK = [
     {
         id: 'fon-kullandirim',
         name: 'Fon Kullandırım',
@@ -141,6 +141,41 @@ const DATASET_DOMAINS = [
         ]
     }
 ];
+
+let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
+let DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+
+async function loadSurecData() {
+    if (typeof ApiClient === 'undefined') return;
+    try {
+        const kokpit = await ApiClient.getSurecKokpit();
+        if (kokpit?.length) {
+            COCKPIT_COLUMNS = kokpit.map(k => ({
+                name: k.katmanKodu,
+                role: k.rol,
+                theme: k.tema,
+                datasets: k.datasets.map(d => ({
+                    name: d.kod,
+                    label: d.etiket,
+                    tasks: d.gorevler.map(g => ({ label: g.etiket, status: g.durum }))
+                }))
+            }));
+        }
+        const domainler = await ApiClient.getSurecDomainler();
+        if (domainler?.length) {
+            DATASET_DOMAINS = domainler.map(d => ({
+                id: d.domainId,
+                name: d.ad,
+                theme: d.tema,
+                datasets: d.datasets.map(ds => ({ name: ds.kod, label: ds.etiket }))
+            }));
+        }
+    } catch (err) {
+        console.warn('Süreç verisi API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
+        COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
+        DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+    }
+}
 
 function getDatasetTotals() {
     const domainCount = DATASET_DOMAINS.length;
@@ -277,20 +312,22 @@ function bindSurecCockpit() {
     }, 1000);
 }
 
-function initSurecCockpit(container) {
+async function initSurecCockpit(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
+    await loadSurecData();
     el.innerHTML = buildSurecHTML();
     bindSurecCockpit();
 }
 
-function initDatasetCatalog(container) {
+async function initDatasetCatalog(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
     if (window._cockpitTimer) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
+    await loadSurecData();
     el.innerHTML = buildDatasetCatalogHTML();
 }
 
@@ -398,13 +435,14 @@ function bindTaskListesiSearch(container) {
     input.addEventListener('input', applyFilter);
 }
 
-function initTaskListesi(container) {
+async function initTaskListesi(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
     if (window._cockpitTimer) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
+    await loadSurecData();
     el.innerHTML = buildTaskListesiHTML();
     bindTaskListesiSearch(el);
 }

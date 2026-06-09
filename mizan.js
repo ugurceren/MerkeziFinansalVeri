@@ -1,62 +1,25 @@
 (function () {
-    const STORAGE_KEY = 'datasetTaskStates';
     const DATASET_ID = 'ds_mizan';
-
-    const DEFAULT_DATASET = {
-        id: DATASET_ID,
-        label: 'Mizan',
-        layer: 'TDMAIN',
-        layerRole: 'Ana veri — kurumsal çekirdek',
-        tasks: [
-            { id: 'donusum', label: 'Dönüşüm', status: 'done' },
-            { id: 'mutabakat', label: 'Mutabakat', status: 'running' },
-            { id: 'onay', label: 'Ana Veri Onay', status: 'pending' }
-        ]
-    };
-
     const RESTART_ROLES = ['admin', 'mutabakat', 'surec'];
 
+    let mizanGorevler = [];
+    let datasetMeta = { layer: 'TDMAIN', layerRole: 'Ana veri — kurumsal çekirdek', label: 'Mizan' };
+
     function getUserRole() {
-        return localStorage.getItem('userRole') || 'admin';
+        return ApiClient?.userRole || localStorage.getItem('userRole') || 'admin';
     }
 
     function canRestartTasks() {
         return RESTART_ROLES.includes(getUserRole());
     }
 
-    function loadStates() {
+    async function loadMizanData() {
         try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-        } catch {
-            return {};
+            mizanGorevler = await ApiClient.getMizanGorevler();
+        } catch (err) {
+            console.error('Mizan görevleri yüklenemedi:', err);
+            mizanGorevler = [];
         }
-    }
-
-    function saveStates(states) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(states));
-    }
-
-    function getMizanDataset() {
-        const saved = loadStates()[DATASET_ID];
-        if (!saved?.tasks?.length) return structuredClone(DEFAULT_DATASET);
-        return {
-            ...DEFAULT_DATASET,
-            ...saved,
-            tasks: saved.tasks.map((t, i) => ({
-                ...DEFAULT_DATASET.tasks[i],
-                ...t,
-                label: DEFAULT_DATASET.tasks[i]?.label || t.label
-            }))
-        };
-    }
-
-    function persistDataset(dataset) {
-        const states = loadStates();
-        states[DATASET_ID] = {
-            tasks: dataset.tasks.map(({ id, label, status }) => ({ id, label, status })),
-            lastUpdated: new Date().toISOString()
-        };
-        saveStates(states);
     }
 
     function statusText(status) {
@@ -67,27 +30,27 @@
     }
 
     function overallStatus(tasks) {
-        if (tasks.every(t => t.status === 'done')) return { label: 'Tamam', cls: 'done' };
-        if (tasks.some(t => t.status === 'running')) return { label: 'Aktif', cls: 'running' };
-        if (tasks.some(t => t.status === 'failed')) return { label: 'Hata', cls: 'failed' };
+        if (tasks.every(t => t.durum === 'done')) return { label: 'Tamam', cls: 'done' };
+        if (tasks.some(t => t.durum === 'running')) return { label: 'Aktif', cls: 'running' };
+        if (tasks.some(t => t.durum === 'failed')) return { label: 'Hata', cls: 'failed' };
         return { label: 'Bekliyor', cls: 'waiting' };
     }
 
     function buildTaskHTML(task, index, authorized) {
         const restartBtn = authorized
-            ? `<button type="button" class="mz-restart-btn" data-restart="${index}" title="Taskı yeniden başlat">
+            ? `<button type="button" class="mz-restart-btn" data-restart="${index}" data-gorev-id="${task.gorevTanimId}" title="Taskı yeniden başlat">
                     <i class="ti ti-refresh" aria-hidden="true"></i>
                     <span>Yeniden Başlat</span>
                </button>`
             : '';
 
         return `
-            <div class="mz-task ${task.status}" data-task-index="${index}">
+            <div class="mz-task ${task.durum}" data-task-index="${index}">
                 <div class="mz-task-main">
-                    <span class="mz-task-icon">${task.status === 'done' ? '✓' : task.status === 'running' ? '◉' : task.status === 'failed' ? '✕' : '○'}</span>
+                    <span class="mz-task-icon">${task.durum === 'done' ? '✓' : task.durum === 'running' ? '◉' : task.durum === 'failed' ? '✕' : '○'}</span>
                     <div class="mz-task-info">
-                        <strong>${task.label}</strong>
-                        <span>${statusText(task.status)}</span>
+                        <strong>${task.etiket}</strong>
+                        <span>${statusText(task.durum)}</span>
                     </div>
                 </div>
                 ${restartBtn}
@@ -95,20 +58,21 @@
     }
 
     function buildMizanHTML() {
-        const dataset = getMizanDataset();
         const authorized = canRestartTasks();
-        const overall = overallStatus(dataset.tasks);
-        const tasksHtml = dataset.tasks.map((t, i) => buildTaskHTML(t, i, authorized)).join('');
-        const lastUpdated = loadStates()[DATASET_ID]?.lastUpdated;
-        const updatedLabel = lastUpdated
-            ? new Date(lastUpdated).toLocaleString('tr-TR')
-            : '—';
+        const overall = overallStatus(mizanGorevler);
+        const tasksHtml = mizanGorevler.map((t, i) => buildTaskHTML(t, i, authorized)).join('');
+        const lastUpdated = mizanGorevler.reduce((max, t) => {
+            if (!t.sonGuncelleme) return max;
+            const d = new Date(t.sonGuncelleme);
+            return !max || d > max ? d : max;
+        }, null);
+        const updatedLabel = lastUpdated ? lastUpdated.toLocaleString('tr-TR') : '—';
 
         return `<section class="mizan-layout">
             <div class="mz-head">
                 <div>
                     <h3>Mizan</h3>
-                    <p>${dataset.layer} dataset task durumu ve yönetimi</p>
+                    <p>${datasetMeta.layer} dataset task durumu ve yönetimi</p>
                 </div>
                 <span class="mz-overall status-${overall.cls}">${overall.label}</span>
             </div>
@@ -117,13 +81,13 @@
                     <div class="mz-dataset-title">
                         <i class="ti ti-database" aria-hidden="true"></i>
                         <div>
-                            <strong>${dataset.label}</strong>
-                            <code>${dataset.id}</code>
+                            <strong>${datasetMeta.label}</strong>
+                            <code>${DATASET_ID}</code>
                         </div>
                     </div>
                     <div class="mz-dataset-meta">
-                        <span class="mz-layer">${dataset.layer}</span>
-                        <span class="mz-layer-desc">${dataset.layerRole}</span>
+                        <span class="mz-layer">${datasetMeta.layer}</span>
+                        <span class="mz-layer-desc">${datasetMeta.layerRole}</span>
                     </div>
                 </div>
                 <div class="mz-task-list">${tasksHtml}</div>
@@ -137,30 +101,19 @@
         </section>`;
     }
 
-    function restartTask(index) {
-        const dataset = getMizanDataset();
-        dataset.tasks = dataset.tasks.map((task, i) => {
-            if (i < index) return { ...task, status: 'done' };
-            if (i === index) return { ...task, status: 'running' };
-            return { ...task, status: 'pending' };
-        });
-        persistDataset(dataset);
-        return dataset;
-    }
-
     function bindMizanEvents(root) {
         const scope = root || document;
         scope.querySelectorAll('[data-restart]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const index = parseInt(btn.dataset.restart, 10);
-                if (Number.isNaN(index) || !canRestartTasks()) return;
+            btn.addEventListener('click', async () => {
+                const gorevId = parseInt(btn.dataset.gorevId, 10);
+                if (Number.isNaN(gorevId) || !canRestartTasks()) return;
 
                 btn.disabled = true;
-                const original = btn.innerHTML;
                 btn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i><span>Başlatılıyor…</span>';
 
-                setTimeout(() => {
-                    restartTask(index);
+                try {
+                    await ApiClient.yenidenBaslatMizanGorev(gorevId);
+                    await loadMizanData();
                     const host = scope.querySelector('.mizan-layout')?.parentElement || scope;
                     if (host.id === 'pageBody' || host.hasAttribute('data-mizan-page')) {
                         host.innerHTML = buildMizanHTML();
@@ -172,14 +125,19 @@
                             bindMizanEvents(scope);
                         }
                     }
-                }, 600);
+                } catch (err) {
+                    alert('Yeniden başlatma başarısız: ' + err.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i><span>Yeniden Başlat</span>';
+                }
             });
         });
     }
 
-    function initMizanPage(container) {
+    async function initMizanPage(container) {
         const el = container || document.querySelector('[data-mizan-page]') || document.getElementById('pageBody');
         if (!el) return;
+        await loadMizanData();
         el.innerHTML = buildMizanHTML();
         bindMizanEvents(el);
     }

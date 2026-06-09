@@ -1,23 +1,7 @@
 (function () {
-    const PERIOD_STORAGE = 'mutabakatPeriod';
-
-    const PERIODS = [
-        { id: '2026-06', label: 'Haziran 2026', status: 'aktif', accounts: 248, diffCount: 12, closedAt: null },
-        { id: '2026-05', label: 'Mayıs 2026', status: 'kapali', accounts: 246, diffCount: 0, closedAt: '2026-06-03' },
-        { id: '2026-04', label: 'Nisan 2026', status: 'kapali', accounts: 244, diffCount: 0, closedAt: '2026-05-04' },
-        { id: '2026-03', label: 'Mart 2026', status: 'onay', accounts: 241, diffCount: 3, closedAt: null }
-    ];
-
-    const DIFF_ACCOUNTS = [
-        { code: '100.01.001', name: 'Merkez Kasa', team: 'Banka Ekip 1', mizan: 1500000, karton: 1485000, status: 'acik' },
-        { code: '120.05.042', name: 'Ticari Alacaklar — X A.Ş.', team: 'Banka Ekip 2', mizan: 2847500, karton: 2851000, status: 'inceleniyor' },
-        { code: '320.02.018', name: 'Satıcılar — Y Ltd.', team: 'Banka Ekip 1', mizan: 920000, karton: 915500, status: 'acik' },
-        { code: '102.03.007', name: 'Vadesiz Mevduat — TL', team: 'Merkezi Kontrol', mizan: 45800000, karton: 45800000, status: 'kapatildi' },
-        { code: '180.01.003', name: 'Gelecek Aylara Ait Giderler', team: 'Banka Ekip 3', mizan: 125400, karton: 128900, status: 'acik' },
-        { code: '391.01.002', name: 'Hesaplanan KDV', team: 'Banka Ekip 2', mizan: 567800, karton: 562300, status: 'inceleniyor' },
-        { code: '770.04.011', name: 'Genel Yönetim Giderleri', team: 'Banka Ekip 3', mizan: 890000, karton: 901200, status: 'acik' },
-        { code: '257.01.001', name: 'Birikmiş Amortisman', team: 'Merkezi Kontrol', mizan: 3200000, karton: 3198500, status: 'kapatildi' }
-    ];
+    let periods = [];
+    let diffAccounts = [];
+    let activePeriodYilAy = '2026-06';
 
     const STATUS_LABEL = {
         aktif: { cls: 'aktif', label: 'Aktif' },
@@ -33,38 +17,46 @@
     }
 
     function getActivePeriod() {
-        return localStorage.getItem(PERIOD_STORAGE) || '2026-06';
+        const active = periods.find(p => p.aktifMi);
+        return active?.yilAy || activePeriodYilAy;
     }
 
-    function setActivePeriod(value) {
-        if (value) localStorage.setItem(PERIOD_STORAGE, value);
+    async function loadData() {
+        try {
+            periods = await ApiClient.getMutabakatDonemler();
+            const active = periods.find(p => p.aktifMi);
+            if (active) activePeriodYilAy = active.yilAy;
+            diffAccounts = await ApiClient.getFarkVeren({ donemId: active?.donemId });
+        } catch (err) {
+            console.error('Mutabakat verisi yüklenemedi:', err);
+        }
     }
 
     function buildPeriodRows(activeId) {
-        return PERIODS.map(p => {
-            const badge = STATUS_LABEL[p.status];
-            const isActive = p.id === activeId;
-            return `<tr class="${isActive ? 'mt-row-active' : ''}" data-period="${p.id}">
-                <td><strong>${p.label}</strong></td>
+        return periods.map(p => {
+            const badge = STATUS_LABEL[p.durum] || { cls: '', label: p.durum };
+            const isActive = p.yilAy === activeId;
+            return `<tr class="${isActive ? 'mt-row-active' : ''}" data-period="${p.yilAy}" data-donem-id="${p.donemId}">
+                <td><strong>${p.etiket}</strong></td>
                 <td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>
-                <td class="mt-num">${p.accounts}</td>
-                <td class="mt-num">${p.diffCount}</td>
-                <td>${p.closedAt || '—'}</td>
+                <td class="mt-num">${p.hesapSayisi}</td>
+                <td class="mt-num">${p.farkVerenSayisi}</td>
+                <td>${p.kapanisTarihi || '—'}</td>
             </tr>`;
         }).join('');
     }
 
     function buildDiffRows(rows) {
         return rows.map(r => {
-            const diff = r.mizan - r.karton;
-            const badge = STATUS_LABEL[r.status];
+            const diff = r.mizanBakiye - r.kartonBakiye;
+            const badge = STATUS_LABEL[r.durum] || { cls: '', label: r.durum };
             const diffClass = diff !== 0 ? 'mt-diff' : '';
             return `<tr>
-                <td>${r.code}</td>
-                <td>${r.name}</td>
-                <td>${r.team}</td>
-                <td class="mt-num">${formatMoney(r.mizan)}</td>
-                <td class="mt-num">${formatMoney(r.karton)}</td>
+                <td>${r.hesapKodu}</td>
+                <td>${r.hesapAdi}</td>
+                <td>${r.ekipAdi || ''}</td>
+                <td class="mt-num">${formatMoney(r.mizanBakiye)}</td>
+                <td class="mt-num">${formatMoney(r.kartonBakiye)}</td>
                 <td class="mt-num ${diffClass}">${diff > 0 ? '+' : ''}${formatMoney(diff)}</td>
                 <td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>
             </tr>`;
@@ -107,8 +99,8 @@
 
     function buildFarkVerenHTML() {
         const activeId = getActivePeriod();
-        const openDiffs = DIFF_ACCOUNTS.filter(r => r.status === 'acik' || r.status === 'inceleniyor');
-        const totalDiff = openDiffs.reduce((s, r) => s + Math.abs(r.mizan - r.karton), 0);
+        const openDiffs = diffAccounts.filter(r => r.durum === 'acik' || r.durum === 'inceleniyor');
+        const totalDiff = openDiffs.reduce((s, r) => s + Math.abs(r.mizanBakiye - r.kartonBakiye), 0);
 
         return `<section class="mt-layout">
             <div class="mt-head">
@@ -126,7 +118,7 @@
                         <span>Açık fark</span>
                     </div>
                     <div class="mt-stat">
-                        <strong>${DIFF_ACCOUNTS.length}</strong>
+                        <strong>${diffAccounts.length}</strong>
                         <span>Toplam kayıt</span>
                     </div>
                     <div class="mt-stat">
@@ -158,7 +150,7 @@
                                 <th>Durum</th>
                             </tr>
                         </thead>
-                        <tbody>${buildDiffRows(DIFF_ACCOUNTS)}</tbody>
+                        <tbody>${buildDiffRows(diffAccounts)}</tbody>
                     </table>
                 </div>
             </div>
@@ -169,23 +161,41 @@
         return view === 'fark-veren' ? buildFarkVerenHTML() : buildDonemHTML();
     }
 
-    function applyDiffFilter(root) {
-        const code = (root.querySelector('#mtFilterCode')?.value || '').toLowerCase();
-        const team = (root.querySelector('#mtFilterTeam')?.value || '').toLowerCase();
-        const filtered = DIFF_ACCOUNTS.filter(r =>
-            r.code.toLowerCase().includes(code) &&
-            r.team.toLowerCase().includes(team)
-        );
-        const tbody = root.querySelector('#mtDiffTable tbody');
-        if (tbody) tbody.innerHTML = buildDiffRows(filtered);
+    async function applyDiffFilter(root) {
+        const code = (root.querySelector('#mtFilterCode')?.value || '').trim();
+        const team = (root.querySelector('#mtFilterTeam')?.value || '').trim();
+        const active = periods.find(p => p.aktifMi);
+        try {
+            const params = { donemId: active?.donemId };
+            if (code) params.hesapKodu = code;
+            diffAccounts = await ApiClient.getFarkVeren(params);
+            if (team) {
+                diffAccounts = diffAccounts.filter(r =>
+                    (r.ekipAdi || '').toLowerCase().includes(team.toLowerCase())
+                );
+            }
+            const tbody = root.querySelector('#mtDiffTable tbody');
+            if (tbody) tbody.innerHTML = buildDiffRows(diffAccounts);
+        } catch (err) {
+            console.error('Filtreleme başarısız:', err);
+        }
     }
 
     function bindMutabakatPage(root) {
         const periodInput = root.querySelector('#mtActivePeriod');
         if (periodInput) {
-            periodInput.addEventListener('change', () => {
-                setActivePeriod(periodInput.value);
-                initMutabakatPage(root);
+            periodInput.addEventListener('change', async () => {
+                const target = periods.find(p => p.yilAy === periodInput.value);
+                if (target) {
+                    try {
+                        await ApiClient.setAktifDonem(target.donemId);
+                        activePeriodYilAy = target.yilAy;
+                        await loadData();
+                        await initMutabakatPage(root);
+                    } catch (err) {
+                        console.error('Aktif dönem değiştirilemedi:', err);
+                    }
+                }
             });
         }
 
@@ -198,9 +208,16 @@
         });
 
         root.querySelectorAll('[data-period]').forEach(row => {
-            row.addEventListener('click', () => {
-                setActivePeriod(row.dataset.period);
-                initMutabakatPage(root);
+            row.addEventListener('click', async () => {
+                const donemId = parseInt(row.dataset.donemId, 10);
+                try {
+                    await ApiClient.setAktifDonem(donemId);
+                    activePeriodYilAy = row.dataset.period;
+                    await loadData();
+                    await initMutabakatPage(root);
+                } catch (err) {
+                    console.error('Dönem seçilemedi:', err);
+                }
             });
         });
     }
@@ -211,10 +228,11 @@
         return 'donem';
     }
 
-    function initMutabakatPage(container) {
+    async function initMutabakatPage(container) {
         const el = container || document.getElementById('pageBody') || document.querySelector('[data-mt-page]');
         if (!el) return;
 
+        await loadData();
         const view = getFocusView();
         el.innerHTML = buildMutabakatHTML(view);
         bindMutabakatPage(el);
