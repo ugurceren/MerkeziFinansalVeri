@@ -121,7 +121,12 @@
         // Veri Kaynakları
         getVeriKaynaklari() { return request('/veri-kaynaklari'); },
         updateVeriKaynagi(id, data) { return request(`/veri-kaynaklari/${id}`, { method: 'PUT', body: data }); },
-        testVeriKaynagi(id) { return request(`/veri-kaynaklari/${id}/test`, { method: 'POST' }); }
+        testVeriKaynagi(id, connectionParams) {
+            return request(`/veri-kaynaklari/${id}/test`, {
+                method: 'POST',
+                body: connectionParams || null
+            });
+        }
     };
 
     window.ApiClient = api;

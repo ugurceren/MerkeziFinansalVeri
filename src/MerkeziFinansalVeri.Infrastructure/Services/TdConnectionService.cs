@@ -1,14 +1,17 @@
 using System.Diagnostics;
 using MerkeziFinansalVeri.Domain.Entities;
+using MerkeziFinansalVeri.Infrastructure.Configuration;
 using MerkeziFinansalVeri.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MerkeziFinansalVeri.Infrastructure.Services;
 
 public class TdConnectionService(
     AppDbContext dbContext,
+    IOptions<TdConnectionsOptions> tdOptions,
     ILogger<TdConnectionService> logger) : ITdConnectionService
 {
     private static readonly HashSet<string> ReadOnlyPrefixes =
@@ -16,28 +19,11 @@ public class TdConnectionService(
         "SELECT", "WITH", "EXEC", "EXECUTE"
     ];
 
-    public async Task<bool> TestConnectionAsync(string katmanKodu, CancellationToken cancellationToken = default)
-    {
-        var kaynak = await GetVeriKaynagiAsync(katmanKodu, cancellationToken);
-        if (kaynak is null)
-        {
-            return false;
-        }
+    public Task<bool> TestConnectionAsync(string katmanKodu, CancellationToken cancellationToken = default)
+        => TestConnectionInternalAsync(katmanKodu, null, cancellationToken);
 
-        try
-        {
-            await using var connection = CreateConnection(kaynak);
-            await connection.OpenAsync(cancellationToken);
-            await UpdateDurumAsync(kaynak, "connected", cancellationToken);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "TD bağlantı testi başarısız: {KatmanKodu}", katmanKodu);
-            await UpdateDurumAsync(kaynak, "error", cancellationToken);
-            return false;
-        }
-    }
+    public Task<bool> TestConnectionAsync(TdConnectionParams parameters, CancellationToken cancellationToken = default)
+        => TestConnectionInternalAsync(parameters.KatmanKodu, parameters, cancellationToken);
 
     public async Task<TdQueryResult> ExecuteReadOnlyQueryAsync(
         string katmanKodu,
@@ -51,7 +37,7 @@ public class TdConnectionService(
             return new TdQueryResult { Hata = "Yalnızca okuma sorgularına izin verilir." };
         }
 
-        var kaynak = await GetVeriKaynagiAsync(katmanKodu, cancellationToken);
+        var kaynak = await ResolveConnectionAsync(katmanKodu, null, cancellationToken);
         if (kaynak is null)
         {
             return new TdQueryResult { Hata = $"Veri kaynağı bulunamadı: {katmanKodu}" };
@@ -101,11 +87,82 @@ public class TdConnectionService(
         }
     }
 
-    internal async Task<VeriKaynagi?> GetVeriKaynagiAsync(string katmanKodu, CancellationToken cancellationToken)
+    private async Task<bool> TestConnectionInternalAsync(
+        string katmanKodu,
+        TdConnectionParams? overrideParams,
+        CancellationToken cancellationToken)
     {
-        return await dbContext.VeriKaynaklari
+        var kaynak = await ResolveConnectionAsync(katmanKodu, overrideParams, cancellationToken);
+        if (kaynak is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            await using var connection = CreateConnection(kaynak);
+            await connection.OpenAsync(cancellationToken);
+
+            if (overrideParams is null)
+            {
+                await UpdateDurumAsync(katmanKodu, "connected", cancellationToken);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "TD bağlantı testi başarısız: {KatmanKodu}", katmanKodu);
+            if (overrideParams is null)
+            {
+                await UpdateDurumAsync(katmanKodu, "error", cancellationToken);
+            }
+
+            return false;
+        }
+    }
+
+    internal async Task<VeriKaynagi?> ResolveConnectionAsync(
+        string katmanKodu,
+        TdConnectionParams? overrideParams,
+        CancellationToken cancellationToken)
+    {
+        if (overrideParams is not null)
+        {
+            return new VeriKaynagi
+            {
+                KatmanKodu = katmanKodu,
+                Sunucu = overrideParams.Sunucu,
+                Veritabani = overrideParams.Veritabani,
+                Port = overrideParams.Port,
+                KimlikDogrulama = overrideParams.KimlikDogrulama,
+                KullaniciAdi = overrideParams.KullaniciAdi
+            };
+        }
+
+        var fromDb = await dbContext.VeriKaynaklari
             .AsNoTracking()
             .FirstOrDefaultAsync(v => v.KatmanKodu == katmanKodu, cancellationToken);
+
+        if (fromDb is not null && !string.IsNullOrWhiteSpace(fromDb.Sunucu))
+        {
+            return fromDb;
+        }
+
+        if (tdOptions.Value.Connections.TryGetValue(katmanKodu, out var entry))
+        {
+            return new VeriKaynagi
+            {
+                KatmanKodu = katmanKodu,
+                Sunucu = entry.Server,
+                Veritabani = entry.Database,
+                Port = entry.Port,
+                KimlikDogrulama = entry.KimlikDogrulama,
+                KullaniciAdi = entry.Username
+            };
+        }
+
+        return fromDb;
     }
 
     private static SqlConnection CreateConnection(VeriKaynagi kaynak)
@@ -115,7 +172,8 @@ public class TdConnectionService(
             DataSource = kaynak.Port == 1433 ? kaynak.Sunucu : $"{kaynak.Sunucu},{kaynak.Port}",
             InitialCatalog = kaynak.Veritabani,
             TrustServerCertificate = true,
-            ApplicationIntent = ApplicationIntent.ReadOnly
+            ApplicationIntent = ApplicationIntent.ReadOnly,
+            ConnectTimeout = 15
         };
 
         if (string.Equals(kaynak.KimlikDogrulama, "windows", StringComparison.OrdinalIgnoreCase))
@@ -131,9 +189,11 @@ public class TdConnectionService(
         return new SqlConnection(builder.ConnectionString);
     }
 
-    private async Task UpdateDurumAsync(VeriKaynagi kaynak, string durum, CancellationToken cancellationToken)
+    private async Task UpdateDurumAsync(string katmanKodu, string durum, CancellationToken cancellationToken)
     {
-        var entity = await dbContext.VeriKaynaklari.FindAsync([kaynak.KaynakId], cancellationToken);
+        var entity = await dbContext.VeriKaynaklari
+            .FirstOrDefaultAsync(v => v.KatmanKodu == katmanKodu, cancellationToken);
+
         if (entity is null)
         {
             return;

@@ -1,5 +1,6 @@
 using MerkeziFinansalVeri.Api.Middleware;
 using MerkeziFinansalVeri.Infrastructure;
+using MerkeziFinansalVeri.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,20 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var bootstrap = scope.ServiceProvider.GetRequiredService<VeriKaynagiBootstrap>();
+        await bootstrap.EnsureSeededAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning(ex, "Veri kaynağı bootstrap atlandı — veritabanı henüz hazır olmayabilir.");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
