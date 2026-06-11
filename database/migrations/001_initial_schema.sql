@@ -2,17 +2,17 @@
     MGTV Application — initial schema (English identifiers)
     Single schema: VIB
     Table naming: {logical_schema}_{TableName}  e.g. VIB.cfg_DataSource
-    Database: MGTV_Uygulama (name retained for existing connection strings)
+    Database: TDUTIL
     Recommended collation: Turkish_CI_AS
 */
 
-IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = N'MGTV_Uygulama')
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = N'TDUTIL')
 BEGIN
-    CREATE DATABASE [MGTV_Uygulama];
+    CREATE DATABASE [TDUTIL];
 END
 GO
 
-USE [MGTV_Uygulama];
+USE [TDUTIL];
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = N'VIB')

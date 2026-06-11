@@ -1,4 +1,4 @@
-USE [MGTV_Uygulama];
+USE [TDUTIL];
 GO
 
 -- VIB.cfg_DataSource (veritabani-baglantisi.js DATABASES defaults)

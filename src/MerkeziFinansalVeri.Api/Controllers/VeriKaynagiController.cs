@@ -19,12 +19,12 @@ public class VeriKaynagiController(
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<VeriKaynagiDto>>> GetList(CancellationToken cancellationToken)
     {
-        var items = await dbContext.VeriKaynaklari
+        var entities = await dbContext.VeriKaynaklari
             .AsNoTracking()
             .OrderBy(v => v.KatmanKodu)
-            .Select(v => ToDto(v))
             .ToListAsync(cancellationToken);
 
+        var items = entities.Select(ToDto).ToList();
         return Ok(items);
     }
 

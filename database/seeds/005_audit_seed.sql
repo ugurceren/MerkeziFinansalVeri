@@ -1,4 +1,4 @@
-USE [MGTV_Uygulama];
+USE [TDUTIL];
 GO
 
 -- VIB.audit_ActivityLog (HomePage.html portal — Son Aktiviteler)

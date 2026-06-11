@@ -1,4 +1,4 @@
-USE [MGTV_Uygulama];
+USE [TDUTIL];
 GO
 
 -- VIB.ops_ReconciliationPeriod (PERIODS)

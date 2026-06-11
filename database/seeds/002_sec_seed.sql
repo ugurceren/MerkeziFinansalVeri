@@ -1,4 +1,4 @@
-USE [MGTV_Uygulama];
+USE [TDUTIL];
 GO
 
 -- VIB.sec_Role (ROLES)
