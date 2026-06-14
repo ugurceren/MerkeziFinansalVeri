@@ -5,6 +5,7 @@ namespace MerkeziFinansalVeri.Domain.Entities;
 public class Kullanici : AuditBase
 {
     public int KullaniciId { get; set; }
+    public string KullaniciKodu { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Eposta { get; set; } = string.Empty;
     public string RolId { get; set; } = string.Empty;

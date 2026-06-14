@@ -52,6 +52,7 @@ public class KullanicilarController(
         var entity = new Kullanici
         {
             KullaniciId = dto.KullaniciId,
+            KullaniciKodu = dto.KullaniciKodu,
             Ad = dto.Ad,
             Eposta = dto.Eposta,
             RolId = dto.RolId,
@@ -83,6 +84,7 @@ public class KullanicilarController(
             return NotFound();
         }
 
+        entity.KullaniciKodu = dto.KullaniciKodu;
         entity.Ad = dto.Ad;
         entity.Eposta = dto.Eposta;
         entity.RolId = dto.RolId;
@@ -178,6 +180,7 @@ public class KullanicilarController(
     private static KullaniciDto ToDto(Kullanici k) => new()
     {
         KullaniciId = k.KullaniciId,
+        KullaniciKodu = k.KullaniciKodu,
         Ad = k.Ad,
         Eposta = k.Eposta,
         RolId = k.RolId,

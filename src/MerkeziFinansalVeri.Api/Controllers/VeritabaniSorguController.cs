@@ -1,0 +1,179 @@
+using MerkeziFinansalVeri.Api.Dtos;
+using MerkeziFinansalVeri.Domain.Entities;
+using MerkeziFinansalVeri.Infrastructure.Configuration;
+using MerkeziFinansalVeri.Infrastructure.Data;
+using MerkeziFinansalVeri.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
+namespace MerkeziFinansalVeri.Api.Controllers;
+
+[ApiController]
+[Route("api/veritabani-sorgu")]
+public class VeritabaniSorguController(
+    ITdConnectionService tdConnectionService,
+    AppDbContext dbContext,
+    IActivityLogService activityLogService,
+    IPermissionService permissionService,
+    IConfiguration configuration,
+    IOptions<TdConnectionsOptions> tdOptions,
+    ILogger<VeritabaniSorguController> logger) : ControllerBase
+{
+    [HttpGet("ayarlar")]
+    public async Task<ActionResult<VeritabaniSorguAyarDto>> Ayarlar(CancellationToken cancellationToken)
+    {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "veritabani-sorgu", cancellationToken);
+        if (denied is not null) return denied;
+
+        var katmanlar = tdOptions.Value.Connections
+            .OrderBy(k => k.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(k => new VeritabaniSorguKatmanDto
+            {
+                KatmanKodu = k.Key,
+                Sunucu = k.Value.Server,
+                Port = k.Value.Port,
+                Veritabani = k.Value.Database,
+                KimlikDogrulama = k.Value.KimlikDogrulama
+            })
+            .ToList();
+
+        return Ok(new VeritabaniSorguAyarDto
+        {
+            VarsayilanKatman = configuration["varsayilanKatman"] ?? "TDSTG",
+            MaxSatir = int.TryParse(configuration["maxSatir"], out var maxSatir) ? maxSatir : 5000,
+            SorguTimeoutSaniye = int.TryParse(configuration["sorguTimeoutSaniye"], out var timeout) ? timeout : 120,
+            VarsayilanSorgu = configuration["varsayilanSorgu"] ?? string.Empty,
+            ConfigDosyasi = "config/td-connections.json",
+            Katmanlar = katmanlar
+        });
+    }
+
+    [HttpPost("calistir")]
+    public async Task<ActionResult<VeritabaniSorguSonucDto>> Calistir(
+        [FromBody] VeritabaniSorguRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "veritabani-sorgu", cancellationToken);
+        if (denied is not null) return denied;
+
+        if (string.IsNullOrWhiteSpace(dto.Sql))
+        {
+            return BadRequest(new VeritabaniSorguSonucDto { Basarili = false, Hata = "Sorgu metni boş." });
+        }
+
+        var maxRows = int.TryParse(configuration["maxSatir"], out var maxSatir) ? maxSatir : 5000;
+        var timeoutSeconds = int.TryParse(configuration["sorguTimeoutSaniye"], out var timeout) ? timeout : 120;
+        var katman = string.IsNullOrWhiteSpace(dto.KatmanKodu) ? "TDSTG" : dto.KatmanKodu.Trim();
+
+        var result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
+            katman,
+            dto.Sql,
+            timeoutSeconds,
+            maxRows,
+            cancellationToken);
+
+        await TryLogExecutionAsync(katman, result, cancellationToken);
+
+        if (!result.Basarili)
+        {
+            await TryActivityLogAsync(
+                "veritabani_sorgu",
+                "Sorgu hatası",
+                $"{katman}: {result.Hata}",
+                cancellationToken);
+
+            return Ok(ToDto(result, kisitlandi: false, maxRows));
+        }
+
+        await TryActivityLogAsync(
+            "veritabani_sorgu",
+            "Sorgu çalıştırıldı",
+            $"{katman} — {result.SatirSayisi} satır, {result.SureMs} ms",
+            cancellationToken);
+
+        var kisitlandi = result.SatirSayisi >= maxRows;
+        return Ok(ToDto(result, kisitlandi, maxRows));
+    }
+
+    [HttpPost("test/{katmanKodu}")]
+    public async Task<ActionResult<VeriKaynagiTestSonucDto>> Test(string katmanKodu, CancellationToken cancellationToken)
+    {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "veritabani-sorgu", cancellationToken);
+        if (denied is not null) return denied;
+
+        var basarili = await tdConnectionService.TestConnectionAsync(katmanKodu, cancellationToken);
+        return Ok(new VeriKaynagiTestSonucDto
+        {
+            KatmanKodu = katmanKodu,
+            Basarili = basarili,
+            Mesaj = basarili
+                ? "Bağlantı başarılı."
+                : "Bağlantı başarısız. config/td-connections.json dosyasını kontrol edin."
+        });
+    }
+
+    private async Task TryLogExecutionAsync(string katman, TdQueryResult result, CancellationToken cancellationToken)
+    {
+        try
+        {
+            dbContext.SorguCalistirmaLoglari.Add(new SorguCalistirmaLog
+            {
+                KatmanKodu = katman,
+                CalistirmaZamani = DateTime.UtcNow,
+                SatirSayisi = result.Basarili ? result.SatirSayisi : null,
+                SureMs = result.SureMs,
+                Hata = result.Hata,
+                KullaniciId = HttpContext.GetCurrentUserId()
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Sorgu çalıştırma logu yazılamadı (uygulama DB erişilemiyor olabilir).");
+        }
+    }
+
+    private async Task TryActivityLogAsync(
+        string olayTipi,
+        string baslik,
+        string? detay,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await activityLogService.LogAsync(
+                olayTipi,
+                baslik,
+                detay,
+                HttpContext.GetCurrentUserId(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Aktivite logu yazılamadı.");
+        }
+    }
+
+    private static VeritabaniSorguSonucDto ToDto(TdQueryResult result, bool kisitlandi, int maxRows)
+    {
+        var kolonlar = result.Satirlar.Count > 0
+            ? result.Satirlar[0].Keys.ToList()
+            : (IReadOnlyList<string>)Array.Empty<string>();
+
+        return new VeritabaniSorguSonucDto
+        {
+            Basarili = result.Basarili,
+            Hata = result.Hata,
+            Kolonlar = kolonlar,
+            Satirlar = result.Satirlar,
+            SatirSayisi = result.SatirSayisi,
+            SureMs = result.SureMs,
+            Kisitlandi = kisitlandi,
+            MaxSatir = maxRows
+        };
+    }
+}

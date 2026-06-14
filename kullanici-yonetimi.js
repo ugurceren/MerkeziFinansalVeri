@@ -11,7 +11,7 @@
     let USERS = [];
     let roleMap = {};
     let selectedRoleId = 'admin';
-    let selectedUserId = 9;
+    let selectedUserId = 5124;
 
     async function loadData() {
         try {

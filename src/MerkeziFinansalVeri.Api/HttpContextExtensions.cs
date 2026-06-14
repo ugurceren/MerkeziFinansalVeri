@@ -3,7 +3,7 @@ namespace MerkeziFinansalVeri.Api;
 public static class CurrentUserKeys
 {
     public const string UserIdItemKey = "CurrentUserId";
-    public const int DefaultUserId = 9;
+    public const int DefaultUserId = 5124;
 }
 
 public static class HttpContextExtensions

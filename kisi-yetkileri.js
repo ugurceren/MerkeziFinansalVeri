@@ -4,7 +4,7 @@
     let USERS = [];
     let roleMap = {};
     let userOverrides = {};
-    let selectedUserId = 9;
+    let selectedUserId = 5124;
     let searchQuery = '';
     let saveHintTimer = null;
 

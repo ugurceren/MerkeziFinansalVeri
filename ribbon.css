@@ -93,6 +93,9 @@ body{font-family:'Segoe UI',sans-serif;background:var(--rb-bg);color:var(--rb-te
 .rbtn.active i{color:var(--rb-rbtn-active-text)}
 .rbtn span{font-size:11px;color:var(--rb-text-secondary);white-space:normal;text-align:center;line-height:1.25;font-weight:600}
 .rbtn.active span{color:var(--rb-rbtn-active-text);font-weight:700}
+.rbtn.is-disabled,.rbtn.is-disabled:hover{opacity:0.45;cursor:not-allowed;pointer-events:none;background:transparent;border-color:transparent;box-shadow:none}
+.rbtn.is-disabled i,.rbtn.is-disabled span{color:var(--rb-text-secondary)}
+.rtab.is-disabled{opacity:0.45;cursor:not-allowed;pointer-events:none}
 
 .tab-panel{display:none;overflow:visible}
 .tab-panel.active{display:flex;overflow:visible}

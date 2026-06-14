@@ -6,8 +6,11 @@ $root = Split-Path -Parent $PSScriptRoot
 
 $files = @(
     "database\migrations\001_initial_schema.sql",
+    "database\migrations\003_sec_user_usercode.sql",
     "database\seeds\001_ref_seed.sql",
     "database\seeds\002_sec_seed.sql",
+    "database\seeds\007_fill_role_page_permission.sql",
+    "database\seeds\006_sec_users_kuveytturk.sql",
     "database\seeds\003_ops_seed.sql",
     "database\seeds\004_cfg_seed.sql",
     "database\seeds\005_audit_seed.sql"

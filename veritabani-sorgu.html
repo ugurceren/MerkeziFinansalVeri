@@ -169,18 +169,41 @@
     <div class="page-area">
         <div class="page-body">
             <div class="vs-layout">
-                <div class="vs-placeholder">
-                    <div class="vs-placeholder-icon" aria-hidden="true">
-                        <i class="ti ti-database"></i>
+                <div class="vs-workspace">
+                    <div class="vs-controls">
+                        <span class="vs-katman-label" for="vsKatmanSelect">Katman</span>
+                        <select id="vsKatmanSelect" class="vs-katman-select" aria-label="Veritabanı katmanı"></select>
+                        <button type="button" class="rbtn vs-action-btn" id="vsTestBtn">Bağlantıyı Test Et</button>
+                        <div class="vs-status">
+                            <span class="vs-status-dot" id="vsStatusDot" aria-hidden="true"></span>
+                            <span id="vsStatusText">API bağlantısı kontrol ediliyor…</span>
+                        </div>
                     </div>
-                    <h3>Veritabanı Sorgusu</h3>
-                    <p>Bu alanda kullanıcılar TDSTG, TDMAIN ve TDREPORT veritabanlarına güvenli sorgu gönderebilecek. SQL editörü, sonuç tablosu ve sorgu geçmişi burada yer alacak.</p>
-                    <div class="vs-db-tags">
-                        <span class="vs-db-tag stg">TDSTG</span>
-                        <span class="vs-db-tag main">TDMAIN</span>
-                        <span class="vs-db-tag report">TDREPORT</span>
+
+
+                    <div class="vs-query-header">
+                        <label class="vs-query-label" for="vsQueryInput">SQL sorgusu</label>
+                        <button type="button" class="vs-execute-btn" id="vsRunBtn" title="Sorguyu çalıştır (Ctrl+Enter)">
+                            <span class="vs-execute-icon" aria-hidden="true">
+                                <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 2.5v11l9-5.5-9-5.5z"/>
+                                </svg>
+                            </span>
+                            <span>Çalıştır</span>
+                        </button>
                     </div>
-                    <span class="vs-coming">Yakında — sorgu arayüzü geliştirme aşamasında</span>
+                    <textarea id="vsQueryInput" class="vs-query-input" spellcheck="false" placeholder="SELECT .."></textarea>
+
+                    <div class="vs-meta" id="vsQueryMeta"></div>
+                    <div class="vs-error" id="vsQueryError" hidden role="alert"></div>
+
+                    <div class="vs-results-wrap" id="vsResultsWrap">
+                        <p class="vs-empty" id="vsResultsEmpty">Sorgu çalıştırıldığında sonuçlar burada listelenir.</p>
+                        <table class="vs-results-table">
+                            <thead id="vsResultsHead"></thead>
+                            <tbody id="vsResultsBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -188,8 +211,13 @@
 
 </div>
 
+<script src="api-client.js"></script>
+<script src="user-session.js"></script>
+<script src="page-permissions.js"></script>
 <script src="status-bar.js"></script>
+<script src="dev-user-switcher.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
+<script src="veritabani-sorgu.js"></script>
 </body>
 </html>

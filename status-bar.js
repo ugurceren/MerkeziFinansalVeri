@@ -6,7 +6,7 @@
     };
 
     function getUserName() {
-        return localStorage.getItem('userName') || 'Ahmet Yılmaz';
+        return localStorage.getItem('userName') || 'Uğur Çeren';
     }
 
     function getInitials(name) {
@@ -59,6 +59,7 @@
 
     window.initStatusBar = initStatusBar;
     window.syncStatusUser = syncStatusUser;
+    window.StatusBarInfo = APP_INFO;
 
     document.addEventListener('DOMContentLoaded', initStatusBar);
 })();

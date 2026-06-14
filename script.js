@@ -3,17 +3,15 @@ function initThemeToggleFromScript() {
     if (typeof initThemeMenu === 'function') initThemeMenu();
 }
 
-// Kullanıcı adı yönetimi
+// Kullanıcı adı — user-session.js ribbon sayfalarında DB'den yükler
 function initUserName() {
     const userNameElement = document.getElementById('userName');
     const userAvatarElement = document.getElementById('userAvatar');
     if (!userNameElement || !userAvatarElement) return;
 
     let userName = localStorage.getItem('userName');
-
-    if (!userName) {
-        userName = prompt('Lütfen adınızı girin:');
-        if (!userName) userName = 'Kullanıcı';
+    if (!userName || userName === 'Kullanıcı') {
+        userName = 'Uğur Çeren';
         localStorage.setItem('userName', userName);
     }
 

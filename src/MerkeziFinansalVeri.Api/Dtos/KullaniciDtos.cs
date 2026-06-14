@@ -3,6 +3,7 @@ namespace MerkeziFinansalVeri.Api.Dtos;
 public sealed class KullaniciDto
 {
     public int KullaniciId { get; set; }
+    public string KullaniciKodu { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Eposta { get; set; } = string.Empty;
     public string RolId { get; set; } = string.Empty;
@@ -14,6 +15,7 @@ public sealed class KullaniciDto
 public sealed class KullaniciCreateDto
 {
     public int KullaniciId { get; set; }
+    public string KullaniciKodu { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Eposta { get; set; } = string.Empty;
     public string RolId { get; set; } = string.Empty;
@@ -22,6 +24,7 @@ public sealed class KullaniciCreateDto
 
 public sealed class KullaniciUpdateDto
 {
+    public string KullaniciKodu { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Eposta { get; set; } = string.Empty;
     public string RolId { get; set; } = string.Empty;

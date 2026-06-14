@@ -46,6 +46,48 @@
     text-overflow: ellipsis;
 }
 
+.dev-user-switcher-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 1px solid var(--rb-border, rgba(255, 255, 255, 0.12));
+    flex-shrink: 0;
+}
+
+.dev-user-switcher-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #f59e0b;
+    white-space: nowrap;
+}
+
+.dev-user-switcher {
+    max-width: 220px;
+    height: 24px;
+    padding: 0 6px;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border-radius: 4px;
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--rb-header-text, #e5e9f0);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.dev-user-switcher:focus {
+    outline: 1px solid #f59e0b;
+    outline-offset: 1px;
+}
+
+.dev-user-switcher:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .status-bar-app {
     flex: 1.4;
     text-align: center;

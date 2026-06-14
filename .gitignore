@@ -48,3 +48,7 @@ packages/
 *~
 .env
 .env.local
+
+# Local push helper logs
+_push_log.txt
+_push_status.txt

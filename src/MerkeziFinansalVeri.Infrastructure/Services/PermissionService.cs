@@ -5,6 +5,26 @@ namespace MerkeziFinansalVeri.Infrastructure.Services;
 
 public class PermissionService(AppDbContext dbContext) : IPermissionService
 {
+    public async Task<bool> IsActiveUserAsync(int kullaniciId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Kullanicilar
+            .AsNoTracking()
+            .AnyAsync(
+                k => k.KullaniciId == kullaniciId && !k.SilindiMi && k.Durum == "active",
+                cancellationToken);
+    }
+
+    public async Task<bool> HasPageAccessAsync(int kullaniciId, string sayfaId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(sayfaId))
+        {
+            return false;
+        }
+
+        var yetkiler = await GetEffectivePermissionsAsync(kullaniciId, cancellationToken);
+        return yetkiler.Any(y => y.SayfaId == sayfaId && y.IzinVerildi);
+    }
+
     public async Task<IReadOnlyList<SayfaYetkiDto>> GetEffectivePermissionsAsync(
         int kullaniciId,
         CancellationToken cancellationToken = default)

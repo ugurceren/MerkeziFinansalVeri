@@ -8,7 +8,7 @@
     function getUserId() {
         const stored = localStorage.getItem('currentUserId');
         if (stored) return parseInt(stored, 10);
-        return 9;
+        return 5124;
     }
 
     function getUserRole() {
@@ -112,10 +112,13 @@
         // Portal / VK / Aktivite
         getPortalOzet() { return request('/portal/ozet'); },
         getVkKurallar() { return request('/veri-kalitesi/kurallar'); },
+        getVkKurallarAyarlar() { return request('/veri-kalitesi/kurallar/ayarlar'); },
+        getVkKurallarSorgu() { return request('/veri-kalitesi/kurallar/sorgu'); },
         getVkGunlukSonuclar(tarih) {
             const q = tarih ? `?tarih=${tarih}` : '';
             return request(`/veri-kalitesi/gunluk-sonuclar${q}`);
         },
+        getVkGunlukSonuclarSorgu() { return request('/veri-kalitesi/gunluk-sonuclar/sorgu'); },
         getAktiviteLog(limit = 20) { return request(`/aktivite-log?limit=${limit}`); },
 
         // Veri Kaynakları
@@ -126,6 +129,15 @@
                 method: 'POST',
                 body: connectionParams || null
             });
+        },
+
+        // Veritabanı Sorgusu
+        getVeritabaniSorguAyarlar() { return request('/veritabani-sorgu/ayarlar'); },
+        calistirVeritabaniSorgu(data) {
+            return request('/veritabani-sorgu/calistir', { method: 'POST', body: data });
+        },
+        testVeritabaniSorguKatman(katmanKodu) {
+            return request(`/veritabani-sorgu/test/${encodeURIComponent(katmanKodu)}`, { method: 'POST' });
         }
     };
 

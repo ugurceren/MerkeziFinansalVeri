@@ -111,15 +111,10 @@
     ];
 
     const USERS = [
-        { id: 9, name: 'Uğur Çeren', email: 'ugur.ceren@sirket.com', roleId: 'admin', status: 'active', lastLogin: '2026-06-07 10:30' },
-        { id: 1, name: 'Ahmet Yılmaz', email: 'ahmet.yilmaz@sirket.com', roleId: 'admin', status: 'active', lastLogin: '2026-06-07 09:14' },
-        { id: 2, name: 'Ayşe Demir', email: 'ayse.demir@sirket.com', roleId: 'mutabakat', status: 'active', lastLogin: '2026-06-06 16:42' },
-        { id: 3, name: 'Mehmet Kara', email: 'mehmet.kara@sirket.com', roleId: 'rapor', status: 'active', lastLogin: '2026-06-07 08:05' },
-        { id: 4, name: 'Zeynep Can', email: 'zeynep.can@sirket.com', roleId: 'surec', status: 'active', lastLogin: '2026-06-05 11:30' },
-        { id: 5, name: 'Seda Yıldız', email: 'seda.yildiz@sirket.com', roleId: 'veri-kalitesi', status: 'active', lastLogin: '2026-06-04 14:18' },
-        { id: 6, name: 'Fatih Şahin', email: 'fatih.sahin@sirket.com', roleId: 'mutabakat', status: 'passive', lastLogin: '2026-05-28 10:02' },
-        { id: 7, name: 'Can Öztürk', email: 'can.ozturk@sirket.com', roleId: 'viewer', status: 'active', lastLogin: '2026-06-07 07:22' },
-        { id: 8, name: 'Elif Arslan', email: 'elif.arslan@sirket.com', roleId: 'veri-kalitesi', status: 'active', lastLogin: '2026-06-06 13:45' }
+        { id: 5124, name: 'Uğur Çeren', email: 'ugur.ceren@kuveytturk.com.tr', roleId: 'admin', status: 'active', userCode: 'uceren' },
+        { id: 5853, name: 'Mesut Yanık', email: 'mesut.yanik@kuveytturk.com.tr', roleId: 'rapor', status: 'active', userCode: 'myanik' },
+        { id: 5067, name: 'Selim Eşki', email: 'selim.eski@kuveytturk.com.tr', roleId: 'surec', status: 'active', userCode: 'selime' },
+        { id: 9653, name: 'İbrahim Tahtabiçen', email: 'ibrahim.tahtabicen@kuveytturk.com.tr', roleId: 'veri-kalitesi', status: 'active', userCode: 'ibrahimt' }
     ];
 
     const roleMap = Object.fromEntries(ROLES.map(r => [r.id, r]));

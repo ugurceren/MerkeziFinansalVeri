@@ -50,7 +50,7 @@ public class TdConnectionService(
             await connection.OpenAsync(cancellationToken);
 
             await using var command = connection.CreateCommand();
-            command.CommandText = WrapWithRowLimit(sql, maxRows);
+            command.CommandText = sql.Trim().TrimEnd(';');
             command.CommandTimeout = timeoutSeconds;
 
             var satirlar = new List<Dictionary<string, object?>>();
@@ -61,7 +61,7 @@ public class TdConnectionService(
                 var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
-                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : FormatCell(reader.GetValue(i));
                 }
 
                 satirlar.Add(row);
@@ -211,13 +211,11 @@ public class TdConnectionService(
         return ReadOnlyPrefixes.Contains(firstWord.ToUpperInvariant());
     }
 
-    private static string WrapWithRowLimit(string sql, int maxRows)
+    private static object? FormatCell(object value) => value switch
     {
-        if (sql.Contains("TOP ", StringComparison.OrdinalIgnoreCase))
-        {
-            return sql;
-        }
-
-        return $"SELECT TOP ({maxRows}) * FROM ({sql.Trim().TrimEnd(';')}) AS q";
-    }
+        DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss"),
+        DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm:ss"),
+        byte[] bytes => Convert.ToBase64String(bytes),
+        _ => value
+    };
 }

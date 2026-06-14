@@ -84,6 +84,7 @@ GO
 IF OBJECT_ID(N'VIB.sec_User', N'U') IS NULL
 CREATE TABLE VIB.sec_User (
     UserId          INT             NOT NULL,
+    UserCode        NVARCHAR(50)    NOT NULL,
     Name            NVARCHAR(200)   NOT NULL,
     Email           NVARCHAR(200)   NOT NULL,
     RoleId          NVARCHAR(50)    NOT NULL,

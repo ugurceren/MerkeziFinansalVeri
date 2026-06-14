@@ -2,6 +2,10 @@ namespace MerkeziFinansalVeri.Infrastructure.Services;
 
 public interface IPermissionService
 {
+    Task<bool> IsActiveUserAsync(int kullaniciId, CancellationToken cancellationToken = default);
+
+    Task<bool> HasPageAccessAsync(int kullaniciId, string sayfaId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<SayfaYetkiDto>> GetEffectivePermissionsAsync(int kullaniciId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SayfaYetkiDto>> GetRolePermissionsAsync(string rolId, CancellationToken cancellationToken = default);

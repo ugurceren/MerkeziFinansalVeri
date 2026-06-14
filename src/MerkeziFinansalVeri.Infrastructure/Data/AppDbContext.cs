@@ -91,6 +91,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.ToTable("sec_User", "VIB");
             entity.HasKey(e => e.KullaniciId);
             entity.Property(e => e.KullaniciId).HasColumnName("UserId");
+            entity.Property(e => e.KullaniciKodu).HasColumnName("UserCode").HasMaxLength(50);
             entity.Property(e => e.Ad).HasColumnName("Name").HasMaxLength(200);
             entity.Property(e => e.Eposta).HasColumnName("Email").HasMaxLength(200);
             entity.Property(e => e.RolId).HasColumnName("RoleId").HasMaxLength(50);

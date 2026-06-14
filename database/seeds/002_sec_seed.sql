@@ -1,6 +1,16 @@
 USE [TDUTIL];
 GO
 
+/*
+    Önkoşullar (sırayla çalıştırılmalı):
+      1. database/migrations/001_initial_schema.sql
+      2. database/seeds/001_ref_seed.sql   → VIB.ref_Page dolu olmalı
+      3. bu dosya
+
+    NOT: Eski İngilizce şema (002_tdutil_vib_schema_en.sql) kullanıyorsanız
+    tablolar VIB.RolePagePermission / VIB.Page adındadır; bu seed VIB.sec_* yazar.
+*/
+
 -- VIB.sec_Role (ROLES)
 MERGE VIB.sec_Role AS tgt
 USING (VALUES
@@ -19,34 +29,22 @@ WHEN NOT MATCHED BY TARGET THEN
     VALUES (src.RoleId, src.Name, src.Description, src.BadgeClass);
 GO
 
--- VIB.sec_User (USERS)
-MERGE VIB.sec_User AS tgt
-USING (VALUES
-    (9, N'Uğur Çeren',   N'ugur.ceren@sirket.com',   N'admin',          N'active',  CAST(N'2026-06-07 10:30:00' AS DATETIME2)),
-    (1, N'Ahmet Yılmaz', N'ahmet.yilmaz@sirket.com', N'admin',          N'active',  CAST(N'2026-06-07 09:14:00' AS DATETIME2)),
-    (2, N'Ayşe Demir',   N'ayse.demir@sirket.com',   N'mutabakat',      N'active',  CAST(N'2026-06-06 16:42:00' AS DATETIME2)),
-    (3, N'Mehmet Kara',  N'mehmet.kara@sirket.com',   N'rapor',          N'active',  CAST(N'2026-06-07 08:05:00' AS DATETIME2)),
-    (4, N'Zeynep Can',   N'zeynep.can@sirket.com',   N'surec',          N'active',  CAST(N'2026-06-05 11:30:00' AS DATETIME2)),
-    (5, N'Seda Yıldız',  N'seda.yildiz@sirket.com',   N'veri-kalitesi',  N'active',  CAST(N'2026-06-04 14:18:00' AS DATETIME2)),
-    (6, N'Fatih Şahin',  N'fatih.sahin@sirket.com',   N'mutabakat',      N'passive', CAST(N'2026-05-28 10:02:00' AS DATETIME2)),
-    (7, N'Can Öztürk',   N'can.ozturk@sirket.com',    N'viewer',         N'active',  CAST(N'2026-06-07 07:22:00' AS DATETIME2)),
-    (8, N'Elif Arslan',  N'elif.arslan@sirket.com',   N'veri-kalitesi',  N'active',  CAST(N'2026-06-06 13:45:00' AS DATETIME2))
-) AS src(UserId, Name, Email, RoleId, Status, LastLoginAt)
-ON tgt.UserId = src.UserId
-WHEN MATCHED THEN
-    UPDATE SET
-        Name = src.Name,
-        Email = src.Email,
-        RoleId = src.RoleId,
-        Status = src.Status,
-        LastLoginAt = src.LastLoginAt,
-        UpdatedAt = SYSUTCDATETIME()
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT (UserId, Name, Email, RoleId, Status, LastLoginAt)
-    VALUES (src.UserId, src.Name, src.Email, src.RoleId, src.Status, src.LastLoginAt);
-GO
+-- VIB.sec_User — Kuveyt Türk kullanıcıları (006_sec_users_kuveytturk.sql)
 
 -- VIB.sec_RolePagePermission (role page permissions)
+IF OBJECT_ID(N'VIB.sec_RolePagePermission', N'U') IS NULL
+BEGIN
+    RAISERROR(N'HATA: VIB.sec_RolePagePermission tablosu yok. Önce 001_initial_schema.sql çalıştırın. (Eski şema kullanıyorsanız tablo adı VIB.RolePagePermission olabilir.)', 16, 1);
+END
+GO
+
+DECLARE @PageCount INT = (SELECT COUNT(*) FROM VIB.ref_Page);
+IF @PageCount = 0
+BEGIN
+    RAISERROR(N'HATA: VIB.ref_Page boş. RolePagePermission eklenemez (FK). Önce 001_ref_seed.sql çalıştırın.', 16, 1);
+END
+GO
+
 ;WITH RolSayfa AS (
     SELECT RoleId, PageId FROM (VALUES
         (N'admin', N'portal'), (N'admin', N'surec'), (N'admin', N'datasetler'), (N'admin', N'task-listesi'),
@@ -62,9 +60,17 @@ GO
         (N'viewer', N'portal')
     ) AS v(RoleId, PageId)
 )
-MERGE VIB.sec_RolePagePermission AS tgt
-USING RolSayfa AS src
-ON tgt.RoleId = src.RoleId AND tgt.PageId = src.PageId
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT (RoleId, PageId) VALUES (src.RoleId, src.PageId);
+INSERT INTO VIB.sec_RolePagePermission (RoleId, PageId)
+SELECT rs.RoleId, rs.PageId
+FROM RolSayfa rs
+WHERE EXISTS (SELECT 1 FROM VIB.sec_Role r WHERE r.RoleId = rs.RoleId)
+  AND EXISTS (SELECT 1 FROM VIB.ref_Page p WHERE p.PageId = rs.PageId)
+  AND NOT EXISTS (
+      SELECT 1 FROM VIB.sec_RolePagePermission x
+      WHERE x.RoleId = rs.RoleId AND x.PageId = rs.PageId
+  );
+GO
+
+DECLARE @PermCount INT = (SELECT COUNT(*) FROM VIB.sec_RolePagePermission);
+PRINT CONCAT(N'sec_RolePagePermission kayit sayisi: ', @PermCount);
 GO

@@ -4,7 +4,7 @@
         <div class="tab-panel" id="tab-portal">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Portal" data-section="PORTAL" data-href="HomePage.html">
+                    <button class="rbtn" type="button" data-page="Portal" data-page-id="portal" data-section="PORTAL" data-href="HomePage.html">
                         <i class="ti ti-home"></i>
                         <span>Portal</span>
                     </button>
@@ -15,7 +15,7 @@
         <div class="tab-panel" id="tab-surec">
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Süreç" data-section="SÜREÇ" data-href="surec.html">
+                    <button class="rbtn" type="button" data-page="Süreç" data-page-id="surec" data-section="SÜREÇ" data-href="surec.html">
                         <i class="ti ti-timeline"></i>
                         <span>Süreç</span>
                     </button>
@@ -23,7 +23,7 @@
             </div>
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Datasetler" data-section="SÜREÇ" data-href="surec.html?view=datasetler">
+                    <button class="rbtn" type="button" data-page="Datasetler" data-page-id="datasetler" data-section="SÜREÇ" data-href="surec.html?view=datasetler">
                         <i class="ti ti-stack-2"></i>
                         <span>Datasetler</span>
                     </button>
@@ -31,7 +31,7 @@
             </div>
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Task Listesi" data-section="SÜREÇ" data-href="surec.html?view=task-listesi">
+                    <button class="rbtn" type="button" data-page="Task Listesi" data-page-id="task-listesi" data-section="SÜREÇ" data-href="surec.html?view=task-listesi">
                         <i class="ti ti-list-check"></i>
                         <span>Task<br>Listesi</span>
                     </button>
@@ -42,15 +42,15 @@
         <div class="tab-panel" id="tab-mutabakat">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Mizan" data-section="MUTABAKAT" data-href="mizan.html">
+                    <button class="rbtn" type="button" data-page="Mizan" data-page-id="mizan" data-section="MUTABAKAT" data-href="mizan.html">
                         <i class="ti ti-scale"></i>
                         <span>Mizan</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Dönem" data-section="MUTABAKAT" data-href="mutabakat.html?view=donem">
+                    <button class="rbtn" type="button" data-page="Dönem" data-page-id="mutabakat-donem" data-section="MUTABAKAT" data-href="mutabakat.html?view=donem">
                         <i class="ti ti-calendar"></i>
                         <span>Dönem</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Fark Veren Hesaplar" data-section="MUTABAKAT" data-href="mutabakat.html?view=fark-veren">
+                    <button class="rbtn" type="button" data-page="Fark Veren Hesaplar" data-page-id="fark-veren" data-section="MUTABAKAT" data-href="mutabakat.html?view=fark-veren">
                         <i class="ti ti-arrows-diff"></i>
                         <span>Fark Veren<br>Hesaplar</span>
                     </button>
@@ -61,7 +61,7 @@
         <div class="tab-panel" id="tab-parametre">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Kebir Hesapları Sorumluluk Listesi" data-section="PARAMETRE YÖNETİMİ" data-href="kebir-hesaplari.html">
+                    <button class="rbtn" type="button" data-page="Kebir Hesapları Sorumluluk Listesi" data-page-id="kebir" data-section="PARAMETRE YÖNETİMİ" data-href="kebir-hesaplari.html">
                         <i class="ti ti-notebook"></i>
                         <span>Kebir<br>Hesapları<br>Sorumluluk Listesi</span>
                     </button>
@@ -72,11 +72,11 @@
         <div class="tab-panel" id="tab-veri-kalitesi">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Veri Kalitesi Kuralları" data-section="VERİ KALİTESİ" data-href="veri-kalitesi-kurallari.html">
+                    <button class="rbtn" type="button" data-page="Veri Kalitesi Kuralları" data-page-id="vk-kurallar" data-section="VERİ KALİTESİ" data-href="veri-kalitesi-kurallari.html">
                         <i class="ti ti-list-check"></i>
                         <span>Veri Kalitesi<br>Kuralları</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Günlük Kural Sonuçları" data-section="VERİ KALİTESİ" data-href="gunluk-kural-sonuclari.html">
+                    <button class="rbtn" type="button" data-page="Günlük Kural Sonuçları" data-page-id="vk-gunluk" data-section="VERİ KALİTESİ" data-href="gunluk-kural-sonuclari.html">
                         <i class="ti ti-calendar-stats"></i>
                         <span>Günlük Kural<br>Sonuçları</span>
                     </button>
@@ -87,11 +87,11 @@
         <div class="tab-panel" id="tab-raporlama">
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Ters Bakiye Raporu" data-section="RAPORLAMA" data-href="HomePage.html?page=ters-bakiye">
+                    <button class="rbtn" type="button" data-page="Ters Bakiye Raporu" data-page-id="ters-bakiye" data-section="RAPORLAMA" data-href="HomePage.html?page=ters-bakiye">
                         <i class="ti ti-arrows-exchange"></i>
                         <span>Ters Bakiye<br>Raporu</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Nazım Hesapları Raporu" data-section="RAPORLAMA" data-href="HomePage.html?page=nazim">
+                    <button class="rbtn" type="button" data-page="Nazım Hesapları Raporu" data-page-id="nazim" data-section="RAPORLAMA" data-href="HomePage.html?page=nazim">
                         <i class="ti ti-file-analytics"></i>
                         <span>Nazım Hesapları<br>Raporu</span>
                     </button>
@@ -99,7 +99,7 @@
             </div>
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Veritabanı Sorgusu" data-section="RAPORLAMA" data-href="veritabani-sorgu.html">
+                    <button class="rbtn" type="button" data-page="Veritabanı Sorgusu" data-page-id="veritabani-sorgu" data-section="RAPORLAMA" data-href="veritabani-sorgu.html">
                         <i class="ti ti-database"></i>
                         <span>Veritabanı<br>Sorgusu</span>
                     </button>
@@ -110,7 +110,7 @@
         <div class="tab-panel" id="tab-ayarlar">
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Uygulama Ayarları" data-section="AYARLAR" data-href="ayarlar.html">
+                    <button class="rbtn" type="button" data-page="Uygulama Ayarları" data-page-id="ayarlar" data-section="AYARLAR" data-href="ayarlar.html">
                         <i class="ti ti-settings"></i>
                         <span>Uygulama<br>Ayarları</span>
                     </button>
@@ -121,11 +121,11 @@
         <div class="tab-panel" id="tab-yonetim">
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Kullanıcı Yönetimi" data-section="YÖNETİM" data-href="kullanici-yonetimi.html">
+                    <button class="rbtn" type="button" data-page="Kullanıcı Yönetimi" data-page-id="kullanici-yonetimi" data-section="YÖNETİM" data-href="kullanici-yonetimi.html">
                         <i class="ti ti-users"></i>
                         <span>Kullanıcı<br>Yönetimi</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Kişi Bazlı Yetkiler" data-section="YÖNETİM" data-href="kisi-yetkileri.html">
+                    <button class="rbtn" type="button" data-page="Kişi Bazlı Yetkiler" data-page-id="kisi-yetkileri" data-section="YÖNETİM" data-href="kisi-yetkileri.html">
                         <i class="ti ti-user-shield"></i>
                         <span>Kişi Bazlı<br>Yetkiler</span>
                     </button>
@@ -133,7 +133,7 @@
             </div>
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Veritabanı Bağlantısı" data-section="YÖNETİM" data-href="veritabani-baglantisi.html">
+                    <button class="rbtn" type="button" data-page="Veritabanı Bağlantısı" data-page-id="veritabani-baglantisi" data-section="YÖNETİM" data-href="veritabani-baglantisi.html">
                         <i class="ti ti-plug-connected"></i>
                         <span>Veritabanı<br>Bağlantısı</span>
                     </button>
@@ -165,7 +165,7 @@
     };
 
     function initUserBar() {
-        const userName = localStorage.getItem('userName') || 'Ahmet Yılmaz';
+        const userName = localStorage.getItem('userName') || 'Uğur Çeren';
         const initials = userName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
         const el = document.getElementById('tbUser');
         const av = document.getElementById('tbAvatar');
@@ -242,6 +242,7 @@
 
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
+                if (tab.classList.contains('is-disabled')) return;
                 tabs.forEach(t => t.classList.remove('active'));
                 panels.forEach(p => p.classList.remove('active'));
                 tab.classList.add('active');
@@ -252,6 +253,7 @@
 
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
+                if (btn.classList.contains('is-disabled')) return;
                 if (btn.classList.contains('ribbon-dropdown-trigger')) return;
                 if (btn.classList.contains('theme-option')) return;
 
