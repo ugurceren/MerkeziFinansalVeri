@@ -3,10 +3,19 @@ namespace MerkeziFinansalVeri.Api.Dtos;
 public sealed class PortalOzetDto
 {
     public PortalKpiDto Kpi { get; set; } = new();
+    public VeriKalitesiKpiDto VeriKalitesiKpi { get; set; } = new();
+    public AktifDonemOzetDto? AktifDonem { get; set; }
     public IReadOnlyList<EkipIlerlemeDto> EkipIlerleme { get; set; } = [];
     public IReadOnlyList<AktiviteLogDto> SonAktiviteler { get; set; } = [];
     public IReadOnlyList<EkipIsYukuDto> EkipIsYuku { get; set; } = [];
     public SistemDurumuDto SistemDurumu { get; set; } = new();
+}
+
+public sealed class AktifDonemOzetDto
+{
+    public int DonemId { get; set; }
+    public string YilAy { get; set; } = string.Empty;
+    public string Etiket { get; set; } = string.Empty;
 }
 
 public sealed class PortalKpiDto
@@ -15,6 +24,16 @@ public sealed class PortalKpiDto
     public int MutabakatDonemSayisi { get; set; }
     public int AcikFarkSayisi { get; set; }
     public int BekleyenGorevSayisi { get; set; }
+}
+
+public sealed class VeriKalitesiKpiDto
+{
+    public int ToplamKuralSayisi { get; set; }
+    public int AktifKuralSayisi { get; set; }
+    public int SonCalistirmaHataliSayisi { get; set; }
+    public int SonCalistirmaGecenSayisi { get; set; }
+    public int BasariYuzdesi { get; set; }
+    public DateOnly? SonCalistirmaTarihi { get; set; }
 }
 
 public sealed class EkipIlerlemeDto

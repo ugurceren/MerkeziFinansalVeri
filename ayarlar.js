@@ -1,7 +1,6 @@
 (function () {
     const STORAGE = {
-        defaultPage: 'defaultPage',
-        mutabakatPeriod: 'mutabakatPeriod'
+        defaultPage: 'defaultPage'
     };
 
     const DEFAULT_PAGES = [
@@ -61,20 +60,6 @@
                     </div>
                 </section>
                 </div>
-
-                <section class="ay-card" id="mutabakat-donemi">
-                    <div class="ay-card-head">
-                        <h3><i class="ti ti-calendar" aria-hidden="true"></i> Mutabakat Dönemi</h3>
-                        <p>Mutabakat ve raporlama için aktif dönem</p>
-                    </div>
-                    <div class="ay-card-body">
-                        <div class="ay-field">
-                            <label for="ayMutabakatPeriod">Dönem (Ay / Yıl)</label>
-                            <input type="month" id="ayMutabakatPeriod" class="ay-month-input">
-                        </div>
-                        <p class="ay-hint">Kebir hesapları ve mutabakat ekranlarında varsayılan filtre dönemi olarak kullanılır.</p>
-                    </div>
-                </section>
 
                 <section class="ay-card" id="hakkinda">
                     <div class="ay-card-head">
@@ -145,19 +130,6 @@
         }
     }
 
-    function initMutabakatPeriod(root) {
-        const input = (root || document).querySelector('#ayMutabakatPeriod');
-        if (!input) return;
-
-        const saved = localStorage.getItem(STORAGE.mutabakatPeriod);
-        if (saved && /^\d{4}-\d{2}$/.test(saved)) {
-            input.value = saved;
-        } else {
-            const now = new Date();
-            input.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        }
-    }
-
     function initAboutSection(root) {
         const scope = root || document;
         const map = {
@@ -175,10 +147,8 @@
     function saveSettings(root) {
         const scope = root || document;
         const defaultPage = scope.querySelector('#ayDefaultPage')?.value;
-        const period = scope.querySelector('#ayMutabakatPeriod')?.value;
 
         if (defaultPage) localStorage.setItem(STORAGE.defaultPage, defaultPage);
-        if (period) localStorage.setItem(STORAGE.mutabakatPeriod, period);
 
         showSaveMessage(scope);
     }
@@ -202,7 +172,6 @@
         const root = container || document;
         initThemeOptions(root);
         initDefaultPageSelect(root);
-        initMutabakatPeriod(root);
         initAboutSection(root);
         initScrollLinks();
 
@@ -212,16 +181,39 @@
         if (hash) setTimeout(() => scrollToSection(hash), 100);
     }
 
+    function initAyarlarShell() {
+        const pageBody = document.getElementById('pageBody');
+        const root = pageBody || document;
+
+        if (window.SistemDurumuPage?.isSistemDurumuView?.()) {
+            if (pageBody) {
+                window.SistemDurumuPage.render(pageBody);
+            }
+            return;
+        }
+
+        if (pageBody && !pageBody.querySelector('.ay-layout')) {
+            pageBody.innerHTML = buildAyarlarHTML();
+        }
+
+        initAyarlarPage(root);
+    }
+
     window.buildAyarlarHTML = buildAyarlarHTML;
     window.initAyarlarPage = initAyarlarPage;
     window.scrollToAyarlarSection = scrollToSection;
 
+    document.addEventListener('ribbon-ready', () => {
+        if (!(window.location.pathname.split('/').pop() || '').toLowerCase().includes('ayarlar.html')) return;
+        if (typeof initUserBar === 'function') initUserBar();
+        if (typeof initThemeMenu === 'function') initThemeMenu();
+        initAyarlarShell();
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
-        if (document.querySelector('.ay-layout')) {
-            initAyarlarPage(document);
-        }
+        if (document.getElementById('ribbonBody')) return;
+        initAyarlarShell();
     });
 
     window.getDefaultPage = () => localStorage.getItem(STORAGE.defaultPage) || 'HomePage.html';
-    window.getMutabakatPeriod = () => localStorage.getItem(STORAGE.mutabakatPeriod);
 })();

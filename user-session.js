@@ -36,7 +36,9 @@
     }
 
     async function loadUserFromApi() {
-        const userId = ApiClient?.userId || DEFAULT_USER_ID;
+        const userId = window.DevAdminMode?.isActive?.()
+            ? window.DevAdminMode.ADMIN_USER_ID
+            : (ApiClient?.userId || DEFAULT_USER_ID);
         try {
             const user = await ApiClient.getKullanici(userId);
             if (!user || user.durum !== 'active') {

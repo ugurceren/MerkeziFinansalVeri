@@ -1,6 +1,8 @@
 (function () {
     const HREF_TO_PAGE_ID = {
         'homepage.html': 'portal',
+        'homepage.html?view=hizli-erisim': 'portal',
+        'ayarlar.html?view=sistem-durumu': 'ayarlar',
         'homepage.html?page=ters-bakiye': 'ters-bakiye',
         'homepage.html?page=nazim': 'nazim',
         'surec.html': 'surec',
@@ -21,6 +23,17 @@
     };
 
     let allowedPages = new Set(['portal']);
+    let permissionsInitPromise = null;
+
+    function applyFallbackPermissions() {
+        const roleId = localStorage.getItem('userRole') || ApiClient?.userRole || 'viewer';
+        if (window.KullaniciShared?.getRolePages) {
+            allowedPages = new Set(KullaniciShared.getRolePages(roleId));
+        }
+        if (!allowedPages.size) {
+            allowedPages.add('portal');
+        }
+    }
 
     function normalizeHref(href) {
         if (!href) return '';
@@ -48,7 +61,11 @@
         if (path === 'homepage.html') {
             if (pageParam === 'ters-bakiye') return 'ters-bakiye';
             if (pageParam === 'nazim') return 'nazim';
+            if (view === 'hizli-erisim') return 'portal';
             return 'portal';
+        }
+        if (path === 'ayarlar.html') {
+            return 'ayarlar';
         }
         if (path === 'surec.html') {
             if (view === 'datasetler') return 'datasetler';
@@ -74,6 +91,19 @@
     }
 
     function applyRibbonPermissions() {
+        if (window.DevAdminMode?.isActive?.()) {
+            document.querySelectorAll('.rbtn[data-href]').forEach(btn => {
+                const pageId = btn.dataset.pageId || hrefToPageId(btn.dataset.href);
+                if (pageId) btn.dataset.pageId = pageId;
+                setButtonDisabled(btn, false);
+            });
+            document.querySelectorAll('.rtab').forEach(tab => {
+                tab.classList.remove('is-disabled');
+                tab.setAttribute('aria-disabled', 'false');
+            });
+            return;
+        }
+
         document.querySelectorAll('.rbtn[data-href]').forEach(btn => {
             const pageId = btn.dataset.pageId || hrefToPageId(btn.dataset.href);
             if (!pageId) return;
@@ -91,6 +121,8 @@
     }
 
     function guardCurrentPage() {
+        if (window.DevAdminMode?.isActive?.()) return;
+
         const pageId = detectCurrentPageId();
         if (!pageId || pageId === 'portal') return;
         if (allowedPages.has(pageId)) return;
@@ -100,6 +132,11 @@
     }
 
     async function loadPermissions() {
+        if (window.DevAdminMode?.isActive?.()) {
+            allowedPages = new Set(Object.values(HREF_TO_PAGE_ID));
+            return;
+        }
+
         try {
             const userId = ApiClient.userId;
             const yetkiler = await ApiClient.getKullaniciYetkiler(userId);
@@ -111,24 +148,39 @@
             }
         } catch (err) {
             console.warn('Sayfa yetkileri yüklenemedi:', err);
+            applyFallbackPermissions();
         }
     }
 
-    async function initPagePermissions() {
-        await loadPermissions();
-        applyRibbonPermissions();
-        guardCurrentPage();
+    function initPagePermissions() {
+        if (!permissionsInitPromise) {
+            permissionsInitPromise = (async () => {
+                await loadPermissions();
+                applyRibbonPermissions();
+                guardCurrentPage();
+            })();
+        }
+        return permissionsInitPromise;
     }
 
     window.PagePermissions = {
-        load: loadPermissions,
+        load: async () => {
+            permissionsInitPromise = null;
+            await loadPermissions();
+        },
         applyRibbon: applyRibbonPermissions,
         guardPage: guardCurrentPage,
-        hasAccess: pageId => allowedPages.has(pageId),
-        getAllowedPages: () => new Set(allowedPages)
+        hasAccess: pageId => window.DevAdminMode?.isActive?.() || allowedPages.has(pageId),
+        getAllowedPages: () => new Set(allowedPages),
+        reload: () => {
+            permissionsInitPromise = null;
+            return initPagePermissions();
+        }
     };
 
-    document.addEventListener('ribbon-ready', () => applyRibbonPermissions());
+    document.addEventListener('ribbon-ready', () => {
+        initPagePermissions();
+    });
 
     document.addEventListener('user-session-ready', () => {
         initPagePermissions();

@@ -78,35 +78,35 @@
             name: 'Mutabakat Sorumlusu',
             desc: 'Portal ve mutabakat sayfaları',
             badgeClass: 'role-mutabakat',
-            pages: ['portal', 'kebir', 'mizan', 'mutabakat-donem', 'fark-veren']
+            pages: ['portal', 'kebir', 'mizan', 'mutabakat-donem', 'fark-veren', 'ayarlar']
         },
         {
             id: 'rapor',
             name: 'Raporlama Uzmanı',
             desc: 'Portal ve raporlama sayfaları',
             badgeClass: 'role-rapor',
-            pages: ['portal', 'veritabani-sorgu', 'ters-bakiye', 'nazim']
+            pages: ['portal', 'veritabani-sorgu', 'ters-bakiye', 'nazim', 'mizan', 'mutabakat-donem', 'fark-veren', 'kebir', 'ayarlar']
         },
         {
             id: 'surec',
             name: 'Süreç Koordinatörü',
             desc: 'Portal ve süreç yönetimi',
             badgeClass: 'role-surec',
-            pages: ['portal', 'surec', 'datasetler', 'task-listesi']
+            pages: ['portal', 'surec', 'datasetler', 'task-listesi', 'mizan', 'mutabakat-donem', 'fark-veren', 'ayarlar']
         },
         {
             id: 'veri-kalitesi',
             name: 'Veri Kalitesi Sorumlusu',
             desc: 'Portal ve veri kalitesi sayfaları',
             badgeClass: 'role-veri-kalitesi',
-            pages: ['portal', 'vk-kurallar', 'vk-gunluk']
+            pages: ['portal', 'vk-kurallar', 'vk-gunluk', 'ayarlar']
         },
         {
             id: 'viewer',
             name: 'Görüntüleyici',
             desc: 'Yalnızca portal',
             badgeClass: 'role-viewer',
-            pages: ['portal']
+            pages: ['portal', 'ayarlar']
         }
     ];
 

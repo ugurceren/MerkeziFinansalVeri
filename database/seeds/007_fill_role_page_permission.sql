@@ -47,11 +47,13 @@ GO
         (N'admin', N'ters-bakiye'), (N'admin', N'nazim'), (N'admin', N'ayarlar'),
         (N'admin', N'kullanici-yonetimi'), (N'admin', N'kisi-yetkileri'), (N'admin', N'veritabani-baglantisi'),
         (N'mutabakat', N'portal'), (N'mutabakat', N'kebir'), (N'mutabakat', N'mizan'),
-        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'),
+        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'), (N'mutabakat', N'ayarlar'),
         (N'rapor', N'portal'), (N'rapor', N'veritabani-sorgu'), (N'rapor', N'ters-bakiye'), (N'rapor', N'nazim'),
+        (N'rapor', N'mizan'), (N'rapor', N'mutabakat-donem'), (N'rapor', N'fark-veren'), (N'rapor', N'kebir'), (N'rapor', N'ayarlar'),
         (N'surec', N'portal'), (N'surec', N'surec'), (N'surec', N'datasetler'), (N'surec', N'task-listesi'),
-        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'),
-        (N'viewer', N'portal')
+        (N'surec', N'mizan'), (N'surec', N'mutabakat-donem'), (N'surec', N'fark-veren'), (N'surec', N'ayarlar'),
+        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'), (N'veri-kalitesi', N'ayarlar'),
+        (N'viewer', N'portal'), (N'viewer', N'ayarlar')
     ) AS v(RoleId, PageId)
 )
 SELECT COUNT(*) AS EklenebilirIzinSayisi
@@ -72,11 +74,13 @@ GO
         (N'admin', N'ters-bakiye'), (N'admin', N'nazim'), (N'admin', N'ayarlar'),
         (N'admin', N'kullanici-yonetimi'), (N'admin', N'kisi-yetkileri'), (N'admin', N'veritabani-baglantisi'),
         (N'mutabakat', N'portal'), (N'mutabakat', N'kebir'), (N'mutabakat', N'mizan'),
-        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'),
+        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'), (N'mutabakat', N'ayarlar'),
         (N'rapor', N'portal'), (N'rapor', N'veritabani-sorgu'), (N'rapor', N'ters-bakiye'), (N'rapor', N'nazim'),
+        (N'rapor', N'mizan'), (N'rapor', N'mutabakat-donem'), (N'rapor', N'fark-veren'), (N'rapor', N'kebir'), (N'rapor', N'ayarlar'),
         (N'surec', N'portal'), (N'surec', N'surec'), (N'surec', N'datasetler'), (N'surec', N'task-listesi'),
-        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'),
-        (N'viewer', N'portal')
+        (N'surec', N'mizan'), (N'surec', N'mutabakat-donem'), (N'surec', N'fark-veren'), (N'surec', N'ayarlar'),
+        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'), (N'veri-kalitesi', N'ayarlar'),
+        (N'viewer', N'portal'), (N'viewer', N'ayarlar')
     ) AS v(RoleId, PageId)
 )
 INSERT INTO VIB.sec_RolePagePermission (RoleId, PageId)
@@ -99,11 +103,13 @@ GO
         (N'admin', N'ters-bakiye'), (N'admin', N'nazim'), (N'admin', N'ayarlar'),
         (N'admin', N'kullanici-yonetimi'), (N'admin', N'kisi-yetkileri'), (N'admin', N'veritabani-baglantisi'),
         (N'mutabakat', N'portal'), (N'mutabakat', N'kebir'), (N'mutabakat', N'mizan'),
-        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'),
+        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'), (N'mutabakat', N'ayarlar'),
         (N'rapor', N'portal'), (N'rapor', N'veritabani-sorgu'), (N'rapor', N'ters-bakiye'), (N'rapor', N'nazim'),
+        (N'rapor', N'mizan'), (N'rapor', N'mutabakat-donem'), (N'rapor', N'fark-veren'), (N'rapor', N'kebir'), (N'rapor', N'ayarlar'),
         (N'surec', N'portal'), (N'surec', N'surec'), (N'surec', N'datasetler'), (N'surec', N'task-listesi'),
-        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'),
-        (N'viewer', N'portal')
+        (N'surec', N'mizan'), (N'surec', N'mutabakat-donem'), (N'surec', N'fark-veren'), (N'surec', N'ayarlar'),
+        (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'), (N'veri-kalitesi', N'ayarlar'),
+        (N'viewer', N'portal'), (N'viewer', N'ayarlar')
     ) AS v(RoleId, PageId)
 )
 SELECT rs.RoleId, rs.PageId AS EksikPageId

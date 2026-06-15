@@ -6,6 +6,9 @@
     }
 
     function getUserId() {
+        if (window.DevAdminMode?.isActive?.()) {
+            return window.DevAdminMode.ADMIN_USER_ID;
+        }
         const stored = localStorage.getItem('currentUserId');
         if (stored) return parseInt(stored, 10);
         return 5124;

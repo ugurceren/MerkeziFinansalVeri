@@ -50,9 +50,42 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+}
+
+.dev-tools-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-left: 10px;
     padding-left: 10px;
     border-left: 1px solid var(--rb-border, rgba(255, 255, 255, 0.12));
+    flex-shrink: 0;
+}
+
+.dev-admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #22c55e;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dev-admin-toggle input {
+    accent-color: #22c55e;
+    cursor: pointer;
+}
+
+.dev-user-switcher-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     flex-shrink: 0;
 }
 

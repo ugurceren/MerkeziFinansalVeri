@@ -151,7 +151,7 @@ tr.row-editing{background:var(--rb-accent-soft)!important;outline:1px solid var(
 
 .dashboard{display:flex;flex-direction:column;gap:16px}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.stat-card{background:var(--rb-surface);border:0.5px solid var(--rb-border);border-radius:12px;padding:14px 16px;transition:background 0.3s,border-color 0.3s}
+.stat-card{background:var(--rb-surface);border:0.5px solid var(--rb-border);border-radius:12px;padding:14px 16px;transition:background 0.3s,border-color 0.3s,transform 0.15s}
 .stat-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .stat-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:14px;font-weight:700}
 .stat-icon.blue{background:rgba(124,154,255,0.18);color:var(--rb-accent)}

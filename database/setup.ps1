@@ -10,6 +10,7 @@ $files = @(
     "database\seeds\001_ref_seed.sql",
     "database\seeds\002_sec_seed.sql",
     "database\seeds\007_fill_role_page_permission.sql",
+    "database\seeds\008_role_page_permission_extend.sql",
     "database\seeds\006_sec_users_kuveytturk.sql",
     "database\seeds\003_ops_seed.sql",
     "database\seeds\004_cfg_seed.sql",

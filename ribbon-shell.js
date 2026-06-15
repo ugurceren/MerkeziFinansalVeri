@@ -8,6 +8,10 @@
                         <i class="ti ti-home"></i>
                         <span>Portal</span>
                     </button>
+                    <button class="rbtn" type="button" data-page="Hızlı Erişim" data-page-id="portal" data-section="PORTAL" data-href="HomePage.html?view=hizli-erisim">
+                        <i class="ti ti-bolt"></i>
+                        <span>Hızlı<br>Erişim</span>
+                    </button>
                 </div>
             </div>
         </div>`,
@@ -114,6 +118,10 @@
                         <i class="ti ti-settings"></i>
                         <span>Uygulama<br>Ayarları</span>
                     </button>
+                    <button class="rbtn" type="button" data-page="Sistem Durumu" data-page-id="ayarlar" data-section="AYARLAR" data-href="ayarlar.html?view=sistem-durumu">
+                        <i class="ti ti-server"></i>
+                        <span>Sistem<br>Durumu</span>
+                    </button>
                 </div>
             </div>
         </div>`,
@@ -212,6 +220,7 @@
         if (path === 'homepage.html') {
             if (pageParam === 'ters-bakiye') return { section: 'RAPORLAMA', page: 'Ters Bakiye Raporu' };
             if (pageParam === 'nazim') return { section: 'RAPORLAMA', page: 'Nazım Hesapları Raporu' };
+            if (view === 'hizli-erisim') return { section: 'PORTAL', page: 'Hızlı Erişim' };
             return { section: 'PORTAL', page: 'Portal' };
         }
         if (path === 'surec.html') {
@@ -228,7 +237,10 @@
         if (path === 'veri-kalitesi-kurallari.html') return { section: 'VERİ KALİTESİ', page: 'Veri Kalitesi Kuralları' };
         if (path === 'gunluk-kural-sonuclari.html') return { section: 'VERİ KALİTESİ', page: 'Günlük Kural Sonuçları' };
         if (path === 'veritabani-sorgu.html') return { section: 'RAPORLAMA', page: 'Veritabanı Sorgusu' };
-        if (path === 'ayarlar.html') return { section: 'AYARLAR', page: 'Uygulama Ayarları' };
+        if (path === 'ayarlar.html') {
+            if (view === 'sistem-durumu') return { section: 'AYARLAR', page: 'Sistem Durumu' };
+            return { section: 'AYARLAR', page: 'Uygulama Ayarları' };
+        }
         if (path === 'kullanici-yonetimi.html') return { section: 'YÖNETİM', page: 'Kullanıcı Yönetimi' };
         if (path === 'kisi-yetkileri.html') return { section: 'YÖNETİM', page: 'Kişi Bazlı Yetkiler' };
         if (path === 'veritabani-baglantisi.html') return { section: 'YÖNETİM', page: 'Veritabanı Bağlantısı' };

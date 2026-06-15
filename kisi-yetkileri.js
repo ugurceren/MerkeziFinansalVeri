@@ -4,6 +4,7 @@
     let USERS = [];
     let roleMap = {};
     let userOverrides = {};
+    let userHasDbOverrides = {};
     let selectedUserId = 5124;
     let searchQuery = '';
     let saveHintTimer = null;
@@ -43,7 +44,17 @@
     }
 
     function hasCustomPermissions(userId) {
-        return Object.prototype.hasOwnProperty.call(userOverrides, userId);
+        return Object.prototype.hasOwnProperty.call(userOverrides, userId)
+            || userHasDbOverrides[userId] === true;
+    }
+
+    async function refreshUserOverrideFlag(userId) {
+        try {
+            const yetkiler = await ApiClient.getKullaniciYetkiler(userId);
+            userHasDbOverrides[userId] = yetkiler.some(y => y.kullaniciOverride);
+        } catch {
+            userHasDbOverrides[userId] = false;
+        }
     }
 
     function getEffectivePages(userId) {
@@ -235,13 +246,14 @@
 
     async function resetToRoleDefault() {
         delete userOverrides[selectedUserId];
+        userHasDbOverrides[selectedUserId] = false;
         try {
             await ApiClient.sifirlaKullaniciYetkiler(selectedUserId);
         } catch (err) {
             console.error('Yetki sıfırlama başarısız:', err);
         }
         renderUserList();
-        renderPermissionPanel();
+        await renderPermissionPanel();
         showSaveHint(false);
     }
 
@@ -272,23 +284,30 @@
         document.getElementById('kyCollapseAll')?.addEventListener('click', () => expandAll(false));
         document.getElementById('kyResetRole')?.addEventListener('click', resetToRoleDefault);
         document.getElementById('kySaveBtn')?.addEventListener('click', async () => {
-            if (!hasCustomPermissions(selectedUserId)) {
+            if (!Object.prototype.hasOwnProperty.call(userOverrides, selectedUserId)) {
                 showSaveHint(true);
                 return;
             }
             try {
-                const yetkiler = userOverrides[selectedUserId].map(sayfaId => ({
-                    sayfaId,
-                    izinVerildi: true
-                }));
+                const effective = new Set(userOverrides[selectedUserId] || []);
+                const roleDefault = await getRoleDefaultPages(selectedUserId);
                 const allPages = PAGE_MENU.flatMap(g => g.pages.map(p => p.id));
+                const yetkiler = [];
+
                 allPages.forEach(sayfaId => {
-                    if (!userOverrides[selectedUserId].includes(sayfaId)) {
-                        yetkiler.push({ sayfaId, izinVerildi: false });
+                    const izinVerildi = effective.has(sayfaId);
+                    const rolVarsayilan = roleDefault.has(sayfaId);
+                    if (izinVerildi !== rolVarsayilan) {
+                        yetkiler.push({ sayfaId, izinVerildi });
                     }
                 });
+
                 await ApiClient.updateKullaniciYetkiler(selectedUserId, yetkiler);
+                delete userOverrides[selectedUserId];
+                userHasDbOverrides[selectedUserId] = yetkiler.length > 0;
                 showSaveHint(true);
+                renderUserList();
+                await renderPermissionPanel();
             } catch (err) {
                 alert('Kaydetme başarısız: ' + err.message);
             }
@@ -303,6 +322,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
         bindToolbar();
         await loadUsers();
+        await Promise.all(USERS.map(u => refreshUserOverrideFlag(u.kullaniciId)));
         renderUserList();
         await renderPermissionPanel();
     });

@@ -138,8 +138,20 @@ public class KullanicilarController(
 
         dbContext.KullaniciSayfaYetkileri.RemoveRange(mevcut);
 
+        var rolYetkileri = (await dbContext.RolSayfaYetkileri
+            .AsNoTracking()
+            .Where(r => r.RolId == kullanici.RolId)
+            .Select(r => r.SayfaId)
+            .ToListAsync(cancellationToken)).ToHashSet();
+
         foreach (var yetki in yetkiler)
         {
+            var rolVarsayilan = rolYetkileri.Contains(yetki.SayfaId);
+            if (yetki.IzinVerildi == rolVarsayilan)
+            {
+                continue;
+            }
+
             dbContext.KullaniciSayfaYetkileri.Add(new KullaniciSayfaYetki
             {
                 KullaniciId = id,

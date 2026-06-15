@@ -21,11 +21,27 @@
         return active?.yilAy || activePeriodYilAy;
     }
 
+    function persistMutabakatPeriod(yilAy) {
+        if (yilAy && /^\d{4}-\d{2}$/.test(yilAy)) {
+            localStorage.setItem('mutabakatPeriod', yilAy);
+        }
+    }
+
+    async function setActivePeriod(donemId, yilAy) {
+        await ApiClient.setAktifDonem(donemId);
+        activePeriodYilAy = yilAy;
+        persistMutabakatPeriod(yilAy);
+        await loadData();
+    }
+
     async function loadData() {
         try {
             periods = await ApiClient.getMutabakatDonemler();
             const active = periods.find(p => p.aktifMi);
-            if (active) activePeriodYilAy = active.yilAy;
+            if (active) {
+                activePeriodYilAy = active.yilAy;
+                persistMutabakatPeriod(active.yilAy);
+            }
             diffAccounts = await ApiClient.getFarkVeren({ donemId: active?.donemId });
         } catch (err) {
             console.error('Mutabakat verisi yüklenemedi:', err);
@@ -65,19 +81,30 @@
 
     function buildDonemHTML() {
         const activeId = getActivePeriod();
+        const activePeriod = periods.find(p => p.yilAy === activeId);
+        const activeLabel = activePeriod?.etiket || activeId;
 
         return `<section class="mt-layout">
             <div class="mt-head">
-                <h3>Mutabakat Dönemleri</h3>
-                <p>Aktif dönem seçimi ve dönem durumları</p>
+                <h3>Mutabakat Dönemi</h3>
+                <p>Mutabakat ve raporlama için aktif dönem seçimi</p>
+            </div>
+            <div class="mt-card mt-donem-picker" id="mt-donem-picker">
+                <div class="mt-card-head">
+                    <h4><i class="ti ti-calendar" aria-hidden="true"></i> Aktif Dönem</h4>
+                    <span class="mt-active-label">Seçili: <strong>${activeLabel}</strong></span>
+                </div>
+                <div class="mt-donem-picker-body">
+                    <div class="mt-period-active">
+                        <label for="mtActivePeriod">Dönem (Ay / Yıl)</label>
+                        <input type="month" id="mtActivePeriod" value="${activeId}">
+                    </div>
+                    <p class="mt-hint">Kebir hesapları, mizan ve fark veren ekranlarında varsayılan filtre dönemi olarak kullanılır. Ay/yıl alanından veya alttaki tablodan satır seçerek değiştirebilirsiniz.</p>
+                </div>
             </div>
             <div class="mt-card" id="mt-donem">
                 <div class="mt-card-head">
-                    <h4><i class="ti ti-calendar" aria-hidden="true"></i> Dönem Listesi</h4>
-                    <div class="mt-period-active">
-                        <label for="mtActivePeriod">Aktif dönem</label>
-                        <input type="month" id="mtActivePeriod" value="${activeId}">
-                    </div>
+                    <h4><i class="ti ti-list" aria-hidden="true"></i> Dönem Listesi</h4>
                 </div>
                 <div class="mt-scroll">
                     <table class="mt-table">
@@ -186,15 +213,16 @@
         if (periodInput) {
             periodInput.addEventListener('change', async () => {
                 const target = periods.find(p => p.yilAy === periodInput.value);
-                if (target) {
-                    try {
-                        await ApiClient.setAktifDonem(target.donemId);
-                        activePeriodYilAy = target.yilAy;
-                        await loadData();
-                        await initMutabakatPage(root);
-                    } catch (err) {
-                        console.error('Aktif dönem değiştirilemedi:', err);
-                    }
+                if (!target) {
+                    periodInput.value = getActivePeriod();
+                    return;
+                }
+                try {
+                    await setActivePeriod(target.donemId, target.yilAy);
+                    await initMutabakatPage(root);
+                } catch (err) {
+                    console.error('Aktif dönem değiştirilemedi:', err);
+                    periodInput.value = getActivePeriod();
                 }
             });
         }
@@ -211,9 +239,7 @@
             row.addEventListener('click', async () => {
                 const donemId = parseInt(row.dataset.donemId, 10);
                 try {
-                    await ApiClient.setAktifDonem(donemId);
-                    activePeriodYilAy = row.dataset.period;
-                    await loadData();
+                    await setActivePeriod(donemId, row.dataset.period);
                     await initMutabakatPage(root);
                 } catch (err) {
                     console.error('Dönem seçilemedi:', err);
@@ -240,6 +266,7 @@
 
     window.initMutabakatPage = initMutabakatPage;
     window.buildMutabakatHTML = buildMutabakatHTML;
+    window.getMutabakatPeriod = getActivePeriod;
 
     document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('pageBody') && /mutabakat\.html/i.test(window.location.pathname)) {

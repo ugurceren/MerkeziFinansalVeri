@@ -83,13 +83,76 @@ public class PortalController(AppDbContext dbContext) : ControllerBase
             })
             .ToListAsync(cancellationToken);
 
+        var aktifDonem = await dbContext.MutabakatDonemleri
+            .AsNoTracking()
+            .Where(d => d.AktifMi)
+            .Select(d => new AktifDonemOzetDto
+            {
+                DonemId = d.DonemId,
+                YilAy = d.YilAy,
+                Etiket = d.Etiket
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var toplamKural = await dbContext.VeriKalitesiKurallari.CountAsync(cancellationToken);
+        var aktifKural = await dbContext.VeriKalitesiKurallari
+            .CountAsync(k => k.Durum.ToLower() == "aktif" || k.Durum.ToLower() == "active", cancellationToken);
+
+        var sonTarih = await dbContext.VeriKalitesiKuralSonuclari
+            .MaxAsync(s => (DateOnly?)s.CalistirmaTarihi, cancellationToken);
+
+        var sonCalistirmaHatali = 0;
+        var sonCalistirmaGecen = 0;
+        if (sonTarih.HasValue)
+        {
+            var sonuclar = await dbContext.VeriKalitesiKuralSonuclari
+                .AsNoTracking()
+                .Where(s => s.CalistirmaTarihi == sonTarih.Value)
+                .Select(s => new { s.HataliSayi, s.Sonuc })
+                .ToListAsync(cancellationToken);
+
+            foreach (var s in sonuclar)
+            {
+                if (IsVkSonucHatali(s.HataliSayi, s.Sonuc))
+                    sonCalistirmaHatali++;
+                else
+                    sonCalistirmaGecen++;
+            }
+        }
+
+        var toplamSonuc = sonCalistirmaHatali + sonCalistirmaGecen;
+        var basariYuzdesi = toplamSonuc == 0 ? 100 : (int)(sonCalistirmaGecen * 100.0 / toplamSonuc);
+
+        var veriKalitesiKpi = new VeriKalitesiKpiDto
+        {
+            ToplamKuralSayisi = toplamKural,
+            AktifKuralSayisi = aktifKural,
+            SonCalistirmaHataliSayisi = sonCalistirmaHatali,
+            SonCalistirmaGecenSayisi = sonCalistirmaGecen,
+            BasariYuzdesi = basariYuzdesi,
+            SonCalistirmaTarihi = sonTarih
+        };
+
         return Ok(new PortalOzetDto
         {
             Kpi = kpi,
+            VeriKalitesiKpi = veriKalitesiKpi,
+            AktifDonem = aktifDonem,
             EkipIlerleme = ekipIlerleme,
             SonAktiviteler = sonAktiviteler,
             EkipIsYuku = ekipIsYuku,
             SistemDurumu = new SistemDurumuDto { VeriKaynaklari = veriKaynaklari }
         });
+    }
+
+    private static bool IsVkSonucHatali(int hataliSayi, string? sonuc)
+    {
+        if (hataliSayi > 0) return true;
+        if (string.IsNullOrWhiteSpace(sonuc)) return false;
+
+        var normalized = sonuc.Trim().ToLowerInvariant();
+        return normalized is "hata" or "fail" or "failed" or "basarisiz" or "error"
+            || normalized.Contains("hata")
+            || normalized.Contains("fail");
     }
 }

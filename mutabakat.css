@@ -77,6 +77,30 @@
     border-color: var(--rb-accent);
 }
 
+.mt-donem-picker-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mt-hint {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--rb-text-muted);
+}
+
+.mt-active-label {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.mt-active-label strong {
+    color: var(--rb-text);
+    font-weight: 600;
+}
+
 .mt-scroll {
     overflow-x: auto;
 }

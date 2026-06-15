@@ -8,9 +8,6 @@
 <link rel="stylesheet" href="ribbon.css">
 <link rel="stylesheet" href="homepage.css">
 <link rel="stylesheet" href="theme-menu.css">
-<link rel="stylesheet" href="ayarlar.css">
-<link rel="stylesheet" href="mizan.css">
-<link rel="stylesheet" href="veri-kalitesi.css">
 <script>
 (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
 </script>
@@ -18,7 +15,6 @@
 <body>
 <div class="app">
 
-  <!-- Title Bar -->
   <div class="title-bar">
     <div class="title-bar-left">
       <div class="brand-mark" aria-hidden="true">
@@ -41,11 +37,8 @@
     </div>
   </div>
 
-  <!-- Ribbon Tabs -->
   <div class="ribbon-tabs" id="ribbonTabs">
-    <div class="ribbon-tab-list">
     <div class="ribbon-tab-list"></div>
-    </div>
     <div class="ribbon-tabs-actions">
       <div class="theme-switch-wrap">
         <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
@@ -63,300 +56,23 @@
 
   <div class="ribbon-body" id="ribbonBody"></div>
 
-  <!-- Page Area -->
   <div class="page-area">
     <div class="page-body" id="pageBody"></div>
   </div>
 
 </div>
 
+<script src="dev-admin-mode.js"></script>
 <script src="api-client.js"></script>
+<script src="kullanici-shared.js"></script>
 <script src="user-session.js"></script>
 <script src="page-permissions.js"></script>
 <script src="status-bar.js"></script>
 <script src="dev-user-switcher.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
-<script src="ayarlar.js"></script>
-<script src="mizan.js"></script>
 <script src="surec-cockpit.js"></script>
-<script src="veri-kalitesi-pages.js"></script>
-<script>
-const pageBody = document.getElementById('pageBody');
-
-function formatRelativeTime(dateStr) {
-    const d = new Date(dateStr);
-    const diff = Date.now() - d.getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins} dk önce`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours} saat önce`;
-    return d.toLocaleDateString('tr-TR');
-}
-
-function activityDotClass(olayTipi) {
-    if (olayTipi === 'alert' || olayTipi === 'uyari') return 'alert';
-    if (olayTipi === 'ok' || olayTipi === 'onay') return 'ok';
-    if (olayTipi === 'export') return 'export';
-    return 'edit';
-}
-
-async function buildDashboardHTML() {
-    let ozet = null;
-    try {
-        ozet = await ApiClient.getPortalOzet();
-    } catch (err) {
-        console.warn('Portal özeti yüklenemedi:', err.message);
-    }
-
-    if (typeof loadSurecData === 'function') {
-        await loadSurecData();
-    }
-
-    const kpi = ozet?.kpi || {};
-    const ekipIlerleme = ozet?.ekipIlerleme || [];
-    const ekipIsYuku = ozet?.ekipIsYuku || [];
-    const aktiviteler = ozet?.sonAktiviteler || [];
-    const veriKaynaklari = ozet?.sistemDurumu?.veriKaynaklari || [];
-
-    const mutabakatPct = ekipIlerleme.length
-        ? Math.round(ekipIlerleme.reduce((s, e) => s + e.ilerlemeYuzde, 0) / ekipIlerleme.length)
-        : 94;
-
-    const chartRows = ekipIlerleme.map(e => `
-        <div class="chart-row"><label>${e.ekipAdi}</label><div class="bar-track"><div class="bar-fill" style="width:${e.ilerlemeYuzde}%"></div></div><span class="pct">${e.ilerlemeYuzde}%</span></div>
-    `).join('') || `
-        <div class="chart-row"><label>Banka Ekip 1</label><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="pct">92%</span></div>`;
-
-    const maxIsYuku = Math.max(...ekipIsYuku.map(e => e.acikFarkSayisi + e.bekleyenAksiyonSayisi), 1);
-    const isYukuRows = ekipIsYuku.map(e => {
-        const total = e.acikFarkSayisi + e.bekleyenAksiyonSayisi;
-        const pct = Math.round(total / maxIsYuku * 100);
-        const level = pct > 70 ? 'high' : pct > 40 ? 'medium' : 'low';
-        return `<div class="team-load-item"><div class="team-load-header"><span>${e.ekipAdi}</span><span>${total} görev</span></div><div class="load-track"><div class="load-fill ${level}" style="width:${pct}%"></div></div></div>`;
-    }).join('');
-
-    const activityRows = aktiviteler.slice(0, 4).map(a => `
-        <li class="activity-item">
-            <div class="activity-dot ${activityDotClass(a.olayTipi)}">${a.olayTipi === 'ok' ? '✓' : a.olayTipi === 'alert' ? '!' : a.olayTipi === 'export' ? '↓' : '✎'}</div>
-            <div class="activity-body"><strong>${a.baslik}</strong><span>${a.detay || ''}${a.kullaniciAdi ? ' — ' + a.kullaniciAdi : ''}</span></div>
-            <span class="activity-time">${formatRelativeTime(a.olusturmaZamani)}</span>
-        </li>
-    `).join('') || '<li class="activity-item"><div class="activity-body"><span>Aktivite kaydı yok</span></div></li>';
-
-    const statusRows = veriKaynaklari.map(v => {
-        const online = v.durum === 'connected';
-        return `<div class="status-item"><span>${v.katmanKodu}</span><span class="status-badge ${online ? 'online' : 'syncing'}">${online ? 'Çevrimiçi' : 'Bağlantı yok'}</span></div>`;
-    }).join('') || `
-        <div class="status-item"><span>TDMAIN</span><span class="status-badge syncing">Yapılandırılıyor</span></div>`;
-
-    return `<section class="dashboard">
-    <div class="stat-grid">
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon blue">◈</div></div><p class="stat-value">${kpi.kurumsalHesapSayisi ?? '—'}</p><p class="stat-label">Toplam Kurumsal Hesap</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon amber">!</div></div><p class="stat-value">${kpi.acikFarkSayisi ?? '—'}</p><p class="stat-label">Açık Fark</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon green">✓</div></div><p class="stat-value">${mutabakatPct}%</p><p class="stat-label">Mutabakat Tamamlanma</p></article>
-      <article class="stat-card"><div class="stat-card-header"><div class="stat-icon purple">◉</div></div><p class="stat-value">${kpi.bekleyenGorevSayisi ?? '—'}</p><p class="stat-label">Bekleyen Görev</p></article>
-    </div>
-    <div class="dashboard-grid">
-      <div class="dashboard-main">
-        <div class="dashboard-panel">
-          <div class="panel-head"><h4>Mutabakat İlerlemesi — Ekip Bazlı</h4><span>Son 30 gün</span></div>
-          <div class="chart-bars">${chartRows}</div>
-        </div>
-        ${buildPortalDatasetCardHTML()}
-        <div class="dashboard-panel">
-          <div class="panel-head"><h4>Son Aktiviteler</h4><span>Canlı akış</span></div>
-          <ul class="activity-list">${activityRows}</ul>
-        </div>
-      </div>
-      <div class="dashboard-side">
-        <div class="dashboard-panel">
-          <div class="panel-head"><h4>Hızlı Erişim</h4></div>
-          <div class="quick-links">
-            <a class="quick-link" href="kebir-hesaplari.html"><span class="quick-link-icon">≡</span>Kebir Hesapları Listesi</a>
-            <a class="quick-link" href="mizan.html"><span class="quick-link-icon">⊞</span>Mizan Görüntüle</a>
-            <a class="quick-link" href="veritabani-sorgu.html"><span class="quick-link-icon">◫</span>Veritabanı Sorgusu</a>
-            <a class="quick-link" href="#" data-quick-page="Ters Bakiye Raporu" data-quick-section="RAPORLAMA"><span class="quick-link-icon">⇄</span>Ters Bakiye Raporu</a>
-          </div>
-        </div>
-        <div class="dashboard-panel">
-          <div class="panel-head"><h4>Ekip İş Yükü</h4><span>Bekleyen görev</span></div>
-          <div class="team-load-list">${isYukuRows || '<div class="team-load-item"><span>Veri yükleniyor…</span></div>'}</div>
-        </div>
-        <div class="dashboard-panel">
-          <div class="panel-head"><h4>Sistem Durumu</h4></div>
-          <div class="status-list">${statusRows}</div>
-        </div>
-      </div>
-    </div>
-  </section>`;
-}
-
-const tableData = [
-  [1,1,'Kurumsal Hesap 1','Banka Ekip 1','Ödeme İşlemi','Banka Sistemi','2024-01-15','2024-01-20','Ahmet Yılmaz','Mehmet Kara'],
-  [2,2,'Kurumsal Hesap 2','Banka Ekip 2','Hesap Aktarımı','Merkezi Sistem','2024-01-18','2024-01-21','Ayşe Demir','Zeynep Can'],
-  [3,3,'Kurumsal Hesap 3','Banka Ekip 1','Kaydı Güncelle','Banka Sistemi','2024-01-20','2024-01-22','Mehmet Kara','Ahmet Yılmaz'],
-  [4,4,'Kurumsal Hesap 4','Banka Ekip 3','Doğrulama Bekle','Merkezi Sistem','2024-01-22','2024-01-23','Fatih Şahin','Seda Yıldız'],
-  [5,5,'Kurumsal Hesap 5','Banka Ekip 2','Bilgi Eksik','Banka Sistemi','2024-01-23','2024-01-24','Zeynep Can','Ayşe Demir'],
-  [6,6,'Kurumsal Hesap 6','Banka Ekip 1','İzin Bekle','Merkezi Sistem','2024-01-25','2024-01-26','Seda Yıldız','Fatih Şahin'],
-  [7,7,'Kurumsal Hesap 7','Banka Ekip 3','Ödeme İşlemi','Banka Sistemi','2024-01-26','2024-01-27','Ahmet Yılmaz','Mehmet Kara'],
-  [8,8,'Kurumsal Hesap 8','Banka Ekip 2','Hesap Aktarımı','Merkezi Sistem','2024-01-27','2024-01-28','Zeynep Can','Ayşe Demir'],
-  [9,9,'Kurumsal Hesap 9','Banka Ekip 1','Kaydı Güncelle','Banka Sistemi','2024-01-28','2024-01-29','Fatih Şahin','Seda Yıldız'],
-  [10,10,'Kurumsal Hesap 10','Banka Ekip 3','Doğrulama Bekle','Merkezi Sistem','2024-01-29','2024-01-30','Mehmet Kara','Ahmet Yılmaz'],
-];
-
-function buildTableHTML(data) {
-  const rows = data.map(r => `<tr>
-    <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
-    <td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td>
-    <td>${r[8]}</td><td>${r[9]}</td>
-    <td><button class="edit-btn">Düzenle</button><button class="del-btn">Sil</button></td>
-  </tr>`).join('');
-  return `<div class="table-card">
-    <div class="tc-head">
-      <div><h3>Kurumsal Hesaplar</h3><p>Bankadaki görevli ekipler tarafından yönetilen hesaplar.</p></div>
-      <button class="add-btn">+ Yeni Hesap Ekle</button>
-    </div>
-    <div class="filter-bar">
-      <div class="fg"><label>Hesap Adı</label><input type="text" id="fName" placeholder="Hesap adı ara..."></div>
-      <div class="fg"><label>Ekip</label><input type="text" id="fTeam" placeholder="Ekip ara..."></div>
-      <div class="fg"><label>Hesap ID Aralığı</label>
-        <div class="filter-range">
-          <input type="number" id="fMin" placeholder="Min">
-          <span class="range-dash">—</span>
-          <input type="number" id="fMax" placeholder="Max">
-        </div>
-      </div>
-      <button class="filter-btn" onclick="applyFilter()">Filtrele</button>
-    </div>
-    <div style="overflow-x:auto">
-      <table id="mainTable">
-        <thead><tr>
-          <th>Hesap No</th><th>HesapID</th><th>Hesap Adı</th><th>Sorumlu Ekip</th>
-          <th>Alınması Beklenen Aksiyon</th><th>Kaynak</th><th>Kayıt Tarihi</th>
-          <th>Güncelleme Tarihi</th><th>Kaydı Oluşturan</th><th>Güncelleyen</th><th>İşlemler</th>
-        </tr></thead>
-        <tbody id="tableBody">${rows}</tbody>
-      </table>
-    </div>
-  </div>`;
-}
-
-function applyFilter() {
-  const name = document.getElementById('fName').value.toLowerCase();
-  const team = document.getElementById('fTeam').value.toLowerCase();
-  const min = parseInt(document.getElementById('fMin').value) || 0;
-  const max = parseInt(document.getElementById('fMax').value) || 99999;
-  const filtered = tableData.filter(r =>
-    r[2].toLowerCase().includes(name) &&
-    r[3].toLowerCase().includes(team) &&
-    r[1] >= min && r[1] <= max
-  );
-  document.getElementById('tableBody').innerHTML = filtered.map(r => `<tr>
-    <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
-    <td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td>
-    <td>${r[8]}</td><td>${r[9]}</td>
-    <td><button class="edit-btn">Düzenle</button><button class="del-btn">Sil</button></td>
-  </tr>`).join('');
-}
-
-const iconMap = {
-  'Portal': 'ti-home',
-  'Kebir Hesapları Sorumluluk Listesi': 'ti-notebook',
-  'Mizan': 'ti-scale',
-  'Veritabanı Sorgusu': 'ti-database',
-  'Veri Kalitesi Kuralları': 'ti-list-check',
-  'Günlük Kural Sonuçları': 'ti-calendar-stats',
-  'Ters Bakiye Raporu': 'ti-arrows-exchange',
-  'Nazım Hesapları Raporu': 'ti-file-analytics',
-  'Kullanıcı Yönetimi': 'ti-users',
-  'Veritabanı Bağlantısı': 'ti-plug-connected',
-  'Uygulama Ayarları': 'ti-settings'
-};
-
-function activateTab(section) {
-  if (typeof window.activateRibbonSection === 'function') {
-    window.activateRibbonSection(section);
-  }
-}
-
-function setPage(section, page, options = {}) {
-  if (options.href) {
-    window.location.href = options.href;
-    return;
-  }
-
-  activateTab(section);
-
-  if (page === 'Portal') {
-    buildDashboardHTML().then(html => {
-      pageBody.innerHTML = html;
-      bindQuickLinks();
-    });
-    return;
-  }
-
-  if (page === 'Kebir Hesapları Sorumluluk Listesi') {
-    pageBody.innerHTML = buildTableHTML(tableData);
-    return;
-  }
-
-  if (page === 'Mizan') {
-    initMizanPage(pageBody);
-    return;
-  }
-
-  if (page === 'Veri Kalitesi Kuralları') {
-    initVeriKalitesiKurallariPage(pageBody);
-    return;
-  }
-
-  if (page === 'Günlük Kural Sonuçları') {
-    initGunlukKuralSonuclariPage(pageBody);
-    return;
-  }
-
-  if (page === 'Uygulama Ayarları') {
-    pageBody.innerHTML = buildAyarlarHTML();
-    initAyarlarPage(pageBody);
-    return;
-  }
-
-  const icon = iconMap[page] || 'ti-file';
-  pageBody.innerHTML = `<div class="placeholder-page">
-    <i class="ti ${icon}"></i>
-    <p>${page}</p>
-    <span>Bu sayfa için içerik buraya gelecek.</span>
-  </div>`;
-}
-
-function bindQuickLinks() {
-  pageBody.querySelectorAll('[data-quick-page]').forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      const page = link.dataset.quickPage;
-      const section = link.dataset.quickSection;
-      activateTab(section);
-      if (typeof window.activateRibbonButton === 'function') {
-        window.activateRibbonButton(page);
-      }
-      setPage(section, page);
-    });
-  });
-}
-
-window.handleRibbonPage = function(section, page) {
-  setPage(section, page);
-};
-
-document.addEventListener('ribbon-ready', function(e) {
-  initUserBar();
-  initThemeMenu();
-  const state = e.detail || (typeof detectRibbonState === 'function' ? detectRibbonState() : null);
-  const section = state?.section || 'PORTAL';
-  const page = state?.page || 'Portal';
-  setPage(section, page);
-});
-</script>
+<script src="sistem-durumu.js"></script>
+<script src="portal.js"></script>
 </body>
 </html>

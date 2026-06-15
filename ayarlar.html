@@ -39,15 +39,7 @@
     </div>
 
     <div class="ribbon-tabs" id="ribbonTabs">
-        <div class="ribbon-tab-list">
-            <button class="rtab" data-tab="genel">Genel</button>
-            <button class="rtab" data-tab="surec">Süreç</button>
-            <button class="rtab" data-tab="mutabakat">Mutabakat</button>
-            <button class="rtab" data-tab="parametre">Parametre Yönetimi</button>
-            <button class="rtab" data-tab="raporlama">Raporlama</button>
-            <button class="rtab active" data-tab="ayarlar">Ayarlar</button>
-            <button class="rtab" data-tab="yonetim">Yönetim</button>
-        </div>
+        <div class="ribbon-tab-list"></div>
         <div class="ribbon-tabs-actions">
             <div class="theme-switch-wrap">
                 <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
@@ -63,194 +55,15 @@
         </div>
     </div>
 
-    <div class="ribbon-body" id="ribbonBody">
-
-        <div class="tab-panel" id="tab-genel">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-home"></i>
-                        <span>Genel Bakış</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-surec">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="surec.html">
-                        <i class="ti ti-timeline"></i>
-                        <span>Süreç</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-mutabakat">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="mizan.html">
-                        <i class="ti ti-scale"></i>
-                        <span>Mizan</span>
-                    </button>
-                </div>
-                <div class="rg-label">Mutabakat</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-parametre">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="kebir-hesaplari.html">
-                        <i class="ti ti-notebook"></i>
-                        <span>Kebir Hesapları<br>Sorumluluk Listesi</span>
-                    </button>
-                </div>
-                <div class="rg-label">Parametre</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-raporlama">
-            <div class="ribbon-group">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="veritabani-sorgu.html">
-                        <i class="ti ti-database"></i>
-                        <span>Veritabanı<br>Sorgusu</span>
-                    </button>
-                </div>
-                <div class="rg-label">Sorgu</div>
-            </div>
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="HomePage.html">
-                        <i class="ti ti-arrows-exchange"></i>
-                        <span>Ters Bakiye Raporu</span>
-                    </button>
-                </div>
-                <div class="rg-label">Özel Raporlar</div>
-            </div>
-        </div>
-
-        <div class="tab-panel active" id="tab-ayarlar">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn active" type="button" data-page="Uygulama Ayarları" data-section="AYARLAR">
-                        <i class="ti ti-settings"></i>
-                        <span>Uygulama Ayarları</span>
-                    </button>
-                </div>
-                <div class="rg-label">Menü</div>
-            </div>
-        </div>
-
-        <div class="tab-panel" id="tab-yonetim">
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-href="kullanici-yonetimi.html">
-                        <i class="ti ti-users"></i>
-                        <span>Kullanıcı Yönetimi</span>
-                    </button>
-                    <button class="rbtn" type="button" data-href="veritabani-baglantisi.html">
-                        <i class="ti ti-plug-connected"></i>
-                        <span>Veritabanı<br>Bağlantısı</span>
-                    </button>
-                </div>
-                <div class="rg-label">Sistem</div>
-            </div>
-        </div>
-
-    </div>
+    <div class="ribbon-body" id="ribbonBody"></div>
 
     <div class="page-area">
-        <div class="page-body">
-            <div class="ay-layout">
-
-                <div class="ay-row">
-                <section class="ay-card" id="varsayilan-sayfa">
-                    <div class="ay-card-head">
-                        <h3><i class="ti ti-home" aria-hidden="true"></i> Varsayılan Açılış Sayfası</h3>
-                        <p>Uygulama açıldığında yönlendirilecek sayfa</p>
-                    </div>
-                    <div class="ay-card-body">
-                        <div class="ay-field">
-                            <label for="ayDefaultPage">Sayfa</label>
-                            <select id="ayDefaultPage"></select>
-                        </div>
-                        <p class="ay-hint">Tercih kaydedilir; giriş noktası sayfasına eklendiğinde otomatik yönlendirme için kullanılır.</p>
-                    </div>
-                </section>
-
-                <section class="ay-card" id="gorunum">
-                    <div class="ay-card-head">
-                        <h3><i class="ti ti-palette" aria-hidden="true"></i> Görünüm</h3>
-                        <p>Arayüz teması ve renk tercihleri</p>
-                    </div>
-                    <div class="ay-card-body">
-                        <div class="ay-field">
-                            <label>Tema</label>
-                            <div class="ay-theme-options">
-                                <button type="button" class="ay-theme-option" data-theme-option="dark">
-                                    <i class="ti ti-moon" aria-hidden="true"></i>
-                                    <strong>Koyu Tema</strong>
-                                    <span>Koyu arka plan, göz yormayan</span>
-                                </button>
-                                <button type="button" class="ay-theme-option" data-theme-option="light">
-                                    <i class="ti ti-sun" aria-hidden="true"></i>
-                                    <strong>Açık Tema</strong>
-                                    <span>Aydınlık arka plan</span>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="ay-hint">Menü çubuğundaki anahtar ile de tema değiştirilebilir; seçim otomatik senkronize edilir.</p>
-                    </div>
-                </section>
-                </div>
-
-                <section class="ay-card" id="mutabakat-donemi">
-                    <div class="ay-card-head">
-                        <h3><i class="ti ti-calendar" aria-hidden="true"></i> Mutabakat Dönemi</h3>
-                        <p>Mutabakat ve raporlama için aktif dönem</p>
-                    </div>
-                    <div class="ay-card-body">
-                        <div class="ay-field">
-                            <label for="ayMutabakatPeriod">Dönem (Ay / Yıl)</label>
-                            <input type="month" id="ayMutabakatPeriod" class="ay-month-input">
-                        </div>
-                        <p class="ay-hint">Kebir hesapları ve mutabakat ekranlarında varsayılan filtre dönemi olarak kullanılır.</p>
-                    </div>
-                </section>
-
-                <section class="ay-card" id="hakkinda">
-                    <div class="ay-card-head">
-                        <h3><i class="ti ti-info-circle" aria-hidden="true"></i> Hakkında</h3>
-                        <p>Uygulama ve ortam bilgisi</p>
-                    </div>
-                    <div class="ay-card-body">
-                        <dl class="ay-about-grid">
-                            <dt>Uygulama</dt>
-                            <dd id="ayAppName">—</dd>
-                            <dt>Sürüm</dt>
-                            <dd id="ayAppVersion">—</dd>
-                            <dt>Ortam</dt>
-                            <dd><span class="ay-env-badge" id="ayAppEnv">—</span></dd>
-                            <dt>Yayın tarihi</dt>
-                            <dd id="ayAppBuild">—</dd>
-                        </dl>
-                    </div>
-                </section>
-
-                <div class="ay-save-bar">
-                    <button type="button" class="ay-save-btn" id="aySaveBtn">Ayarları Kaydet</button>
-                    <span class="ay-save-msg" id="aySaveMsg" role="status">Kaydedildi</span>
-                </div>
-
-            </div>
-        </div>
+        <div class="page-body" id="pageBody"></div>
     </div>
 
 </div>
 
+<script src="dev-admin-mode.js"></script>
 <script src="api-client.js"></script>
 <script src="user-session.js"></script>
 <script src="page-permissions.js"></script>
@@ -258,6 +71,7 @@
 <script src="dev-user-switcher.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
+<script src="sistem-durumu.js"></script>
 <script src="ayarlar.js"></script>
 </body>
 </html>
