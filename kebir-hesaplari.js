@@ -170,5 +170,8 @@
         loadAccounts();
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
+        init();
+    });
 })();

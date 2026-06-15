@@ -1,5 +1,6 @@
 using MerkeziFinansalVeri.Api.Middleware;
 using MerkeziFinansalVeri.Infrastructure;
+using MerkeziFinansalVeri.Infrastructure.Data;
 using MerkeziFinansalVeri.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,12 @@ if (File.Exists(vkGunlukConfigPath))
     builder.Configuration.AddJsonFile(vkGunlukConfigPath, optional: true, reloadOnChange: true);
 }
 
+var vkPortalKpiConfigPath = Path.Combine(repoRoot, "config", "vk-portal-kpi.json");
+if (File.Exists(vkPortalKpiConfigPath))
+{
+    builder.Configuration.AddJsonFile(vkPortalKpiConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -32,6 +39,12 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IVeriKalitesiKpiService>(sp => new VeriKalitesiKpiService(
+    sp.GetRequiredService<AppDbContext>(),
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<VeriKalitesiKpiService>>(),
+    repoRoot));
 
 builder.Services.AddCors(options =>
 {

@@ -24,6 +24,12 @@
 
     let allowedPages = new Set(['portal']);
     let permissionsInitPromise = null;
+    let permissionsReadyResolve;
+    let permissionsReady = false;
+
+    const permissionsReadyPromise = new Promise(resolve => {
+        permissionsReadyResolve = resolve;
+    });
 
     function applyFallbackPermissions() {
         const roleId = localStorage.getItem('userRole') || ApiClient?.userRole || 'viewer';
@@ -37,7 +43,22 @@
 
     function normalizeHref(href) {
         if (!href) return '';
-        return href.replace(/^\//, '').toLowerCase();
+        try {
+            const url = new URL(href, window.location.href);
+            const path = (url.pathname.split('/').pop() || '').toLowerCase();
+            const view = url.searchParams.get('view');
+            const page = url.searchParams.get('page');
+            if (path === 'homepage.html') {
+                if (page === 'ters-bakiye') return 'homepage.html?page=ters-bakiye';
+                if (page === 'nazim') return 'homepage.html?page=nazim';
+                if (view === 'hizli-erisim') return 'homepage.html?view=hizli-erisim';
+                return 'homepage.html';
+            }
+            if (view) return `${path}?view=${view}`;
+            return path;
+        } catch {
+            return href.replace(/^\//, '').toLowerCase();
+        }
     }
 
     function hrefToPageId(href) {
@@ -65,7 +86,7 @@
             return 'portal';
         }
         if (path === 'ayarlar.html') {
-            return 'ayarlar';
+            return view === 'sistem-durumu' ? 'ayarlar' : 'ayarlar';
         }
         if (path === 'surec.html') {
             if (view === 'datasetler') return 'datasetler';
@@ -120,15 +141,77 @@
         });
     }
 
+    function denyAccess() {
+        alert('Bu sayfa için yetkiniz yok.');
+        if (!/homepage\.html/i.test(window.location.pathname)) {
+            window.location.replace('HomePage.html');
+        }
+    }
+
+    function hasAccess(pageId) {
+        if (!pageId) return true;
+        if (window.DevAdminMode?.isActive?.()) return true;
+        return allowedPages.has(pageId);
+    }
+
+    function canNavigateTo(href) {
+        if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+            return true;
+        }
+        const pageId = hrefToPageId(href);
+        if (!pageId) return true;
+        return hasAccess(pageId);
+    }
+
     function guardCurrentPage() {
-        if (window.DevAdminMode?.isActive?.()) return;
+        if (window.DevAdminMode?.isActive?.()) return true;
 
         const pageId = detectCurrentPageId();
-        if (!pageId || pageId === 'portal') return;
-        if (allowedPages.has(pageId)) return;
+        if (!pageId || pageId === 'portal') return true;
+        if (hasAccess(pageId)) return true;
 
-        alert('Bu sayfa için yetkiniz yok.');
-        window.location.replace('HomePage.html');
+        denyAccess();
+        return false;
+    }
+
+    function markPermissionsReady() {
+        if (permissionsReady) return;
+        permissionsReady = true;
+        document.documentElement.classList.remove('permissions-pending');
+        permissionsReadyResolve();
+        document.dispatchEvent(new Event('permissions-ready'));
+    }
+
+    function bindNavigationGuard() {
+        document.addEventListener('click', (e) => {
+            if (window.DevAdminMode?.isActive?.()) return;
+
+            const rbtn = e.target.closest('.rbtn[data-href]');
+            if (rbtn) {
+                if (rbtn.classList.contains('is-disabled')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    alert('Bu sayfa için yetkiniz yok.');
+                    return;
+                }
+                if (!canNavigateTo(rbtn.dataset.href)) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    alert('Bu sayfa için yetkiniz yok.');
+                }
+                return;
+            }
+
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+
+            const href = link.getAttribute('href');
+            if (!canNavigateTo(href)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                alert('Bu sayfa için yetkiniz yok.');
+            }
+        }, true);
     }
 
     async function loadPermissions() {
@@ -157,11 +240,17 @@
             permissionsInitPromise = (async () => {
                 await loadPermissions();
                 applyRibbonPermissions();
-                guardCurrentPage();
+                if (guardCurrentPage()) {
+                    markPermissionsReady();
+                }
             })();
         }
         return permissionsInitPromise;
     }
+
+    applyFallbackPermissions();
+    document.documentElement.classList.add('permissions-pending');
+    bindNavigationGuard();
 
     window.PagePermissions = {
         load: async () => {
@@ -170,10 +259,15 @@
         },
         applyRibbon: applyRibbonPermissions,
         guardPage: guardCurrentPage,
-        hasAccess: pageId => window.DevAdminMode?.isActive?.() || allowedPages.has(pageId),
+        hasAccess,
+        canNavigateTo,
+        hrefToPageId,
         getAllowedPages: () => new Set(allowedPages),
+        ready: () => permissionsReadyPromise,
         reload: () => {
             permissionsInitPromise = null;
+            permissionsReady = false;
+            document.documentElement.classList.add('permissions-pending');
             return initPagePermissions();
         }
     };

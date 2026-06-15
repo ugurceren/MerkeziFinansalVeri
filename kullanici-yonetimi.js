@@ -142,6 +142,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         await loadData();
         renderRoleCards();
         renderUsersTable();

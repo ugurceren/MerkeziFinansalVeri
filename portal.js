@@ -372,7 +372,7 @@
         const tarihLabel = isOffline
             ? 'Canlı veri yok'
             : (vk.sonCalistirmaTarihi
-                ? `Son çalıştırma: ${formatDateOnly(vk.sonCalistirmaTarihi)}`
+                ? `Son çalıştırma: ${formatDateOnly(vk.sonCalistirmaTarihi)}${vk.kaynak === 'tdutil' ? ' · TDUTIL' : ''}`
                 : 'Henüz çalıştırma kaydı yok');
 
         return `<div class="dashboard-panel portal-vk-kpi-panel">
@@ -537,7 +537,6 @@
                 ? `<div class="portal-context-band">
                     <i class="ti ti-calendar-event"></i>
                     <span><strong>${donemLabel}</strong> · Aktif mutabakat dönemi</span>
-                    <a href="mutabakat.html?view=donem" class="portal-context-link">Dönemi yönet</a>
                    </div>`
                 : `<div class="portal-context-band portal-context-muted">
                     <i class="ti ti-calendar-off"></i>
@@ -754,9 +753,11 @@
 
     window.initPortalPage = initPortalPage;
 
-    document.addEventListener('ribbon-ready', function (e) {
+    document.addEventListener('ribbon-ready', async function (e) {
         const pageBody = document.getElementById('pageBody');
         if (!pageBody) return;
+
+        await window.PagePermissions?.ready?.();
 
         initUserBar();
         initThemeMenu();

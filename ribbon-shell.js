@@ -270,6 +270,11 @@
                 if (btn.classList.contains('theme-option')) return;
 
                 const href = btn.dataset.href;
+                const pageId = btn.dataset.pageId || window.PagePermissions?.hrefToPageId?.(href);
+                if (pageId && window.PagePermissions && !window.PagePermissions.hasAccess(pageId)) {
+                    alert('Bu sayfa için yetkiniz yok.');
+                    return;
+                }
                 if (href) {
                     window.location.href = href;
                     return;

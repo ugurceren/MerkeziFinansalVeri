@@ -1,0 +1,7 @@
+{
+  "VkPortalKpi": {
+    "KatmanKodu": "TDUTIL",
+    "SorguDosyasi": "config/queries/vk-portal-kpi.sql",
+    "SorguTimeoutSaniye": 60
+  }
+}

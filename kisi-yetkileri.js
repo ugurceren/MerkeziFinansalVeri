@@ -320,6 +320,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         bindToolbar();
         await loadUsers();
         await Promise.all(USERS.map(u => refreshUserOverrideFlag(u.kullaniciId)));

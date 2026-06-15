@@ -257,7 +257,8 @@
     window.initVeriKalitesiKurallariPage = (c) => initVkPage('kurallar', c);
     window.initGunlukKuralSonuclariPage = (c) => initVkPage('gunluk', c);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         const host = document.querySelector('[data-vk-page]');
         if (!host) return;
         initVkPage(host.dataset.vkPage, host);

@@ -262,7 +262,8 @@
     window.buildVeritabaniBaglantisiHTML = buildPageHTML;
     window.initVeritabaniBaglantisi = initVeritabaniBaglantisi;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         const host = document.querySelector('[data-db-page]');
         if (host) {
             initVeritabaniBaglantisi(host);

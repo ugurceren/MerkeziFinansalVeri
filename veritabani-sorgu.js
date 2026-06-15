@@ -177,6 +177,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         bindEvents();
         await loadAyarlar();
         if (document.getElementById('vsStatusDot')?.classList.contains('err')) return;

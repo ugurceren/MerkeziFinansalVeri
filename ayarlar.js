@@ -203,15 +203,17 @@
     window.initAyarlarPage = initAyarlarPage;
     window.scrollToAyarlarSection = scrollToSection;
 
-    document.addEventListener('ribbon-ready', () => {
+    document.addEventListener('ribbon-ready', async () => {
         if (!(window.location.pathname.split('/').pop() || '').toLowerCase().includes('ayarlar.html')) return;
+        await window.PagePermissions?.ready?.();
         if (typeof initUserBar === 'function') initUserBar();
         if (typeof initThemeMenu === 'function') initThemeMenu();
         initAyarlarShell();
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         if (document.getElementById('ribbonBody')) return;
+        await window.PagePermissions?.ready?.();
         initAyarlarShell();
     });
 

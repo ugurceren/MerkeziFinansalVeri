@@ -268,8 +268,9 @@
     window.buildMutabakatHTML = buildMutabakatHTML;
     window.getMutabakatPeriod = getActivePeriod;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         if (document.getElementById('pageBody') && /mutabakat\.html/i.test(window.location.pathname)) {
+            await window.PagePermissions?.ready?.();
             initMutabakatPage();
         }
     });

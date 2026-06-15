@@ -146,7 +146,8 @@
     window.initMizanPage = initMizanPage;
     window.canRestartMizanTasks = canRestartTasks;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await window.PagePermissions?.ready?.();
         const host = document.querySelector('[data-mizan-page]');
         if (host) initMizanPage(host);
     });

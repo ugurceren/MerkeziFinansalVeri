@@ -80,7 +80,8 @@
         if (page === 'Task Listesi') initTaskListesi();
     };
 
-    document.addEventListener('ribbon-ready', function() {
+    document.addEventListener('ribbon-ready', async function() {
+        await window.PagePermissions?.ready?.();
         const view = new URLSearchParams(window.location.search).get('view');
         if (view === 'datasetler') initDatasetCatalog();
         else if (view === 'task-listesi') initTaskListesi();

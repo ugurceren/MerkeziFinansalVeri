@@ -1,5 +1,6 @@
 using MerkeziFinansalVeri.Api.Dtos;
 using MerkeziFinansalVeri.Infrastructure.Data;
+using MerkeziFinansalVeri.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,9 @@ namespace MerkeziFinansalVeri.Api.Controllers;
 
 [ApiController]
 [Route("api/portal")]
-public class PortalController(AppDbContext dbContext) : ControllerBase
+public class PortalController(
+    AppDbContext dbContext,
+    IVeriKalitesiKpiService veriKalitesiKpiService) : ControllerBase
 {
     [HttpGet("ozet")]
     public async Task<ActionResult<PortalOzetDto>> GetOzet(CancellationToken cancellationToken)
@@ -94,43 +97,16 @@ public class PortalController(AppDbContext dbContext) : ControllerBase
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        var toplamKural = await dbContext.VeriKalitesiKurallari.CountAsync(cancellationToken);
-        var aktifKural = await dbContext.VeriKalitesiKurallari
-            .CountAsync(k => k.Durum.ToLower() == "aktif" || k.Durum.ToLower() == "active", cancellationToken);
-
-        var sonTarih = await dbContext.VeriKalitesiKuralSonuclari
-            .MaxAsync(s => (DateOnly?)s.CalistirmaTarihi, cancellationToken);
-
-        var sonCalistirmaHatali = 0;
-        var sonCalistirmaGecen = 0;
-        if (sonTarih.HasValue)
-        {
-            var sonuclar = await dbContext.VeriKalitesiKuralSonuclari
-                .AsNoTracking()
-                .Where(s => s.CalistirmaTarihi == sonTarih.Value)
-                .Select(s => new { s.HataliSayi, s.Sonuc })
-                .ToListAsync(cancellationToken);
-
-            foreach (var s in sonuclar)
-            {
-                if (IsVkSonucHatali(s.HataliSayi, s.Sonuc))
-                    sonCalistirmaHatali++;
-                else
-                    sonCalistirmaGecen++;
-            }
-        }
-
-        var toplamSonuc = sonCalistirmaHatali + sonCalistirmaGecen;
-        var basariYuzdesi = toplamSonuc == 0 ? 100 : (int)(sonCalistirmaGecen * 100.0 / toplamSonuc);
-
+        var vkSnapshot = await veriKalitesiKpiService.GetKpiAsync(cancellationToken);
         var veriKalitesiKpi = new VeriKalitesiKpiDto
         {
-            ToplamKuralSayisi = toplamKural,
-            AktifKuralSayisi = aktifKural,
-            SonCalistirmaHataliSayisi = sonCalistirmaHatali,
-            SonCalistirmaGecenSayisi = sonCalistirmaGecen,
-            BasariYuzdesi = basariYuzdesi,
-            SonCalistirmaTarihi = sonTarih
+            ToplamKuralSayisi = vkSnapshot.ToplamKuralSayisi,
+            AktifKuralSayisi = vkSnapshot.AktifKuralSayisi,
+            SonCalistirmaHataliSayisi = vkSnapshot.SonCalistirmaHataliSayisi,
+            SonCalistirmaGecenSayisi = vkSnapshot.SonCalistirmaGecenSayisi,
+            BasariYuzdesi = vkSnapshot.BasariYuzdesi,
+            SonCalistirmaTarihi = vkSnapshot.SonCalistirmaTarihi,
+            Kaynak = vkSnapshot.Kaynak
         };
 
         return Ok(new PortalOzetDto
@@ -143,16 +119,5 @@ public class PortalController(AppDbContext dbContext) : ControllerBase
             EkipIsYuku = ekipIsYuku,
             SistemDurumu = new SistemDurumuDto { VeriKaynaklari = veriKaynaklari }
         });
-    }
-
-    private static bool IsVkSonucHatali(int hataliSayi, string? sonuc)
-    {
-        if (hataliSayi > 0) return true;
-        if (string.IsNullOrWhiteSpace(sonuc)) return false;
-
-        var normalized = sonuc.Trim().ToLowerInvariant();
-        return normalized is "hata" or "fail" or "failed" or "basarisiz" or "error"
-            || normalized.Contains("hata")
-            || normalized.Contains("fail");
     }
 }

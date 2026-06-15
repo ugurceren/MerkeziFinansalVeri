@@ -34,6 +34,7 @@ public sealed class VeriKalitesiKpiDto
     public int SonCalistirmaGecenSayisi { get; set; }
     public int BasariYuzdesi { get; set; }
     public DateOnly? SonCalistirmaTarihi { get; set; }
+    public string Kaynak { get; set; } = "local";
 }
 
 public sealed class EkipIlerlemeDto
