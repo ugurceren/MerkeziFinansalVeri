@@ -324,13 +324,12 @@
 .mt-mm-filter-panel .fg {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
     min-width: 180px;
 }
 
 .mt-mm-filter-panel label {
-    font-size: 11px;
-    color: var(--rb-text-muted);
+    display: none;
 }
 
 .mt-mm-filter-input {

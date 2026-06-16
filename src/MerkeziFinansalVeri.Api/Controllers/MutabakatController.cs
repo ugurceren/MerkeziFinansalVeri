@@ -188,7 +188,8 @@ public class MutabakatController(
         MatrixTableDescription = dto.MatrixTableDescription,
         MatrixColumnName = dto.MatrixColumnName,
         MatrixColumnDescription = dto.MatrixColumnDescription,
-        TdInscopeFlag = dto.TdInscopeFlag is 0 or 1 ? dto.TdInscopeFlag : null
+        TdInscopeFlag = dto.TdInscopeFlag is 0 or 1 ? dto.TdInscopeFlag : null,
+        BalanceTypeName = dto.BalanceTypeName
     };
 
     private static VeritabaniSorguSonucDto ToMatrixMapDto(MatrixMapQueryResult result) => new()

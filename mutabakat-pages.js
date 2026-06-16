@@ -8,8 +8,6 @@
     let matrixMapFilterDebounceTimer = null;
 
     const MATRIXMAP_COLUMNS = [
-        { key: 'loadId', label: 'LoadId' },
-        { key: 'updateLoadId', label: 'UpdateLoadId' },
         { key: 'systemDateTime', label: 'SystemDateTime' },
         { key: 'validFrom', label: 'ValidFrom' },
         { key: 'validUntil', label: 'ValidUntil' },
@@ -23,7 +21,6 @@
         { key: 'matrixColumnName', label: 'MatrixColumnName' },
         { key: 'matrixColumnDescription', label: 'MatrixColumnDescription' },
         { key: 'tdInscopeFlag', label: 'TDInscopeFlag' },
-        { key: 'balanceTypeId', label: 'BalanceTypeId' },
         { key: 'balanceTypeName', label: 'BalanceTypeName' },
         { key: 'insertUserCode', label: 'InsertUserCode' },
         { key: 'updateUserCode', label: 'UpdateUserCode' }
@@ -34,14 +31,13 @@
         { apiKey: 'matrixTableDescription', label: 'MatrixTableDescription', maxLength: 250, type: 'text' },
         { apiKey: 'matrixColumnName', label: 'MatrixColumnName', maxLength: 120, type: 'text' },
         { apiKey: 'matrixColumnDescription', label: 'MatrixColumnDescription', maxLength: 250, type: 'text' },
-        { apiKey: 'tdInscopeFlag', label: 'TDInscopeFlag', type: 'tinyint' }
+        { apiKey: 'tdInscopeFlag', label: 'TDInscopeFlag', type: 'tinyint' },
+        { apiKey: 'balanceTypeName', label: 'BalanceTypeName', maxLength: 120, type: 'text' }
     ];
 
     const MATRIXMAP_COLUMN_KEYS = Object.fromEntries(
         MATRIXMAP_COLUMNS.map(c => [c.key, c.key.replace(/^[a-z]/, ch => ch.toUpperCase())])
     );
-    MATRIXMAP_COLUMN_KEYS.loadId = 'LoadId';
-    MATRIXMAP_COLUMN_KEYS.updateLoadId = 'UpdateLoadId';
     MATRIXMAP_COLUMN_KEYS.systemDateTime = 'SystemDateTime';
     MATRIXMAP_COLUMN_KEYS.validFrom = 'ValidFrom';
     MATRIXMAP_COLUMN_KEYS.validUntil = 'ValidUntil';
@@ -55,7 +51,6 @@
     MATRIXMAP_COLUMN_KEYS.matrixColumnName = 'MatrixColumnName';
     MATRIXMAP_COLUMN_KEYS.matrixColumnDescription = 'MatrixColumnDescription';
     MATRIXMAP_COLUMN_KEYS.tdInscopeFlag = 'TDInscopeFlag';
-    MATRIXMAP_COLUMN_KEYS.balanceTypeId = 'BalanceTypeId';
     MATRIXMAP_COLUMN_KEYS.balanceTypeName = 'BalanceTypeName';
     MATRIXMAP_COLUMN_KEYS.insertUserCode = 'InsertUserCode';
     MATRIXMAP_COLUMN_KEYS.updateUserCode = 'UpdateUserCode';
@@ -295,18 +290,16 @@
             if (field.type === 'tinyint') {
                 const selected = value === '' ? '' : value;
                 return `<div class="fg">
-                    <label for="mmf-${field.apiKey}">${field.label}</label>
-                    <select id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}">
-                        <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
+                    <select id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}" aria-label="${field.label}">
+                        <option value=""${selected === '' ? ' selected' : ''}>TDInscopeFlag</option>
                         <option value="1"${selected === '1' ? ' selected' : ''}>1</option>
                         <option value="0"${selected === '0' ? ' selected' : ''}>0</option>
                     </select>
                 </div>`;
             }
             return `<div class="fg">
-                <label for="mmf-${field.apiKey}">${field.label}</label>
                 <input type="text" id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}"
-                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label}">
+                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label}" aria-label="${field.label}">
             </div>`;
         }).join('');
 

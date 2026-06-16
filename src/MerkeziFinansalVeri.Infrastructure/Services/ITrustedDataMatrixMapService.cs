@@ -24,6 +24,7 @@ public sealed class TrustedDataMatrixMapFilter
     public string? MatrixColumnName { get; init; }
     public string? MatrixColumnDescription { get; init; }
     public int? TdInscopeFlag { get; init; }
+    public string? BalanceTypeName { get; init; }
 }
 
 public sealed class MatrixMapQueryResult

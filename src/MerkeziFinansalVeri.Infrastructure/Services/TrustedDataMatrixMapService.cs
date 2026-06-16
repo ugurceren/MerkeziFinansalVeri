@@ -114,6 +114,7 @@ public sealed class TrustedDataMatrixMapService(
         AppendStringFilter(where, "MatrixColumnName", filter.MatrixColumnName, 120);
         AppendStringFilter(where, "MatrixColumnDescription", filter.MatrixColumnDescription, 250);
         AppendTinyIntFilter(where, "TDInscopeFlag", filter.TdInscopeFlag is 0 or 1 ? filter.TdInscopeFlag : null);
+        AppendStringFilter(where, "BalanceTypeName", filter.BalanceTypeName, 120);
 
         if (where.Length == 0)
         {

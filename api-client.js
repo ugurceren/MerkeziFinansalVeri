@@ -100,7 +100,7 @@
             const q = new URLSearchParams();
             const keys = [
                 'matrixTableName', 'matrixTableDescription', 'matrixColumnName',
-                'matrixColumnDescription', 'tdInscopeFlag'
+                'matrixColumnDescription', 'tdInscopeFlag', 'balanceTypeName'
             ];
             keys.forEach(key => {
                 const val = params[key];

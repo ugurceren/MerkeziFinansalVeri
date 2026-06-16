@@ -53,6 +53,7 @@ public sealed class TrustedDataMatrixMapFilterDto
     public string? MatrixColumnName { get; set; }
     public string? MatrixColumnDescription { get; set; }
     public int? TdInscopeFlag { get; set; }
+    public string? BalanceTypeName { get; set; }
 }
 
 public sealed class MatrixMapAyarDto
