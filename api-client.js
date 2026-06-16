@@ -99,10 +99,8 @@
         getMatrixMap(params = {}) {
             const q = new URLSearchParams();
             const keys = [
-                'loadId', 'updateLoadId', 'systemDateTime', 'validFrom', 'validUntil', 'scdActiveFlag',
-                'trustedDataMatrixMapId', 'sourceName', 'matrixTableId', 'matrixTableName', 'matrixTableDescription',
-                'matrixColumnId', 'matrixColumnName', 'matrixColumnDescription', 'tdInscopeFlag',
-                'balanceTypeId', 'balanceTypeName', 'insertUserCode', 'updateUserCode'
+                'matrixTableName', 'matrixTableDescription', 'matrixColumnName',
+                'matrixColumnDescription', 'tdInscopeFlag'
             ];
             keys.forEach(key => {
                 const val = params[key];

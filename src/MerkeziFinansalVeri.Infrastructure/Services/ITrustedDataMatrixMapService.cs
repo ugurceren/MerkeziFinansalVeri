@@ -19,25 +19,11 @@ public sealed class MatrixMapAyarlar
 
 public sealed class TrustedDataMatrixMapFilter
 {
-    public int? LoadId { get; init; }
-    public int? UpdateLoadId { get; init; }
-    public string? SystemDateTime { get; init; }
-    public string? ValidFrom { get; init; }
-    public string? ValidUntil { get; init; }
-    public int? ScdActiveFlag { get; init; }
-    public int? TrustedDataMatrixMapId { get; init; }
-    public string? SourceName { get; init; }
-    public int? MatrixTableId { get; init; }
     public string? MatrixTableName { get; init; }
     public string? MatrixTableDescription { get; init; }
-    public int? MatrixColumnId { get; init; }
     public string? MatrixColumnName { get; init; }
     public string? MatrixColumnDescription { get; init; }
     public int? TdInscopeFlag { get; init; }
-    public int? BalanceTypeId { get; init; }
-    public string? BalanceTypeName { get; init; }
-    public string? InsertUserCode { get; init; }
-    public string? UpdateUserCode { get; init; }
 }
 
 public sealed class MatrixMapQueryResult

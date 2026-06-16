@@ -3,6 +3,7 @@ GO
 
 /*
     Matrix Map sayfasi (mutabakat menusu) — mevcut DB'ye ekler.
+    Mutabakat sayfalarina (mizan, donem, fark-veren) erisen tum rollere matrixmap izni verilir.
 */
 
 MERGE VIB.ref_Page AS tgt
@@ -23,12 +24,9 @@ WHEN NOT MATCHED BY TARGET THEN
 GO
 
 ;WITH YeniIzin AS (
-    SELECT RoleId, PageId FROM (VALUES
-        (N'admin', N'matrixmap'),
-        (N'mutabakat', N'matrixmap'),
-        (N'rapor', N'matrixmap'),
-        (N'surec', N'matrixmap')
-    ) AS v(RoleId, PageId)
+    SELECT DISTINCT rp.RoleId, N'matrixmap' AS PageId
+    FROM VIB.sec_RolePagePermission rp
+    WHERE rp.PageId IN (N'mizan', N'mutabakat-donem', N'fark-veren')
 )
 INSERT INTO VIB.sec_RolePagePermission (RoleId, PageId)
 SELECT yi.RoleId, yi.PageId

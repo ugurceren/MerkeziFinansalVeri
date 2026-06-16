@@ -27,7 +27,7 @@
             title: 'Mutabakat',
             desc: 'Mizan, dönem ve fark veren hesaplar',
             icon: 'ti-scale',
-            pages: ['mizan', 'mutabakat-donem', 'fark-veren']
+            pages: ['mizan', 'mutabakat-donem', 'fark-veren', 'matrixmap']
         },
         {
             section: 'SÜREÇ',

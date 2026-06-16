@@ -184,25 +184,11 @@ public class MutabakatController(
 
     private static TrustedDataMatrixMapFilter ToMatrixMapFilter(TrustedDataMatrixMapFilterDto dto) => new()
     {
-        LoadId = dto.LoadId,
-        UpdateLoadId = dto.UpdateLoadId,
-        SystemDateTime = dto.SystemDateTime,
-        ValidFrom = dto.ValidFrom,
-        ValidUntil = dto.ValidUntil,
-        ScdActiveFlag = dto.ScdActiveFlag,
-        TrustedDataMatrixMapId = dto.TrustedDataMatrixMapId,
-        SourceName = dto.SourceName,
-        MatrixTableId = dto.MatrixTableId,
         MatrixTableName = dto.MatrixTableName,
         MatrixTableDescription = dto.MatrixTableDescription,
-        MatrixColumnId = dto.MatrixColumnId,
         MatrixColumnName = dto.MatrixColumnName,
         MatrixColumnDescription = dto.MatrixColumnDescription,
-        TdInscopeFlag = dto.TdInscopeFlag,
-        BalanceTypeId = dto.BalanceTypeId,
-        BalanceTypeName = dto.BalanceTypeName,
-        InsertUserCode = dto.InsertUserCode,
-        UpdateUserCode = dto.UpdateUserCode
+        TdInscopeFlag = dto.TdInscopeFlag is 0 or 1 ? dto.TdInscopeFlag : null
     };
 
     private static VeritabaniSorguSonucDto ToMatrixMapDto(MatrixMapQueryResult result) => new()

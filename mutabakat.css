@@ -268,39 +268,103 @@
     border: 0.5px solid var(--rb-border);
 }
 
-.mt-table-filterable .mt-filter-row th {
-    padding: 4px 6px;
-    background: var(--rb-surface);
-    vertical-align: top;
+.page-body-matrixmap {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 12px;
 }
 
-.mt-col-filter {
-    width: 100%;
-    min-width: 72px;
-    max-width: 140px;
-    height: 28px;
-    padding: 0 6px;
-    font-size: 11px;
+.mt-matrixmap-layout {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mt-mm-head {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.mt-mm-head-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mt-mm-head-main h3 {
+    margin: 0;
+}
+
+.mt-mm-head-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.mt-mm-filter-panel {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    padding: 10px 12px;
     border: 0.5px solid var(--rb-border);
-    border-radius: 5px;
+    border-radius: 10px;
+    background: var(--rb-filter-bg);
+    flex-shrink: 0;
+}
+
+.mt-mm-filter-panel.is-hidden {
+    display: none;
+}
+
+.mt-mm-filter-panel .fg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 180px;
+}
+
+.mt-mm-filter-panel label {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.mt-mm-filter-input {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
     background: var(--rb-input-bg);
     color: var(--rb-text);
     font-family: inherit;
+    min-width: 180px;
 }
 
-.mt-col-filter:focus {
+.mt-mm-filter-input:focus {
     outline: none;
     border-color: var(--rb-accent);
 }
 
-.mt-table-filterable thead tr:first-child th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
+.mt-mm-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.mt-table-filterable thead tr.mt-filter-row th {
+.mt-mm-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.mt-mm-scroll .mt-table thead th {
     position: sticky;
-    top: 33px;
+    top: 0;
     z-index: 1;
 }

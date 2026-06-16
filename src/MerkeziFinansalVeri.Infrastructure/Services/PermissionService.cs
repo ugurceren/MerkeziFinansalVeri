@@ -5,6 +5,9 @@ namespace MerkeziFinansalVeri.Infrastructure.Services;
 
 public class PermissionService(AppDbContext dbContext) : IPermissionService
 {
+    private static readonly string[] MutabakatSayfaIds = ["mizan", "mutabakat-donem", "fark-veren"];
+    private const string MatrixMapSayfaId = "matrixmap";
+
     public async Task<bool> IsActiveUserAsync(int kullaniciId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Kullanicilar
@@ -54,7 +57,7 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
             .Where(k => k.KullaniciId == kullaniciId)
             .ToDictionaryAsync(k => k.SayfaId, k => k.IzinVerildi, cancellationToken);
 
-        return sayfalar.Select(s =>
+        return ApplyMutabakatMatrixMapInheritance(sayfalar.Select(s =>
         {
             var rolVarsayilan = rolYetkileri.Contains(s.SayfaId);
             var overrideVar = kullaniciYetkileri.TryGetValue(s.SayfaId, out var izin);
@@ -69,7 +72,7 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
                 RolVarsayilan = rolVarsayilan,
                 KullaniciOverride = overrideVar
             };
-        }).ToList();
+        }).ToList());
     }
 
     public async Task<IReadOnlyList<SayfaYetkiDto>> GetRolePermissionsAsync(
@@ -87,7 +90,7 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
             .Select(r => r.SayfaId)
             .ToListAsync(cancellationToken)).ToHashSet();
 
-        return sayfalar.Select(s => new SayfaYetkiDto
+        return ApplyMutabakatMatrixMapInheritance(sayfalar.Select(s => new SayfaYetkiDto
         {
             SayfaId = s.SayfaId,
             Etiket = s.Etiket,
@@ -95,6 +98,33 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
             IzinVerildi = rolYetkileri.Contains(s.SayfaId),
             RolVarsayilan = rolYetkileri.Contains(s.SayfaId),
             KullaniciOverride = false
-        }).ToList();
+        }).ToList());
+    }
+
+    private static IReadOnlyList<SayfaYetkiDto> ApplyMutabakatMatrixMapInheritance(
+        IReadOnlyList<SayfaYetkiDto> yetkiler)
+    {
+        var hasMutabakatAccess = yetkiler.Any(y =>
+            MutabakatSayfaIds.Contains(y.SayfaId) && y.IzinVerildi);
+
+        if (!hasMutabakatAccess)
+        {
+            return yetkiler;
+        }
+
+        return yetkiler
+            .Select(y => y.SayfaId == MatrixMapSayfaId && !y.IzinVerildi
+                ? new SayfaYetkiDto
+                {
+                    SayfaId = y.SayfaId,
+                    Etiket = y.Etiket,
+                    Bolum = y.Bolum,
+                    IzinVerildi = true,
+                    RolVarsayilan = y.RolVarsayilan || MutabakatSayfaIds.Any(id =>
+                        yetkiler.Any(m => m.SayfaId == id && m.IzinVerildi)),
+                    KullaniciOverride = y.KullaniciOverride
+                }
+                : y)
+            .ToList();
     }
 }

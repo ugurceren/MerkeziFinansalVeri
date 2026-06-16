@@ -109,25 +109,11 @@ public sealed class TrustedDataMatrixMapService(
         }
 
         var where = new StringBuilder();
-        AppendIntFilter(where, "LoadId", filter.LoadId);
-        AppendIntFilter(where, "UpdateLoadId", filter.UpdateLoadId);
-        AppendDateFilter(where, "SystemDateTime", filter.SystemDateTime);
-        AppendDateFilter(where, "ValidFrom", filter.ValidFrom);
-        AppendDateFilter(where, "ValidUntil", filter.ValidUntil);
-        AppendIntFilter(where, "SCDActiveFlag", filter.ScdActiveFlag);
-        AppendIntFilter(where, "TrustedDataMatrixMapId", filter.TrustedDataMatrixMapId);
-        AppendStringFilter(where, "SourceName", filter.SourceName);
-        AppendIntFilter(where, "MatrixTableId", filter.MatrixTableId);
-        AppendStringFilter(where, "MatrixTableName", filter.MatrixTableName);
-        AppendStringFilter(where, "MatrixTableDescription", filter.MatrixTableDescription);
-        AppendIntFilter(where, "MatrixColumnId", filter.MatrixColumnId);
-        AppendStringFilter(where, "MatrixColumnName", filter.MatrixColumnName);
-        AppendStringFilter(where, "MatrixColumnDescription", filter.MatrixColumnDescription);
-        AppendIntFilter(where, "TDInscopeFlag", filter.TdInscopeFlag);
-        AppendIntFilter(where, "BalanceTypeId", filter.BalanceTypeId);
-        AppendStringFilter(where, "BalanceTypeName", filter.BalanceTypeName);
-        AppendStringFilter(where, "InsertUserCode", filter.InsertUserCode);
-        AppendStringFilter(where, "UpdateUserCode", filter.UpdateUserCode);
+        AppendStringFilter(where, "MatrixTableName", filter.MatrixTableName, 120);
+        AppendStringFilter(where, "MatrixTableDescription", filter.MatrixTableDescription, 250);
+        AppendStringFilter(where, "MatrixColumnName", filter.MatrixColumnName, 120);
+        AppendStringFilter(where, "MatrixColumnDescription", filter.MatrixColumnDescription, 250);
+        AppendTinyIntFilter(where, "TDInscopeFlag", filter.TdInscopeFlag is 0 or 1 ? filter.TdInscopeFlag : null);
 
         if (where.Length == 0)
         {
@@ -137,24 +123,20 @@ public sealed class TrustedDataMatrixMapService(
         return $"{baseSql}\nWHERE 1=1{where}\nORDER BY TrustedDataMatrixMapId";
     }
 
-    private static void AppendIntFilter(StringBuilder where, string column, int? value)
-    {
-        if (!value.HasValue)
-        {
-            return;
-        }
-
-        where.Append('\n').Append("  AND ").Append(column).Append(" = ").Append(value.Value);
-    }
-
-    private static void AppendStringFilter(StringBuilder where, string column, string? value)
+    private static void AppendStringFilter(StringBuilder where, string column, string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             return;
         }
 
-        var escaped = value.Trim().Replace("'", "''");
+        var trimmed = value.Trim();
+        if (trimmed.Length > maxLength)
+        {
+            trimmed = trimmed[..maxLength];
+        }
+
+        var escaped = trimmed.Replace("'", "''");
         where.Append('\n')
             .Append("  AND ")
             .Append(column)
@@ -163,20 +145,14 @@ public sealed class TrustedDataMatrixMapService(
             .Append("%'");
     }
 
-    private static void AppendDateFilter(StringBuilder where, string column, string? value)
+    private static void AppendTinyIntFilter(StringBuilder where, string column, int? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        if (!value.HasValue)
         {
             return;
         }
 
-        var escaped = value.Trim().Replace("'", "''");
-        where.Append('\n')
-            .Append("  AND CONVERT(varchar(23), ")
-            .Append(column)
-            .Append(", 121) LIKE '%")
-            .Append(escaped)
-            .Append("%'");
+        where.Append('\n').Append("  AND ").Append(column).Append(" = ").Append(value.Value);
     }
 
     private static MatrixMapQueryResult Fail(string message) => new()

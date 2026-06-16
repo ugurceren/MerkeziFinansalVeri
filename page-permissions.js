@@ -23,6 +23,15 @@
         'veritabani-baglantisi.html': 'veritabani-baglantisi'
     };
 
+    const MUTABAKAT_PAGE_IDS = ['mizan', 'mutabakat-donem', 'fark-veren'];
+
+    function expandMutabakatPermissions(pages) {
+        if (MUTABAKAT_PAGE_IDS.some(id => pages.has(id))) {
+            pages.add('matrixmap');
+        }
+        return pages;
+    }
+
     let allowedPages = new Set(['portal']);
     let permissionsInitPromise = null;
     let permissionsReadyResolve;
@@ -40,6 +49,7 @@
         if (!allowedPages.size) {
             allowedPages.add('portal');
         }
+        expandMutabakatPermissions(allowedPages);
     }
 
     function normalizeHref(href) {
@@ -232,6 +242,7 @@
             if (!allowedPages.size) {
                 allowedPages.add('portal');
             }
+            expandMutabakatPermissions(allowedPages);
         } catch (err) {
             console.warn('Sayfa yetkileri yüklenemedi:', err);
             applyFallbackPermissions();
