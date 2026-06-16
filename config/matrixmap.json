@@ -1,0 +1,8 @@
+{
+  "MatrixMap": {
+    "KatmanKodu": "TDMAIN",
+    "SorguDosyasi": "config/queries/matrixmap.sql",
+    "MaxSatir": 5000,
+    "SorguTimeoutSaniye": 120
+  }
+}

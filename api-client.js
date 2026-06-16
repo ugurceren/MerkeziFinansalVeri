@@ -95,6 +95,24 @@
             const qs = q.toString();
             return request(`/mutabakat/fark-veren${qs ? `?${qs}` : ''}`);
         },
+        getMatrixMapAyarlar() { return request('/mutabakat/matrixmap/ayarlar'); },
+        getMatrixMap(params = {}) {
+            const q = new URLSearchParams();
+            const keys = [
+                'loadId', 'updateLoadId', 'systemDateTime', 'validFrom', 'validUntil', 'scdActiveFlag',
+                'trustedDataMatrixMapId', 'sourceName', 'matrixTableId', 'matrixTableName', 'matrixTableDescription',
+                'matrixColumnId', 'matrixColumnName', 'matrixColumnDescription', 'tdInscopeFlag',
+                'balanceTypeId', 'balanceTypeName', 'insertUserCode', 'updateUserCode'
+            ];
+            keys.forEach(key => {
+                const val = params[key];
+                if (val !== undefined && val !== null && String(val).trim() !== '') {
+                    q.set(key, String(val).trim());
+                }
+            });
+            const qs = q.toString();
+            return request(`/mutabakat/matrixmap${qs ? `?${qs}` : ''}`);
+        },
 
         // Süreç / Mizan
         getSurecKokpit() { return request('/surec/kokpit'); },

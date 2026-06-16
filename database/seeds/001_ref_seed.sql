@@ -24,16 +24,17 @@ USING (VALUES
     (N'mizan',            N'MUTABAKAT',           N'ti-scale',        N'Mizan',                               N'mizan.html',                           5),
     (N'mutabakat-donem',  N'MUTABAKAT',           N'ti-scale',        N'Dönem',                               N'mutabakat.html?view=donem',            6),
     (N'fark-veren',       N'MUTABAKAT',           N'ti-scale',        N'Fark Veren Hesaplar',                 N'mutabakat.html?view=fark-veren',       7),
-    (N'kebir',            N'PARAMETRE YÖNETİMİ',   N'ti-adjustments',  N'Kebir Hesapları Sorumluluk Listesi',  N'kebir-hesaplari.html',                 8),
-    (N'vk-kurallar',      N'VERİ KALİTESİ',       N'ti-list-check',   N'Veri Kalitesi Kuralları',             N'veri-kalitesi-kurallari.html',         9),
-    (N'vk-gunluk',        N'VERİ KALİTESİ',       N'ti-list-check',   N'Günlük Kural Sonuçları',              N'gunluk-kural-sonuclari.html',         10),
-    (N'veritabani-sorgu', N'RAPORLAMA',           N'ti-chart-bar',    N'Veritabanı Sorgusu',                  N'veritabani-sorgu.html',               11),
-    (N'ters-bakiye',      N'RAPORLAMA',           N'ti-chart-bar',    N'Ters Bakiye Raporu',                  NULL,                                   12),
-    (N'nazim',            N'RAPORLAMA',           N'ti-chart-bar',    N'Nazım Hesapları Raporu',              NULL,                                   13),
-    (N'ayarlar',          N'AYARLAR',             N'ti-settings',     N'Ayarlar',                             N'ayarlar.html',                        14),
-    (N'kullanici-yonetimi', N'YÖNETİM',           N'ti-users',        N'Kullanıcı Yönetimi',                  N'kullanici-yonetimi.html',             15),
-    (N'kisi-yetkileri',   N'YÖNETİM',             N'ti-users',        N'Kişi Bazlı Yetkiler',                 N'kisi-yetkileri.html',                 16),
-    (N'veritabani-baglantisi', N'YÖNETİM',         N'ti-users',        N'Veritabanı Bağlantısı',               N'veritabani-baglantisi.html',          17)
+    (N'matrixmap',        N'MUTABAKAT',           N'ti-scale',        N'Matrix Map',                          N'mutabakat.html?view=matrixmap',        8),
+    (N'kebir',            N'PARAMETRE YÖNETİMİ',   N'ti-adjustments',  N'Kebir Hesapları Sorumluluk Listesi',  N'kebir-hesaplari.html',                 9),
+    (N'vk-kurallar',      N'VERİ KALİTESİ',       N'ti-list-check',   N'Veri Kalitesi Kuralları',             N'veri-kalitesi-kurallari.html',        10),
+    (N'vk-gunluk',        N'VERİ KALİTESİ',       N'ti-list-check',   N'Günlük Kural Sonuçları',              N'gunluk-kural-sonuclari.html',         11),
+    (N'veritabani-sorgu', N'RAPORLAMA',           N'ti-chart-bar',    N'Veritabanı Sorgusu',                  N'veritabani-sorgu.html',               12),
+    (N'ters-bakiye',      N'RAPORLAMA',           N'ti-chart-bar',    N'Ters Bakiye Raporu',                  NULL,                                   13),
+    (N'nazim',            N'RAPORLAMA',           N'ti-chart-bar',    N'Nazım Hesapları Raporu',              NULL,                                   14),
+    (N'ayarlar',          N'AYARLAR',             N'ti-settings',     N'Ayarlar',                             N'ayarlar.html',                        15),
+    (N'kullanici-yonetimi', N'YÖNETİM',           N'ti-users',        N'Kullanıcı Yönetimi',                  N'kullanici-yonetimi.html',             16),
+    (N'kisi-yetkileri',   N'YÖNETİM',             N'ti-users',        N'Kişi Bazlı Yetkiler',                 N'kisi-yetkileri.html',                 17),
+    (N'veritabani-baglantisi', N'YÖNETİM',         N'ti-users',        N'Veritabanı Bağlantısı',               N'veritabani-baglantisi.html',          18)
 ) AS src(PageId, Section, SectionIcon, Label, Href, SortOrder)
 ON tgt.PageId = src.PageId
 WHEN MATCHED THEN

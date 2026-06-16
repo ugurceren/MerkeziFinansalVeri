@@ -12,6 +12,7 @@
         'mutabakat.html?view=donem': 'mutabakat-donem',
         'mutabakat.html': 'mutabakat-donem',
         'mutabakat.html?view=fark-veren': 'fark-veren',
+        'mutabakat.html?view=matrixmap': 'matrixmap',
         'kebir-hesaplari.html': 'kebir',
         'veri-kalitesi-kurallari.html': 'vk-kurallar',
         'gunluk-kural-sonuclari.html': 'vk-gunluk',
@@ -94,7 +95,9 @@
             return 'surec';
         }
         if (path === 'mutabakat.html') {
-            return view === 'fark-veren' ? 'fark-veren' : 'mutabakat-donem';
+            if (view === 'fark-veren') return 'fark-veren';
+            if (view === 'matrixmap') return 'matrixmap';
+            return 'mutabakat-donem';
         }
 
         const key = path + (window.location.search || '');

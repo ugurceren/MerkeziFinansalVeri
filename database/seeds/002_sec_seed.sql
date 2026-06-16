@@ -48,16 +48,16 @@ GO
 ;WITH RolSayfa AS (
     SELECT RoleId, PageId FROM (VALUES
         (N'admin', N'portal'), (N'admin', N'surec'), (N'admin', N'datasetler'), (N'admin', N'task-listesi'),
-        (N'admin', N'mizan'), (N'admin', N'mutabakat-donem'), (N'admin', N'fark-veren'), (N'admin', N'kebir'),
+        (N'admin', N'mizan'), (N'admin', N'mutabakat-donem'), (N'admin', N'fark-veren'), (N'admin', N'matrixmap'), (N'admin', N'kebir'),
         (N'admin', N'vk-kurallar'), (N'admin', N'vk-gunluk'), (N'admin', N'veritabani-sorgu'),
         (N'admin', N'ters-bakiye'), (N'admin', N'nazim'), (N'admin', N'ayarlar'),
         (N'admin', N'kullanici-yonetimi'), (N'admin', N'kisi-yetkileri'), (N'admin', N'veritabani-baglantisi'),
         (N'mutabakat', N'portal'), (N'mutabakat', N'kebir'), (N'mutabakat', N'mizan'),
-        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'), (N'mutabakat', N'ayarlar'),
+        (N'mutabakat', N'mutabakat-donem'), (N'mutabakat', N'fark-veren'), (N'mutabakat', N'matrixmap'), (N'mutabakat', N'ayarlar'),
         (N'rapor', N'portal'), (N'rapor', N'veritabani-sorgu'), (N'rapor', N'ters-bakiye'), (N'rapor', N'nazim'),
-        (N'rapor', N'mizan'), (N'rapor', N'mutabakat-donem'), (N'rapor', N'fark-veren'), (N'rapor', N'kebir'), (N'rapor', N'ayarlar'),
+        (N'rapor', N'mizan'), (N'rapor', N'mutabakat-donem'), (N'rapor', N'fark-veren'), (N'rapor', N'matrixmap'), (N'rapor', N'kebir'), (N'rapor', N'ayarlar'),
         (N'surec', N'portal'), (N'surec', N'surec'), (N'surec', N'datasetler'), (N'surec', N'task-listesi'),
-        (N'surec', N'mizan'), (N'surec', N'mutabakat-donem'), (N'surec', N'fark-veren'), (N'surec', N'ayarlar'),
+        (N'surec', N'mizan'), (N'surec', N'mutabakat-donem'), (N'surec', N'fark-veren'), (N'surec', N'matrixmap'), (N'surec', N'ayarlar'),
         (N'veri-kalitesi', N'portal'), (N'veri-kalitesi', N'vk-kurallar'), (N'veri-kalitesi', N'vk-gunluk'), (N'veri-kalitesi', N'ayarlar'),
         (N'viewer', N'portal'), (N'viewer', N'ayarlar')
     ) AS v(RoleId, PageId)

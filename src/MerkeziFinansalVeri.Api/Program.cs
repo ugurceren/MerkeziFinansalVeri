@@ -30,6 +30,12 @@ if (File.Exists(vkPortalKpiConfigPath))
     builder.Configuration.AddJsonFile(vkPortalKpiConfigPath, optional: true, reloadOnChange: true);
 }
 
+var matrixMapConfigPath = Path.Combine(repoRoot, "config", "matrixmap.json");
+if (File.Exists(matrixMapConfigPath))
+{
+    builder.Configuration.AddJsonFile(matrixMapConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -44,6 +50,12 @@ builder.Services.AddScoped<IVeriKalitesiKpiService>(sp => new VeriKalitesiKpiSer
     sp.GetRequiredService<ITdConnectionService>(),
     sp.GetRequiredService<IConfiguration>(),
     sp.GetRequiredService<ILogger<VeriKalitesiKpiService>>(),
+    repoRoot));
+
+builder.Services.AddScoped<ITrustedDataMatrixMapService>(sp => new TrustedDataMatrixMapService(
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<TrustedDataMatrixMapService>>(),
     repoRoot));
 
 builder.Services.AddCors(options =>

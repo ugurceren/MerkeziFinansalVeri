@@ -1,0 +1,21 @@
+SELECT
+    LoadId,
+    UpdateLoadId,
+    SystemDateTime,
+    ValidFrom,
+    ValidUntil,
+    SCDActiveFlag,
+    TrustedDataMatrixMapId,
+    SourceName,
+    MatrixTableId,
+    MatrixTableName,
+    MatrixTableDescription,
+    MatrixColumnId,
+    MatrixColumnName,
+    MatrixColumnDescription,
+    TDInscopeFlag,
+    BalanceTypeId,
+    BalanceTypeName,
+    InsertUserCode,
+    UpdateUserCode
+FROM PRM.TrustedDataMatrixMap

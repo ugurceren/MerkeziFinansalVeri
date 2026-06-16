@@ -10,7 +10,8 @@ namespace MerkeziFinansalVeri.Api.Controllers;
 [Route("api/mutabakat")]
 public class MutabakatController(
     AppDbContext dbContext,
-    IActivityLogService activityLogService) : ControllerBase
+    IActivityLogService activityLogService,
+    ITrustedDataMatrixMapService matrixMapService) : ControllerBase
 {
     [HttpGet("donemler")]
     public async Task<ActionResult<IReadOnlyList<MutabakatDonemDto>>> GetDonemler(CancellationToken cancellationToken)
@@ -147,6 +148,28 @@ public class MutabakatController(
         return Ok(items);
     }
 
+    [HttpGet("matrixmap/ayarlar")]
+    public ActionResult<MatrixMapAyarDto> GetMatrixMapAyarlar()
+    {
+        var ayarlar = matrixMapService.GetAyarlar();
+        return Ok(new MatrixMapAyarDto
+        {
+            KatmanKodu = ayarlar.KatmanKodu,
+            SorguDosyasi = ayarlar.SorguDosyasi,
+            MaxSatir = ayarlar.MaxSatir,
+            SorguTimeoutSaniye = ayarlar.SorguTimeoutSaniye
+        });
+    }
+
+    [HttpGet("matrixmap")]
+    public async Task<ActionResult<VeritabaniSorguSonucDto>> GetMatrixMap(
+        [FromQuery] TrustedDataMatrixMapFilterDto filter,
+        CancellationToken cancellationToken)
+    {
+        var result = await matrixMapService.QueryAsync(ToMatrixMapFilter(filter), cancellationToken);
+        return Ok(ToMatrixMapDto(result));
+    }
+
     private static MutabakatDonemDto ToDonemDto(Domain.Entities.MutabakatDonem d) => new()
     {
         DonemId = d.DonemId,
@@ -157,5 +180,40 @@ public class MutabakatController(
         FarkVerenSayisi = d.FarkVerenSayisi,
         KapanisTarihi = d.KapanisTarihi,
         AktifMi = d.AktifMi
+    };
+
+    private static TrustedDataMatrixMapFilter ToMatrixMapFilter(TrustedDataMatrixMapFilterDto dto) => new()
+    {
+        LoadId = dto.LoadId,
+        UpdateLoadId = dto.UpdateLoadId,
+        SystemDateTime = dto.SystemDateTime,
+        ValidFrom = dto.ValidFrom,
+        ValidUntil = dto.ValidUntil,
+        ScdActiveFlag = dto.ScdActiveFlag,
+        TrustedDataMatrixMapId = dto.TrustedDataMatrixMapId,
+        SourceName = dto.SourceName,
+        MatrixTableId = dto.MatrixTableId,
+        MatrixTableName = dto.MatrixTableName,
+        MatrixTableDescription = dto.MatrixTableDescription,
+        MatrixColumnId = dto.MatrixColumnId,
+        MatrixColumnName = dto.MatrixColumnName,
+        MatrixColumnDescription = dto.MatrixColumnDescription,
+        TdInscopeFlag = dto.TdInscopeFlag,
+        BalanceTypeId = dto.BalanceTypeId,
+        BalanceTypeName = dto.BalanceTypeName,
+        InsertUserCode = dto.InsertUserCode,
+        UpdateUserCode = dto.UpdateUserCode
+    };
+
+    private static VeritabaniSorguSonucDto ToMatrixMapDto(MatrixMapQueryResult result) => new()
+    {
+        Basarili = result.Basarili,
+        Hata = result.Hata,
+        Kolonlar = result.Kolonlar,
+        Satirlar = result.Satirlar,
+        SatirSayisi = result.SatirSayisi,
+        SureMs = result.SureMs,
+        Kisitlandi = result.Kisitlandi,
+        MaxSatir = result.MaxSatir
     };
 }

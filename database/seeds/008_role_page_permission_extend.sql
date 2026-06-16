@@ -17,11 +17,13 @@ GO
         (N'rapor', N'mizan'),
         (N'rapor', N'mutabakat-donem'),
         (N'rapor', N'fark-veren'),
+        (N'rapor', N'matrixmap'),
         (N'rapor', N'kebir'),
         (N'surec', N'ayarlar'),
         (N'surec', N'mizan'),
         (N'surec', N'mutabakat-donem'),
         (N'surec', N'fark-veren'),
+        (N'surec', N'matrixmap'),
         (N'veri-kalitesi', N'ayarlar'),
         (N'viewer', N'ayarlar')
     ) AS v(RoleId, PageId)
@@ -43,7 +45,7 @@ FROM VIB.sec_UserPagePermission up
 INNER JOIN VIB.sec_User u ON u.UserId = up.UserId AND u.IsDeleted = 0
 INNER JOIN VIB.sec_RolePagePermission rp ON rp.RoleId = u.RoleId AND rp.PageId = up.PageId
 WHERE up.IsGranted = 0
-  AND up.PageId IN (N'ayarlar', N'mizan', N'mutabakat-donem', N'fark-veren', N'kebir');
+  AND up.PageId IN (N'ayarlar', N'mizan', N'mutabakat-donem', N'fark-veren', N'matrixmap', N'kebir');
 GO
 
 SELECT r.RoleId, r.Name, COUNT(p.PageId) AS SayfaSayisi

@@ -238,3 +238,69 @@
     border-color: color-mix(in srgb, var(--rb-accent) 40%, var(--rb-border));
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--rb-accent) 20%, transparent);
 }
+
+.mt-error {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 0.5px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    font-size: 12px;
+}
+
+.mt-card.mt-loading,
+.mt-card.mt-empty {
+    padding: 16px 14px;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.mt-filter-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px 14px 0;
+    flex-wrap: wrap;
+}
+
+.filter-btn-secondary {
+    background: var(--rb-filter-bg);
+    color: var(--rb-text);
+    border: 0.5px solid var(--rb-border);
+}
+
+.mt-table-filterable .mt-filter-row th {
+    padding: 4px 6px;
+    background: var(--rb-surface);
+    vertical-align: top;
+}
+
+.mt-col-filter {
+    width: 100%;
+    min-width: 72px;
+    max-width: 140px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 11px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 5px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    font-family: inherit;
+}
+
+.mt-col-filter:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.mt-table-filterable thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.mt-table-filterable thead tr.mt-filter-row th {
+    position: sticky;
+    top: 33px;
+    z-index: 1;
+}

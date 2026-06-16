@@ -20,7 +20,8 @@
             pages: [
                 { id: 'mizan', label: 'Mizan', href: 'mizan.html' },
                 { id: 'mutabakat-donem', label: 'Dönem', href: 'mutabakat.html?view=donem' },
-                { id: 'fark-veren', label: 'Fark Veren Hesaplar', href: 'mutabakat.html?view=fark-veren' }
+                { id: 'fark-veren', label: 'Fark Veren Hesaplar', href: 'mutabakat.html?view=fark-veren' },
+                { id: 'matrixmap', label: 'Matrix Map', href: 'mutabakat.html?view=matrixmap' }
             ]
         },
         {
@@ -78,21 +79,21 @@
             name: 'Mutabakat Sorumlusu',
             desc: 'Portal ve mutabakat sayfaları',
             badgeClass: 'role-mutabakat',
-            pages: ['portal', 'kebir', 'mizan', 'mutabakat-donem', 'fark-veren', 'ayarlar']
+            pages: ['portal', 'kebir', 'mizan', 'mutabakat-donem', 'fark-veren', 'matrixmap', 'ayarlar']
         },
         {
             id: 'rapor',
             name: 'Raporlama Uzmanı',
             desc: 'Portal ve raporlama sayfaları',
             badgeClass: 'role-rapor',
-            pages: ['portal', 'veritabani-sorgu', 'ters-bakiye', 'nazim', 'mizan', 'mutabakat-donem', 'fark-veren', 'kebir', 'ayarlar']
+            pages: ['portal', 'veritabani-sorgu', 'ters-bakiye', 'nazim', 'mizan', 'mutabakat-donem', 'fark-veren', 'matrixmap', 'kebir', 'ayarlar']
         },
         {
             id: 'surec',
             name: 'Süreç Koordinatörü',
             desc: 'Portal ve süreç yönetimi',
             badgeClass: 'role-surec',
-            pages: ['portal', 'surec', 'datasetler', 'task-listesi', 'mizan', 'mutabakat-donem', 'fark-veren', 'ayarlar']
+            pages: ['portal', 'surec', 'datasetler', 'task-listesi', 'mizan', 'mutabakat-donem', 'fark-veren', 'matrixmap', 'ayarlar']
         },
         {
             id: 'veri-kalitesi',

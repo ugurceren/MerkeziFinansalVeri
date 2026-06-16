@@ -58,6 +58,10 @@
                         <i class="ti ti-arrows-diff"></i>
                         <span>Fark Veren<br>Hesaplar</span>
                     </button>
+                    <button class="rbtn" type="button" data-page="Matrix Map" data-page-id="matrixmap" data-section="MUTABAKAT" data-href="mutabakat.html?view=matrixmap">
+                        <i class="ti ti-table"></i>
+                        <span>Matrix<br>Map</span>
+                    </button>
                 </div>
             </div>
         </div>`,
@@ -231,6 +235,7 @@
         if (path === 'mizan.html') return { section: 'MUTABAKAT', page: 'Mizan' };
         if (path === 'mutabakat.html') {
             if (view === 'fark-veren') return { section: 'MUTABAKAT', page: 'Fark Veren Hesaplar' };
+            if (view === 'matrixmap') return { section: 'MUTABAKAT', page: 'Matrix Map' };
             return { section: 'MUTABAKAT', page: 'Dönem' };
         }
         if (path === 'kebir-hesaplari.html') return { section: 'PARAMETRE YÖNETİMİ', page: 'Kebir Hesapları Sorumluluk Listesi' };
