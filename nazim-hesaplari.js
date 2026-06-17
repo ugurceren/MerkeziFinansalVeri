@@ -244,7 +244,11 @@
         const form = document.getElementById('nzCriteriaForm');
         form?.reset();
         const dataDate = document.getElementById('nzDataDate');
-        if (dataDate) dataDate.value = formatDateInput(new Date());
+        if (dataDate) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            dataDate.value = formatDateInput(yesterday);
+        }
         const minLedger = document.getElementById('nzMinLedger');
         const maxLedger = document.getElementById('nzMaxLedger');
         const minDiff = document.getElementById('nzMinDifference');
