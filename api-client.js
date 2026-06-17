@@ -157,6 +157,12 @@
         },
         testVeritabaniSorguKatman(katmanKodu) {
             return request(`/veritabani-sorgu/test/${encodeURIComponent(katmanKodu)}`, { method: 'POST' });
+        },
+
+        // Ters Bakiye Raporu
+        getTersBakiyeAyarlar() { return request('/raporlar/ters-bakiye/ayarlar'); },
+        calistirTersBakiye(data) {
+            return request('/raporlar/ters-bakiye/calistir', { method: 'POST', body: data });
         }
     };
 

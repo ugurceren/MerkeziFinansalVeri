@@ -36,6 +36,12 @@ if (File.Exists(matrixMapConfigPath))
     builder.Configuration.AddJsonFile(matrixMapConfigPath, optional: true, reloadOnChange: true);
 }
 
+var tersBakiyeConfigPath = Path.Combine(repoRoot, "config", "ters-bakiye.json");
+if (File.Exists(tersBakiyeConfigPath))
+{
+    builder.Configuration.AddJsonFile(tersBakiyeConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -57,6 +63,8 @@ builder.Services.AddScoped<ITrustedDataMatrixMapService>(sp => new TrustedDataMa
     sp.GetRequiredService<IConfiguration>(),
     sp.GetRequiredService<ILogger<TrustedDataMatrixMapService>>(),
     repoRoot));
+
+builder.Services.AddScoped<ITersBakiyeService, TersBakiyeService>();
 
 builder.Services.AddCors(options =>
 {

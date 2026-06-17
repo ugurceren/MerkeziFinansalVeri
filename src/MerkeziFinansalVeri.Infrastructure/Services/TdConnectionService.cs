@@ -87,6 +87,75 @@ public class TdConnectionService(
         }
     }
 
+    public async Task<TdQueryResult> ExecuteStoredProcedureAsync(
+        string katmanKodu,
+        string procedureName,
+        IReadOnlyList<SqlParameter> parameters,
+        int timeoutSeconds = 120,
+        int maxRows = 10000,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(procedureName))
+        {
+            return new TdQueryResult { Hata = "Stored procedure adı boş." };
+        }
+
+        var kaynak = await ResolveConnectionAsync(katmanKodu, null, cancellationToken);
+        if (kaynak is null)
+        {
+            return new TdQueryResult { Hata = $"Veri kaynağı bulunamadı: {katmanKodu}" };
+        }
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            await using var connection = CreateConnection(kaynak);
+            await connection.OpenAsync(cancellationToken);
+
+            await using var command = connection.CreateCommand();
+            command.CommandType = System.Data.CommandType.StoredProcedure;
+            command.CommandText = procedureName.Trim();
+            command.CommandTimeout = timeoutSeconds;
+
+            foreach (var parameter in parameters)
+            {
+                command.Parameters.Add(parameter);
+            }
+
+            var satirlar = new List<Dictionary<string, object?>>();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+            while (await reader.ReadAsync(cancellationToken) && satirlar.Count < maxRows)
+            {
+                var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : FormatCell(reader.GetValue(i));
+                }
+
+                satirlar.Add(row);
+            }
+
+            sw.Stop();
+            return new TdQueryResult
+            {
+                Satirlar = satirlar,
+                SatirSayisi = satirlar.Count,
+                SureMs = (int)sw.ElapsedMilliseconds
+            };
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            logger.LogWarning(ex, "TD SP hatası: {KatmanKodu} {Procedure}", katmanKodu, procedureName);
+            return new TdQueryResult
+            {
+                Hata = ex.Message,
+                SureMs = (int)sw.ElapsedMilliseconds
+            };
+        }
+    }
+
     private async Task<bool> TestConnectionInternalAsync(
         string katmanKodu,
         TdConnectionParams? overrideParams,

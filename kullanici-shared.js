@@ -44,7 +44,7 @@
             icon: 'ti-chart-bar',
             pages: [
                 { id: 'veritabani-sorgu', label: 'Veritabanı Sorgusu', href: 'veritabani-sorgu.html' },
-                { id: 'ters-bakiye', label: 'Ters Bakiye Raporu' },
+                { id: 'ters-bakiye', label: 'Ters Bakiye Raporu', href: 'ters-bakiye.html' },
                 { id: 'nazim', label: 'Nazım Hesapları Raporu' }
             ]
         },

@@ -12,6 +12,14 @@ public interface ITdConnectionService
         int timeoutSeconds = 30,
         int maxRows = 1000,
         CancellationToken cancellationToken = default);
+
+    Task<TdQueryResult> ExecuteStoredProcedureAsync(
+        string katmanKodu,
+        string procedureName,
+        IReadOnlyList<Microsoft.Data.SqlClient.SqlParameter> parameters,
+        int timeoutSeconds = 120,
+        int maxRows = 10000,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class TdQueryResult

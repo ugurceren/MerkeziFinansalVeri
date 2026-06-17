@@ -93,9 +93,9 @@
         </div>`,
         raporlama: `
         <div class="tab-panel" id="tab-raporlama">
-            <div class="ribbon-group">
+            <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Ters Bakiye Raporu" data-page-id="ters-bakiye" data-section="RAPORLAMA" data-href="HomePage.html?page=ters-bakiye">
+                    <button class="rbtn" type="button" data-page="Ters Bakiye Raporu" data-page-id="ters-bakiye" data-section="RAPORLAMA" data-href="ters-bakiye.html">
                         <i class="ti ti-arrows-exchange"></i>
                         <span>Ters Bakiye<br>Raporu</span>
                     </button>
@@ -103,10 +103,6 @@
                         <i class="ti ti-file-analytics"></i>
                         <span>Nazım Hesapları<br>Raporu</span>
                     </button>
-                </div>
-            </div>
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
                     <button class="rbtn" type="button" data-page="Veritabanı Sorgusu" data-page-id="veritabani-sorgu" data-section="RAPORLAMA" data-href="veritabani-sorgu.html">
                         <i class="ti ti-database"></i>
                         <span>Veritabanı<br>Sorgusu</span>
@@ -242,6 +238,7 @@
         if (path === 'veri-kalitesi-kurallari.html') return { section: 'VERİ KALİTESİ', page: 'Veri Kalitesi Kuralları' };
         if (path === 'gunluk-kural-sonuclari.html') return { section: 'VERİ KALİTESİ', page: 'Günlük Kural Sonuçları' };
         if (path === 'veritabani-sorgu.html') return { section: 'RAPORLAMA', page: 'Veritabanı Sorgusu' };
+        if (path === 'ters-bakiye.html') return { section: 'RAPORLAMA', page: 'Ters Bakiye Raporu' };
         if (path === 'ayarlar.html') {
             if (view === 'sistem-durumu') return { section: 'AYARLAR', page: 'Sistem Durumu' };
             return { section: 'AYARLAR', page: 'Uygulama Ayarları' };

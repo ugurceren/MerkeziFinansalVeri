@@ -1,0 +1,399 @@
+/* Ters Bakiye Raporu */
+
+.page-body-tb {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    padding-bottom: 12px;
+}
+
+.tb-layout {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tb-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.tb-mode-tabs {
+    display: inline-flex;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--rb-card);
+}
+
+.tb-mode-btn {
+    border: none;
+    background: transparent;
+    color: var(--rb-text-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.tb-mode-btn:hover {
+    color: var(--rb-text);
+    background: var(--rb-filter-bg);
+}
+
+.tb-mode-btn.is-active {
+    background: var(--rb-accent);
+    color: #fff;
+}
+
+.tb-toolbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tb-workspace {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    position: relative;
+}
+
+.tb-criteria {
+    flex: 0 0 300px;
+    width: 300px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 12px 0 0 12px;
+    overflow: hidden;
+    transition: width 0.22s ease, flex-basis 0.22s ease, opacity 0.18s ease, border-color 0.22s ease;
+}
+
+.tb-criteria-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+    flex-shrink: 0;
+}
+
+.tb-criteria-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.tb-panel-toggle,
+.tb-panel-reopen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-filter-bg);
+    color: var(--rb-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tb-panel-toggle:hover,
+.tb-panel-reopen:hover {
+    color: var(--rb-text);
+    border-color: var(--rb-accent);
+    background: var(--rb-card);
+}
+
+.tb-panel-reopen {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 0 8px var(--rb-shadow);
+}
+
+.tb-workspace.is-criteria-collapsed .tb-criteria {
+    flex-basis: 0;
+    width: 0;
+    opacity: 0;
+    border-color: transparent;
+    pointer-events: none;
+}
+
+.tb-workspace.is-criteria-collapsed .tb-panel-reopen {
+    display: inline-flex;
+}
+
+.tb-workspace:not(.is-criteria-collapsed) .tb-panel-reopen {
+    display: none;
+}
+
+.tb-criteria-form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.tb-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    min-width: 0;
+}
+
+.tb-field-row .tb-field {
+    min-width: 0;
+}
+
+.tb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.tb-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+}
+
+.tb-field input,
+.tb-field select,
+.tb-field textarea {
+    width: 100%;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 12px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    min-width: 0;
+}
+
+.tb-field input:focus,
+.tb-field select:focus,
+.tb-field textarea:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.tb-field textarea {
+    resize: vertical;
+    min-height: 52px;
+    font-family: ui-monospace, Consolas, monospace;
+}
+
+.tb-hint {
+    font-size: 10px;
+    color: var(--rb-text-muted);
+    line-height: 1.35;
+}
+
+.tb-field-check {
+    padding-top: 2px;
+}
+
+.tb-check-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rb-text);
+    cursor: pointer;
+    user-select: none;
+}
+
+.tb-check-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--rb-accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tb-results {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    overflow: hidden;
+}
+
+.tb-workspace.is-criteria-collapsed .tb-results {
+    border-left: 0.5px solid var(--rb-border);
+    border-radius: 12px;
+}
+
+.tb-results-status {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-bottom: 0.5px solid var(--rb-border);
+    flex-shrink: 0;
+}
+
+.tb-results-status.is-error {
+    background: rgba(247, 99, 121, 0.1);
+    color: #f76379;
+}
+
+.tb-results-status.is-loading {
+    color: var(--rb-text-muted);
+}
+
+.tb-results-empty {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 13px;
+}
+
+.tb-results-empty i {
+    font-size: 36px;
+    opacity: 0.45;
+}
+
+.tb-results-empty p {
+    margin: 0;
+    max-width: 360px;
+}
+
+.tb-empty-hint {
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.tb-results-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.tb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+.tb-table th,
+.tb-table td {
+    padding: 7px 10px;
+    border-bottom: 0.5px solid var(--rb-border);
+    text-align: left;
+    white-space: nowrap;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tb-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--rb-card);
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.tb-table tbody tr:hover {
+    background: var(--rb-filter-bg);
+}
+
+.tb-results-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    border-top: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+    font-size: 11px;
+    color: var(--rb-text-muted);
+    flex-shrink: 0;
+}
+
+.tb-layout[data-mod="ledger"] .tb-field-account {
+    display: none;
+}
+
+.tb-layout[data-mod="account"] .tb-field-ledger-row {
+    display: none;
+}
+
+.tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance:only-child,
+.tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance {
+    grid-column: 1 / -1;
+}
+
+.filter-btn-secondary {
+    background: var(--rb-filter-bg);
+    color: var(--rb-text);
+    border: 0.5px solid var(--rb-border);
+}
+
+@media (max-width: 640px) {
+    .tb-workspace {
+        flex-direction: column;
+    }
+
+    .tb-criteria {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: 42vh;
+        border-radius: 12px;
+    }
+
+    .tb-results {
+        border-left: 0.5px solid var(--rb-border);
+        border-radius: 12px;
+        min-height: 240px;
+    }
+
+    .tb-workspace.is-criteria-collapsed .tb-criteria {
+        display: none;
+    }
+}

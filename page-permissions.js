@@ -4,6 +4,7 @@
         'homepage.html?view=hizli-erisim': 'portal',
         'ayarlar.html?view=sistem-durumu': 'ayarlar',
         'homepage.html?page=ters-bakiye': 'ters-bakiye',
+        'ters-bakiye.html': 'ters-bakiye',
         'homepage.html?page=nazim': 'nazim',
         'surec.html': 'surec',
         'surec.html?view=datasetler': 'datasetler',
@@ -60,7 +61,7 @@
             const view = url.searchParams.get('view');
             const page = url.searchParams.get('page');
             if (path === 'homepage.html') {
-                if (page === 'ters-bakiye') return 'homepage.html?page=ters-bakiye';
+                if (page === 'ters-bakiye') return 'ters-bakiye.html';
                 if (page === 'nazim') return 'homepage.html?page=nazim';
                 if (view === 'hizli-erisim') return 'homepage.html?view=hizli-erisim';
                 return 'homepage.html';
@@ -109,6 +110,7 @@
             if (view === 'matrixmap') return 'matrixmap';
             return 'mutabakat-donem';
         }
+        if (path === 'ters-bakiye.html') return 'ters-bakiye';
 
         const key = path + (window.location.search || '');
         return HREF_TO_PAGE_ID[key] || HREF_TO_PAGE_ID[path] || null;

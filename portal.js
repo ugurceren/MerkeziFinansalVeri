@@ -85,7 +85,7 @@
     const PAGE_LINK_OVERRIDES = {
         'hizli-erisim': 'HomePage.html?view=hizli-erisim',
         'sistem-durumu': 'ayarlar.html?view=sistem-durumu',
-        'ters-bakiye': 'HomePage.html?page=ters-bakiye',
+        'ters-bakiye': 'ters-bakiye.html',
         nazim: 'HomePage.html?page=nazim'
     };
 
@@ -740,7 +740,7 @@
         const pageParam = params.get('page');
 
         if (pageParam === 'ters-bakiye') {
-            pageBody.innerHTML = buildPlaceholderHTML('Ters Bakiye Raporu');
+            window.location.replace('ters-bakiye.html');
             return;
         }
         if (pageParam === 'nazim') {
