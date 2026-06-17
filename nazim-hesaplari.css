@@ -1,6 +1,6 @@
-/* Ters Bakiye Raporu */
+/* Nazım Hesapları Raporu */
 
-.page-body-tb {
+.page-body-nz {
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -9,7 +9,7 @@
     padding-bottom: 12px;
 }
 
-.tb-layout {
+.nz-layout {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -17,54 +17,7 @@
     gap: 10px;
 }
 
-.tb-mode-tabs {
-    display: flex;
-    width: 100%;
-    max-width: 100%;
-    border: 0.5px solid var(--rb-border);
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--rb-card);
-}
-
-.tb-mode-btn {
-    flex: 1 1 0;
-    min-width: 0;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    color: var(--rb-text-muted);
-    font: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    height: 32px;
-    padding: 0 10px;
-    line-height: 1.2;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-}
-
-.tb-mode-btn + .tb-mode-btn {
-    border-left: 0.5px solid var(--rb-border);
-}
-
-.tb-mode-btn:hover:not(.is-active) {
-    color: var(--rb-text);
-    background: var(--rb-filter-bg);
-}
-
-.tb-mode-btn.is-active {
-    background: var(--rb-accent);
-    color: #fff;
-}
-
-.tb-mode-btn.is-active:hover {
-    background: var(--rb-accent);
-    color: #fff;
-}
-
-.tb-workspace {
+.nz-workspace {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -74,7 +27,7 @@
     position: relative;
 }
 
-.tb-criteria {
+.nz-criteria {
     flex: 0 0 300px;
     width: 300px;
     min-height: 0;
@@ -87,8 +40,7 @@
     transition: width 0.22s ease, flex-basis 0.22s ease, opacity 0.18s ease, border-color 0.22s ease;
 }
 
-
-.tb-criteria-head {
+.nz-criteria-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -99,15 +51,15 @@
     flex-shrink: 0;
 }
 
-.tb-criteria-title {
+.nz-criteria-title {
     margin: 0;
     font-size: 13px;
     font-weight: 700;
     color: var(--rb-text);
 }
 
-.tb-panel-toggle,
-.tb-panel-reopen {
+.nz-panel-toggle,
+.nz-panel-reopen {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -122,14 +74,14 @@
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.tb-panel-toggle:hover,
-.tb-panel-reopen:hover {
+.nz-panel-toggle:hover,
+.nz-panel-reopen:hover {
     color: var(--rb-text);
     border-color: var(--rb-accent);
     background: var(--rb-card);
 }
 
-.tb-panel-reopen {
+.nz-panel-reopen {
     position: absolute;
     left: 0;
     top: 50%;
@@ -139,7 +91,7 @@
     box-shadow: 2px 0 8px var(--rb-shadow);
 }
 
-.tb-workspace.is-criteria-collapsed .tb-criteria {
+.nz-workspace.is-criteria-collapsed .nz-criteria {
     flex-basis: 0;
     width: 0;
     opacity: 0;
@@ -147,15 +99,15 @@
     pointer-events: none;
 }
 
-.tb-workspace.is-criteria-collapsed .tb-panel-reopen {
+.nz-workspace.is-criteria-collapsed .nz-panel-reopen {
     display: inline-flex;
 }
 
-.tb-workspace:not(.is-criteria-collapsed) .tb-panel-reopen {
+.nz-workspace:not(.is-criteria-collapsed) .nz-panel-reopen {
     display: none;
 }
 
-.tb-criteria-form {
+.nz-criteria-form {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -165,32 +117,31 @@
     gap: 7px;
 }
 
-.tb-field-row {
+.nz-field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     min-width: 0;
 }
 
-.tb-field-row .tb-field {
+.nz-field-row .nz-field {
     min-width: 0;
 }
 
-.tb-field {
+.nz-field {
     display: flex;
     flex-direction: column;
     gap: 3px;
 }
 
-.tb-field label {
+.nz-field label {
     font-size: 11px;
     font-weight: 600;
     color: var(--rb-text-muted);
 }
 
-.tb-field input,
-.tb-field select,
-.tb-field textarea {
+.nz-field input,
+.nz-field select {
     width: 100%;
     padding: 6px 8px;
     font: inherit;
@@ -202,52 +153,13 @@
     min-width: 0;
 }
 
-.tb-field input:focus,
-.tb-field select:focus,
-.tb-field textarea:focus {
+.nz-field input:focus,
+.nz-field select:focus {
     outline: none;
     border-color: var(--rb-accent);
 }
 
-.tb-field textarea {
-    resize: vertical;
-    min-height: 52px;
-    font-family: ui-monospace, Consolas, monospace;
-}
-
-.tb-hint {
-    font-size: 10px;
-    color: var(--rb-text-muted);
-    line-height: 1.35;
-}
-
-.tb-field-check {
-    padding-top: 2px;
-}
-
-.tb-check-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    width: 100%;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--rb-text);
-    cursor: pointer;
-    user-select: none;
-}
-
-.tb-check-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    accent-color: var(--rb-accent);
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.tb-results {
+.nz-results {
     flex: 1;
     min-width: 0;
     min-height: 0;
@@ -261,29 +173,28 @@
     overflow: hidden;
 }
 
-.tb-workspace.is-criteria-collapsed .tb-results {
+.nz-workspace.is-criteria-collapsed .nz-results {
     border-left: 0.5px solid var(--rb-border);
     border-top: 0.5px solid var(--rb-border);
     border-radius: 12px;
 }
 
-.tb-results-status {
+.nz-results-status {
     padding: 10px 14px;
     font-size: 12px;
     border-bottom: 0.5px solid var(--rb-border);
     flex-shrink: 0;
 }
 
-.tb-results-status.is-error {
+.nz-results-status.is-error {
     background: rgba(247, 99, 121, 0.1);
     color: #f76379;
 }
 
-.tb-results-status.is-loading {
+.nz-results-status.is-loading {
     color: var(--rb-text-muted);
 }
 
-.tb-results-main,
 .nz-results-main {
     flex: 1;
     min-height: 0;
@@ -292,7 +203,6 @@
     padding: 10px 12px 0;
 }
 
-.tb-results-footer,
 .nz-results-footer {
     display: flex;
     align-items: center;
@@ -306,19 +216,6 @@
     flex-shrink: 0;
 }
 
-.tb-layout[data-mod="ledger"] .tb-field-account {
-    display: none;
-}
-
-.tb-layout[data-mod="account"] .tb-field-ledger-row {
-    display: none;
-}
-
-.tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance:only-child,
-.tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance {
-    grid-column: 1 / -1;
-}
-
 .filter-btn-secondary {
     background: var(--rb-filter-bg);
     color: var(--rb-text);
@@ -326,24 +223,24 @@
 }
 
 @media (max-width: 640px) {
-    .tb-workspace {
+    .nz-workspace {
         flex-direction: column;
     }
 
-    .tb-criteria {
+    .nz-criteria {
         flex: 0 0 auto;
         width: 100%;
         max-height: 42vh;
         border-radius: 12px;
     }
 
-    .tb-results {
+    .nz-results {
         border-left: 0.5px solid var(--rb-border);
         border-radius: 12px;
         min-height: 240px;
     }
 
-    .tb-workspace.is-criteria-collapsed .tb-criteria {
+    .nz-workspace.is-criteria-collapsed .nz-criteria {
         display: none;
     }
 }

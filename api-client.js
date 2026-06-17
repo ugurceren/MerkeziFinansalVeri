@@ -138,7 +138,16 @@
             return request(`/veri-kalitesi/gunluk-sonuclar${q}`);
         },
         getVkGunlukSonuclarSorgu() { return request('/veri-kalitesi/gunluk-sonuclar/sorgu'); },
-        getAktiviteLog(limit = 20) { return request(`/aktivite-log?limit=${limit}`); },
+        getAktiviteLog(params = {}) {
+            const q = new URLSearchParams();
+            const limit = params.limit ?? 100;
+            q.set('limit', String(limit));
+            if (params.beginDate) q.set('beginDate', params.beginDate);
+            if (params.endDate) q.set('endDate', params.endDate);
+            if (params.olayTipi) q.set('olayTipi', params.olayTipi);
+            if (params.kullaniciId != null) q.set('kullaniciId', String(params.kullaniciId));
+            return request(`/aktivite-log?${q.toString()}`);
+        },
 
         // Veri Kaynakları
         getVeriKaynaklari() { return request('/veri-kaynaklari'); },
@@ -163,6 +172,12 @@
         getTersBakiyeAyarlar() { return request('/raporlar/ters-bakiye/ayarlar'); },
         calistirTersBakiye(data) {
             return request('/raporlar/ters-bakiye/calistir', { method: 'POST', body: data });
+        },
+
+        // Nazım Hesapları Raporu
+        getNazimHesaplariAyarlar() { return request('/raporlar/nazim-hesaplari/ayarlar'); },
+        calistirNazimHesaplari(data) {
+            return request('/raporlar/nazim-hesaplari/calistir', { method: 'POST', body: data });
         }
     };
 

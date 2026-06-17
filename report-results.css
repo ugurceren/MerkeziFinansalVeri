@@ -1,0 +1,134 @@
+/* Rapor sonuç alanı — ekran limiti ve Excel dışa aktarma */
+
+.tb-toolbar,
+.nz-toolbar {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto auto;
+    align-items: stretch;
+    column-gap: 0;
+    row-gap: 10px;
+}
+
+.tb-toolbar-criteria,
+.nz-toolbar-criteria {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.tb-toolbar .tb-toolbar-criteria {
+    gap: 14px;
+}
+
+.tb-toolbar .tb-mode-tabs + .tb-criteria-toolbar {
+    margin-top: 2px;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--rb-border);
+}
+
+.nz-toolbar {
+    grid-template-rows: auto;
+}
+
+.tb-criteria-toolbar,
+.nz-criteria-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tb-criteria-toolbar .filter-btn,
+.nz-criteria-toolbar .filter-btn {
+    flex: 1;
+    min-width: 0;
+}
+
+.report-toolbar-results {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 32px;
+    padding: 0 12px;
+    background: transparent;
+    border: none;
+    align-self: end;
+}
+
+/* Ters Bakiye: mod sekmeleri satırında sağ sütun boş kalmasın */
+.tb-toolbar::after {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.nz-toolbar .report-toolbar-results,
+.nz-toolbar .nz-toolbar-criteria {
+    grid-row: 1;
+}
+
+.report-results-info {
+    margin: 0;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+    line-height: 1.4;
+    min-width: 0;
+}
+
+.report-export-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-card);
+    color: var(--rb-text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.report-export-btn:hover:not(:disabled) {
+    color: var(--rb-accent);
+    border-color: var(--rb-accent);
+    background: var(--rb-accent-soft);
+}
+
+.report-export-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.report-export-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.report-export-btn:not(:disabled) .report-export-icon {
+    color: #1d6f42;
+}
+
+@media (max-width: 640px) {
+    .tb-toolbar,
+    .nz-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .report-toolbar-results {
+        grid-column: 1;
+        grid-row: auto;
+        margin-top: 8px;
+    }
+}

@@ -62,7 +62,7 @@
             title: 'Yönetim',
             desc: 'Kullanıcı ve yetki yönetimi',
             icon: 'ti-users',
-            pages: ['kullanici-yonetimi', 'kisi-yetkileri', 'veritabani-baglantisi']
+            pages: ['kullanici-yonetimi', 'kisi-yetkileri', 'veritabani-baglantisi', 'aktivite-listesi']
         }
     ];
 
@@ -86,7 +86,7 @@
         'hizli-erisim': 'HomePage.html?view=hizli-erisim',
         'sistem-durumu': 'ayarlar.html?view=sistem-durumu',
         'ters-bakiye': 'ters-bakiye.html',
-        nazim: 'HomePage.html?page=nazim'
+        nazim: 'nazim-hesaplari.html'
     };
 
     const PAGE_ICONS = {
@@ -107,6 +107,7 @@
         ayarlar: 'ti-settings',
         'sistem-durumu': 'ti-server',
         'kullanici-yonetimi': 'ti-users',
+        'aktivite-listesi': 'ti-history'
         'kisi-yetkileri': 'ti-user-shield',
         'veritabani-baglantisi': 'ti-plug-connected'
     };
@@ -132,29 +133,6 @@
         const [yil, ay] = yilAy.split('-');
         const monthIdx = parseInt(ay, 10) - 1;
         return `${MONTHS_TR[monthIdx] || ay} ${yil}`;
-    }
-
-    function formatRelativeTime(dateStr) {
-        const d = new Date(dateStr);
-        const diff = Date.now() - d.getTime();
-        const mins = Math.floor(diff / 60000);
-        if (mins < 1) return 'Az önce';
-        if (mins < 60) return `${mins} dk önce`;
-        const hours = Math.floor(mins / 60);
-        if (hours < 24) return `${hours} saat önce`;
-        return d.toLocaleDateString('tr-TR');
-    }
-
-    function activityMeta(olayTipi) {
-        const map = {
-            alert: { dot: 'alert', icon: 'ti-alert-triangle', glyph: '!' },
-            uyari: { dot: 'alert', icon: 'ti-alert-triangle', glyph: '!' },
-            ok: { dot: 'ok', icon: 'ti-check', glyph: '✓' },
-            onay: { dot: 'ok', icon: 'ti-check', glyph: '✓' },
-            export: { dot: 'export', icon: 'ti-download', glyph: '↓' },
-            edit: { dot: 'edit', icon: 'ti-pencil', glyph: '✎' }
-        };
-        return map[olayTipi] || map.edit;
     }
 
     function getUserContext() {
@@ -513,7 +491,6 @@
         const aktifDonem = isOffline ? null : ozet?.aktifDonem;
         const ekipIlerleme = isOffline ? [] : (ozet?.ekipIlerleme || []);
         const ekipIsYuku = isOffline ? [] : (ozet?.ekipIsYuku || []);
-        const aktiviteler = isOffline ? [] : (ozet?.sonAktiviteler || []);
         const veriKaynaklari = isOffline ? [] : (ozet?.sistemDurumu?.veriKaynaklari || []);
         const vkKpi = isOffline ? null : ozet?.veriKalitesiKpi;
         const user = getUserContext();
@@ -568,19 +545,6 @@
                 </div>`;
             }).join('');
 
-        const activityRows = isOffline
-            ? `<li class="activity-item activity-item-offline">
-                <div class="activity-body">${offlineEmptyHint('Aktivite akışı API bağlantısı gerektirir.')}</div>
-               </li>`
-            : (aktiviteler.slice(0, 8).map(a => {
-                const meta = activityMeta(a.olayTipi);
-                return `<li class="activity-item">
-                    <div class="activity-dot ${meta.dot}"><i class="ti ${meta.icon}"></i></div>
-                    <div class="activity-body"><strong>${a.baslik}</strong><span>${a.detay || ''}${a.kullaniciAdi ? ' — ' + a.kullaniciAdi : ''}</span></div>
-                    <span class="activity-time">${formatRelativeTime(a.olusturmaZamani)}</span>
-                </li>`;
-            }).join('') || '<li class="activity-item"><div class="activity-body"><span>Aktivite kaydı yok</span></div></li>');
-
         const summaryStrip = buildSummaryStrip(kpi, veriKaynaklari, mutabakatPct, isOffline);
         const datasetCard = (!isOffline && typeof buildPortalDatasetCardHTML === 'function')
             ? buildPortalDatasetCardHTML()
@@ -590,7 +554,6 @@
         const kpiFark = isOffline ? '—' : (kpi.acikFarkSayisi ?? '—');
         const kpiMutabakat = isOffline ? '—' : `${mutabakatPct}%`;
         const kpiGorev = isOffline ? '—' : (kpi.bekleyenGorevSayisi ?? '—');
-        const activityCountLabel = isOffline ? '—' : `Son ${Math.min(aktiviteler.length, 8)} kayıt`;
 
         return `<section class="dashboard${isOffline ? ' portal-offline' : ''}">
             ${offlineBanner}
@@ -627,10 +590,6 @@
                         <div class="chart-bars">${chartRows}</div>
                     </div>
                     ${datasetCard}
-                    <div class="dashboard-panel${isOffline ? ' panel-offline' : ''}">
-                        <div class="panel-head"><h4>Son Aktiviteler</h4><span>${activityCountLabel}</span></div>
-                        <ul class="activity-list">${activityRows}</ul>
-                    </div>
                 </div>
                 <div class="dashboard-side">
                     <div class="dashboard-panel${isOffline ? ' panel-offline' : ''}">
@@ -744,7 +703,7 @@
             return;
         }
         if (pageParam === 'nazim') {
-            pageBody.innerHTML = buildPlaceholderHTML('Nazım Hesapları Raporu');
+            window.location.replace('nazim-hesaplari.html');
             return;
         }
 

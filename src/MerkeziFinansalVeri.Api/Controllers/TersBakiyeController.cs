@@ -20,7 +20,8 @@ public class TersBakiyeController(ITersBakiyeService tersBakiyeService) : Contro
             MaxSatir = ayarlar.MaxSatir,
             SorguTimeoutSaniye = ayarlar.SorguTimeoutSaniye,
             KolonSira = ayarlar.KolonSira,
-            KolonEtiketleri = ayarlar.KolonEtiketleri
+            KolonEtiketleri = ayarlar.KolonEtiketleri,
+            FiltreKolonMap = ayarlar.FiltreKolonMap
         });
     }
 

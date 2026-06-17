@@ -6,6 +6,7 @@
         'homepage.html?page=ters-bakiye': 'ters-bakiye',
         'ters-bakiye.html': 'ters-bakiye',
         'homepage.html?page=nazim': 'nazim',
+        'nazim-hesaplari.html': 'nazim',
         'surec.html': 'surec',
         'surec.html?view=datasetler': 'datasetler',
         'surec.html?view=task-listesi': 'task-listesi',
@@ -21,7 +22,8 @@
         'ayarlar.html': 'ayarlar',
         'kullanici-yonetimi.html': 'kullanici-yonetimi',
         'kisi-yetkileri.html': 'kisi-yetkileri',
-        'veritabani-baglantisi.html': 'veritabani-baglantisi'
+        'veritabani-baglantisi.html': 'veritabani-baglantisi',
+        'aktivite-listesi.html': 'aktivite-listesi'
     };
 
     const MUTABAKAT_PAGE_IDS = ['mizan', 'mutabakat-donem', 'fark-veren'];
@@ -62,7 +64,7 @@
             const page = url.searchParams.get('page');
             if (path === 'homepage.html') {
                 if (page === 'ters-bakiye') return 'ters-bakiye.html';
-                if (page === 'nazim') return 'homepage.html?page=nazim';
+                if (page === 'nazim') return 'nazim-hesaplari.html';
                 if (view === 'hizli-erisim') return 'homepage.html?view=hizli-erisim';
                 return 'homepage.html';
             }
@@ -111,6 +113,8 @@
             return 'mutabakat-donem';
         }
         if (path === 'ters-bakiye.html') return 'ters-bakiye';
+        if (path === 'nazim-hesaplari.html') return 'nazim';
+        if (path === 'aktivite-listesi.html') return 'aktivite-listesi';
 
         const key = path + (window.location.search || '');
         return HREF_TO_PAGE_ID[key] || HREF_TO_PAGE_ID[path] || null;

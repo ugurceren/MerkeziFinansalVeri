@@ -45,7 +45,7 @@
             pages: [
                 { id: 'veritabani-sorgu', label: 'Veritabanı Sorgusu', href: 'veritabani-sorgu.html' },
                 { id: 'ters-bakiye', label: 'Ters Bakiye Raporu', href: 'ters-bakiye.html' },
-                { id: 'nazim', label: 'Nazım Hesapları Raporu' }
+                { id: 'nazim', label: 'Nazım Hesapları Raporu', href: 'nazim-hesaplari.html' }
             ]
         },
         {
@@ -59,6 +59,7 @@
             pages: [
                 { id: 'kullanici-yonetimi', label: 'Kullanıcı Yönetimi', href: 'kullanici-yonetimi.html' },
                 { id: 'kisi-yetkileri', label: 'Kişi Bazlı Yetkiler', href: 'kisi-yetkileri.html' },
+                { id: 'aktivite-listesi', label: 'Aktivite Listesi', href: 'aktivite-listesi.html' },
                 { id: 'veritabani-baglantisi', label: 'Veritabanı Bağlantısı', href: 'veritabani-baglantisi.html' }
             ]
         }

@@ -1,0 +1,82 @@
+.al-layout {
+    max-width: 920px;
+}
+
+.al-panel {
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.al-filters {
+    padding: 10px 16px 12px;
+    border-bottom: 0.5px solid var(--rb-border);
+    flex-shrink: 0;
+}
+
+.al-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.al-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 140px;
+}
+
+.al-field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+}
+
+.al-field input[type="date"] {
+    height: 32px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 12px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+}
+
+.al-field input[type="date"]:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.al-filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-bottom: 1px;
+}
+
+.al-panel .activity-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 16px 16px;
+}
+
+.al-status {
+    margin: 0 16px 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: rgba(247, 99, 121, 0.1);
+    color: #f76379;
+    border: 0.5px solid rgba(247, 99, 121, 0.25);
+    flex-shrink: 0;
+}
+
+.filter-btn-secondary {
+    background: var(--rb-filter-bg);
+    color: var(--rb-text);
+    border: 0.5px solid var(--rb-border);
+}

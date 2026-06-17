@@ -1,0 +1,38 @@
+{
+  "NazimHesaplari": {
+    "KatmanKodu": "TDREPORT",
+    "StoredProcedure": "RCL.rpt_OffBalanceAccountReconciliation",
+    "MaxSatir": 100000,
+    "SorguTimeoutSaniye": 300,
+    "KolonSira": [
+      "DataDate",
+      "LevelName",
+      "BranchId",
+      "BranchName",
+      "LedgerId",
+      "LedgerName",
+      "ToLedgerId",
+      "FECId",
+      "FECName",
+      "MainLedgerAmount",
+      "ToLedgerAmount",
+      "DifferenceAmount",
+      "SystemDateTime"
+    ],
+    "KolonEtiketleri": {
+      "DataDate": "Rapor Tarihi",
+      "LevelName": "Seviye",
+      "BranchId": "Şube Kodu",
+      "BranchName": "Şube",
+      "LedgerId": "Hesap No",
+      "LedgerName": "Hesap Adı",
+      "ToLedgerId": "Karşı Hesap No",
+      "FECId": "Döviz Kodu",
+      "FECName": "Döviz Adı",
+      "MainLedgerAmount": "Bakiye",
+      "ToLedgerAmount": "Karşı Hesap Bakiye",
+      "DifferenceAmount": "Fark",
+      "SystemDateTime": "Rapor Çalışma Tarihi"
+    }
+  }
+}

@@ -49,6 +49,21 @@
       "ResponsibleUnitName": "Sorumlu Ekip",
       "BranchName": "Şube",
       "BranchId": "Şube Kodu"
+    },
+    "FiltreKolonMap": {
+      "tbAccountNumber": "AccountNumber",
+      "tbAccountList": "AccountNumber",
+      "tbMinLedger": "LedgerCode",
+      "tbMaxLedger": "LedgerCode",
+      "tbBeginDate": "DataDate",
+      "tbEndDate": "DataDate",
+      "tbBranchId": "BranchName",
+      "tbFECId": "FECId",
+      "tbLedgerTypeId": "LedgerTypeName",
+      "tbCreditCardFlag": "CreditCardLedgerFlag",
+      "tbIncomeLossFlag": "IncomeLossLedgerFlag",
+      "tbRiskStatusId": "CustomerRiskStatusName",
+      "tbMinBalance": "Balance"
     }
   }
 }

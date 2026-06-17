@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr" class="page-ribbon">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktivite Listesi | Merkezi Güvenilir Finansal Veri</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="ribbon.css">
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="theme-menu.css">
+    <link rel="stylesheet" href="aktivite-listesi.css">
+    <script>
+    (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
+    </script>
+</head>
+<body>
+<div class="app">
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 3.5L18.5 6.5V11.5C18.5 15.5 15.8 18.8 12 19.8C8.2 18.8 5.5 15.5 5.5 11.5V6.5L12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    <line x1="8" y1="13" x2="14" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span class="title-bar-title">Merkezi Güvenilir Finansal Veri</span>
+        </div>
+        <div class="title-bar-right">
+            <div class="tb-user-menu">
+                <div class="tb-user-row">
+                    <span class="tb-user" id="tbUser">Kullanıcı</span>
+                    <div class="tb-avatar" id="tbAvatar">K</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ribbon-tabs" id="ribbonTabs">
+        <div class="ribbon-tab-list"></div>
+        <div class="ribbon-tabs-actions">
+            <div class="theme-switch-wrap">
+                <button type="button" class="theme-switch is-dark" data-theme-switch role="switch" aria-checked="true" aria-label="Koyu tema">
+                    <span class="theme-switch-track">
+                        <i class="ti ti-sun theme-switch-icon theme-switch-icon-sun" aria-hidden="true"></i>
+                        <i class="ti ti-moon theme-switch-icon theme-switch-icon-moon" aria-hidden="true"></i>
+                        <span class="theme-switch-knob"><i class="ti ti-moon theme-switch-knob-icon" aria-hidden="true"></i></span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="ribbon-body" id="ribbonBody"></div>
+    <div class="page-area">
+        <div class="page-body">
+            <section class="al-layout">
+                <div class="dashboard-panel al-panel">
+                    <div class="panel-head">
+                        <h4>Aktivite Listesi</h4>
+                        <span id="alRecordCount">Yükleniyor…</span>
+                    </div>
+                    <form class="al-filters" id="alFilterForm" autocomplete="off">
+                        <div class="al-filter-row">
+                            <div class="al-field">
+                                <label for="alBeginDate">Başlangıç Tarihi</label>
+                                <input type="date" id="alBeginDate" name="beginDate" required>
+                            </div>
+                            <div class="al-field">
+                                <label for="alEndDate">Bitiş Tarihi</label>
+                                <input type="date" id="alEndDate" name="endDate" required>
+                            </div>
+                            <div class="al-filter-actions">
+                                <button type="submit" class="filter-btn" id="alFilterBtn">Filtrele</button>
+                                <button type="button" class="filter-btn filter-btn-secondary" id="alClearBtn">Temizle</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="al-status" id="alStatus" hidden></div>
+                    <ul class="activity-list" id="alActivityList">
+                        <li class="activity-item"><div class="activity-body"><span>Yükleniyor…</span></div></li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+<script src="dev-admin-mode.js"></script>
+<script src="api-client.js"></script>
+<script src="user-session.js"></script>
+<script src="page-permissions.js"></script>
+<script src="status-bar.js"></script>
+<script src="dev-user-switcher.js"></script>
+<script src="theme-toggle.js"></script>
+<script src="ribbon-shell.js"></script>
+<script src="aktivite-listesi.js"></script>
+</body>
+</html>

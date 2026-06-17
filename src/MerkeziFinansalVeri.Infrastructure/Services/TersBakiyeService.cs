@@ -20,6 +20,8 @@ public sealed class TersBakiyeService(
         SorguTimeoutSaniye = int.TryParse(configuration["TersBakiye:SorguTimeoutSaniye"], out var timeout) ? timeout : 300,
         KolonSira = configuration.GetSection("TersBakiye:KolonSira").Get<string[]>() ?? [],
         KolonEtiketleri = configuration.GetSection("TersBakiye:KolonEtiketleri").Get<Dictionary<string, string>>()
+            ?? new Dictionary<string, string>(),
+        FiltreKolonMap = configuration.GetSection("TersBakiye:FiltreKolonMap").Get<Dictionary<string, string>>()
             ?? new Dictionary<string, string>()
     };
 
@@ -33,7 +35,7 @@ public sealed class TersBakiyeService(
 
         try
         {
-            var parameters = BuildParameters(istek, ayarlar.IntListTableType);
+            var parameters = BuildParameters(istek, ayarlar.IntListTableType, mod);
             var result = await tdConnectionService.ExecuteStoredProcedureAsync(
                 ayarlar.KatmanKodu,
                 spName,
@@ -74,32 +76,48 @@ public sealed class TersBakiyeService(
     private static string NormalizeMod(string? mod) =>
         string.Equals(mod, "ledger", StringComparison.OrdinalIgnoreCase) ? "ledger" : "account";
 
-    private static IReadOnlyList<SqlParameter> BuildParameters(TersBakiyeRaporIstek istek, string intListTypeName)
+    private static IReadOnlyList<SqlParameter> BuildParameters(
+        TersBakiyeRaporIstek istek,
+        string intListTypeName,
+        string mod)
     {
-        var accountList = BuildIntListTable(istek.AccountNumberList);
-        var accountListParam = new SqlParameter("@AccountNumberList", SqlDbType.Structured)
+        var isAccount = mod == "account";
+        var parameters = new List<SqlParameter>
         {
-            TypeName = intListTypeName,
-            Value = accountList.Rows.Count == 0 ? null : accountList
-        };
-
-        return
-        [
             new("@AccountNumber", SqlDbType.Int) { Value = ToDbValue(istek.AccountNumber) },
-            accountListParam,
             new("@minLedgerCode", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MinLedgerCode)) },
             new("@maxLedgerCode", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MaxLedgerCode)) },
             new("@BeginDate", SqlDbType.Date) { Value = istek.BeginDate.ToDateTime(TimeOnly.MinValue) },
             new("@EndDate", SqlDbType.Date) { Value = istek.EndDate.ToDateTime(TimeOnly.MinValue) },
-            new("@BranchId", SqlDbType.Int) { Value = ToDbValue(istek.BranchId) },
             new("@FECId", SqlDbType.Int) { Value = ToDbValue(istek.FECId) },
             new("@LedgerTypeId", SqlDbType.Int) { Value = ToDbValue(istek.LedgerTypeId) },
             new("@CreditCardLedgerFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.CreditCardLedgerFlag) },
             new("@IncomeLossLedgerFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.IncomeLossLedgerFlag) },
-            new("@CustomerRiskStatusId", SqlDbType.Int) { Value = ToDbValue(istek.CustomerRiskStatusId) },
-            new("@minBalance", SqlDbType.Decimal) { Precision = 18, Scale = 2, Value = ToDbValue(istek.MinBalance) },
-            new("@AccountNumberKTFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.AccountNumberKTFlag) }
-        ];
+            new("@minBalance", SqlDbType.Decimal)
+            {
+                Precision = 18,
+                Scale = 2,
+                Value = ToDbValue(istek.MinBalance)
+            }
+        };
+
+        if (!isAccount)
+        {
+            return parameters;
+        }
+
+        var accountList = BuildIntListTable(istek.AccountNumberList);
+        parameters.Insert(1, new SqlParameter("@AccountNumberList", SqlDbType.Structured)
+        {
+            TypeName = intListTypeName,
+            Value = accountList.Rows.Count == 0 ? null : accountList
+        });
+
+        parameters.Add(new("@BranchId", SqlDbType.Int) { Value = ToDbValue(istek.BranchId) });
+        parameters.Add(new("@CustomerRiskStatusId", SqlDbType.Int) { Value = ToDbValue(istek.CustomerRiskStatusId) });
+        parameters.Add(new("@AccountNumberKTFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.AccountNumberKTFlag) });
+
+        return parameters;
     }
 
     private static DataTable BuildIntListTable(IReadOnlyList<int>? values)

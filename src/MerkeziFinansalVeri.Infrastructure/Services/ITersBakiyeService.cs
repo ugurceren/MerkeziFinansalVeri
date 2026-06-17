@@ -20,6 +20,8 @@ public sealed class TersBakiyeAyarlar
     public IReadOnlyList<string> KolonSira { get; init; } = [];
     public IReadOnlyDictionary<string, string> KolonEtiketleri { get; init; }
         = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string> FiltreKolonMap { get; init; }
+        = new Dictionary<string, string>();
 }
 
 public sealed class TersBakiyeRaporIstek

@@ -2,6 +2,7 @@
     let currentMod = 'account';
     let ayarlar = null;
     const cache = { account: null, ledger: null };
+    let exportContext = null;
 
     const MOD_LABELS = {
         account: 'Müşteri - Ek No',
@@ -42,6 +43,22 @@
         BranchId: 'Şube Kodu'
     };
 
+    const DEFAULT_FILTRE_KOLON_MAP = {
+        tbAccountNumber: 'AccountNumber',
+        tbAccountList: 'AccountNumber',
+        tbMinLedger: 'LedgerCode',
+        tbMaxLedger: 'LedgerCode',
+        tbBeginDate: 'DataDate',
+        tbEndDate: 'DataDate',
+        tbBranchId: 'BranchName',
+        tbFECId: 'FECId',
+        tbLedgerTypeId: 'LedgerTypeName',
+        tbCreditCardFlag: 'CreditCardLedgerFlag',
+        tbIncomeLossFlag: 'IncomeLossLedgerFlag',
+        tbRiskStatusId: 'CustomerRiskStatusName',
+        tbMinBalance: 'Balance'
+    };
+
     function kolonSira() {
         const sira = ayarlar?.kolonSira;
         return Array.isArray(sira) && sira.length ? sira : DEFAULT_KOLON_SIRA;
@@ -49,6 +66,31 @@
 
     function kolonEtiketleri() {
         return ayarlar?.kolonEtiketleri || DEFAULT_KOLON_ETIKETLERI;
+    }
+
+    function filtreKolonMap() {
+        return ayarlar?.filtreKolonMap || DEFAULT_FILTRE_KOLON_MAP;
+    }
+
+    function filterLabelFor(inputId, kolonAd) {
+        const base = columnLabel(kolonAd);
+        if (inputId === 'tbBeginDate') return 'Başlangıç Tarihi';
+        if (inputId === 'tbEndDate') return 'Bitiş Tarihi';
+        if (inputId === 'tbAccountList') return `${base} Listesi`;
+        if (inputId === 'tbMinLedger') return `Min ${base}`;
+        if (inputId === 'tbMaxLedger') return `Max ${base}`;
+        if (inputId === 'tbMinBalance') return `Min ${base}`;
+        return base;
+    }
+
+    function applyFilterLabels() {
+        Object.entries(filtreKolonMap()).forEach(([inputId, kolonAd]) => {
+            const label = document.querySelector(`label[for="${inputId}"]`);
+            if (!label) return;
+            label.textContent = filterLabelFor(inputId, kolonAd);
+            const input = document.getElementById(inputId);
+            if (input) input.title = kolonAd;
+        });
     }
 
     function findSpColumnKey(spCols, configuredName) {
@@ -184,19 +226,60 @@
         }
     }
 
+    function resetResultsChrome() {
+        const info = document.getElementById('tbRecordInfo');
+        const exportBtn = document.getElementById('tbExportBtn');
+        if (info) info.textContent = '';
+        if (exportBtn) exportBtn.disabled = true;
+        exportContext = null;
+    }
+
+    function updateResultsMeta(payload, cols, rows) {
+        const info = document.getElementById('tbRecordInfo');
+        const exportBtn = document.getElementById('tbExportBtn');
+        const allRows = payload.satirlar || rows;
+        const total = payload.satirSayisi ?? allRows.length;
+
+        if (info) {
+            info.textContent = window.ReportResults.formatRecordInfo(total, {
+                kisitlandi: payload.kisitlandi,
+                maxSatir: payload.maxSatir
+            });
+        }
+        if (exportBtn) exportBtn.disabled = !allRows.length;
+
+        exportContext = allRows.length ? {
+            columns: cols,
+            rows: allRows,
+            getHeaderLabel: columnLabel,
+            fileName: window.ReportResults.defaultFileName(`ters-bakiye-${currentMod}`)
+        } : null;
+    }
+
+    function exportCurrentResults() {
+        if (!exportContext) return;
+        window.ReportResults.exportToExcel(exportContext);
+    }
+
     function renderResults(payload) {
+        const wrap = document.getElementById('tbResultsWrap');
         const empty = document.getElementById('tbEmpty');
-        const scroll = document.getElementById('tbResultsScroll');
         const footer = document.getElementById('tbFooter');
         const head = document.getElementById('tbResultsHead');
         const body = document.getElementById('tbResultsBody');
-        const countEl = document.getElementById('tbRecordCount');
         const timeEl = document.getElementById('tbQueryTime');
 
         if (!payload || !payload.basarili) {
-            empty.hidden = false;
-            scroll.hidden = true;
-            footer.hidden = true;
+            wrap?.classList.remove('has-data');
+            window.ReportResults.destroyActiveTable();
+            if (head) head.innerHTML = '';
+            if (body) body.innerHTML = '';
+            if (empty) {
+                empty.hidden = false;
+                empty.textContent = 'Kriterleri girin ve Bilgi Getir ile raporu çalıştırın.';
+            }
+            if (footer) footer.hidden = true;
+            resetResultsChrome();
             if (payload && !payload.basarili) {
                 setStatus(payload.hata || 'Rapor çalıştırılamadı.', 'error');
             }
@@ -206,39 +289,37 @@
         setStatus('');
         const cols = resolveDisplayColumns(payload.kolonlar || []);
         const rows = payload.satirlar || [];
+        const displayRows = window.ReportResults.sliceForDisplay(rows);
 
         if (!rows.length) {
-            empty.hidden = false;
-            empty.querySelector('p')?.replaceChildren?.();
-            empty.innerHTML = `
-                <i class="ti ti-table" aria-hidden="true"></i>
-                <p>Seçilen kriterlere uygun kayıt bulunamadı.</p>`;
-            scroll.hidden = true;
-            footer.hidden = false;
-            if (countEl) countEl.textContent = '0 kayıt';
+            wrap?.classList.remove('has-data');
+            window.ReportResults.destroyActiveTable();
+            if (head) head.innerHTML = '';
+            if (body) body.innerHTML = '';
+            if (empty) {
+                empty.hidden = false;
+                empty.textContent = 'Seçilen kriterlere uygun kayıt bulunamadı.';
+            }
+            if (footer) footer.hidden = false;
+            updateResultsMeta(payload, cols, rows);
             if (timeEl) timeEl.textContent = payload.sureMs != null ? `Sorgu süresi: ${payload.sureMs} ms` : '';
             return;
         }
 
-        empty.hidden = true;
-        scroll.hidden = false;
-        footer.hidden = false;
+        if (empty) empty.hidden = true;
+        wrap?.classList.add('has-data');
+        if (footer) footer.hidden = false;
+        updateResultsMeta(payload, cols, rows);
 
-        head.innerHTML = `<tr>${cols.map(c => `<th title="${escapeHtml(c)}">${escapeHtml(columnLabel(c))}</th>`).join('')}</tr>`;
-        body.innerHTML = rows.map(row => {
-            const cells = cols.map(col => {
-                const val = row[col];
-                const display = val === null || val === undefined ? '' : String(val);
-                return `<td title="${escapeHtml(display)}">${escapeHtml(display)}</td>`;
-            }).join('');
-            return `<tr>${cells}</tr>`;
-        }).join('');
+        window.ReportResults.renderTable({
+            scrollEl: wrap,
+            headEl: head,
+            bodyEl: body,
+            cols,
+            rows: displayRows,
+            getColumnLabel: columnLabel
+        });
 
-        let countText = `${payload.satirSayisi ?? rows.length} kayıt`;
-        if (payload.kisitlandi) {
-            countText += ` (ilk ${payload.maxSatir} gösterildi)`;
-        }
-        if (countEl) countEl.textContent = countText;
         if (timeEl) {
             timeEl.textContent = payload.sureMs != null ? `Sorgu süresi: ${payload.sureMs} ms` : '';
         }
@@ -252,18 +333,21 @@
         }
 
         setStatus('');
+        const wrap = document.getElementById('tbResultsWrap');
         const empty = document.getElementById('tbEmpty');
-        const scroll = document.getElementById('tbResultsScroll');
         const footer = document.getElementById('tbFooter');
+        const head = document.getElementById('tbResultsHead');
+        const body = document.getElementById('tbResultsBody');
+        wrap?.classList.remove('has-data');
+        window.ReportResults.destroyActiveTable();
+        if (head) head.innerHTML = '';
+        if (body) body.innerHTML = '';
         if (empty) {
             empty.hidden = false;
-            empty.innerHTML = `
-                <i class="ti ti-table" aria-hidden="true"></i>
-                <p>Kriterleri girin ve <strong>Bilgi Getir</strong> ile raporu çalıştırın.</p>
-                <p class="tb-empty-hint">${modLabel(currentMod)} modu için henüz sonuç yok.</p>`;
+            empty.innerHTML = `Kriterleri girin ve <strong>Bilgi Getir</strong> ile raporu çalıştırın. (${modLabel(currentMod)} modu)`;
         }
-        if (scroll) scroll.hidden = true;
         if (footer) footer.hidden = true;
+        resetResultsChrome();
     }
 
     function setMod(mod) {
@@ -303,9 +387,11 @@
             console.warn('Ters bakiye ayarları yüklenemedi:', err);
             ayarlar = {
                 kolonSira: DEFAULT_KOLON_SIRA,
-                kolonEtiketleri: DEFAULT_KOLON_ETIKETLERI
+                kolonEtiketleri: DEFAULT_KOLON_ETIKETLERI,
+                filtreKolonMap: DEFAULT_FILTRE_KOLON_MAP
             };
         }
+        applyFilterLabels();
     }
 
     async function fetchReport() {
@@ -372,6 +458,7 @@
         });
         document.getElementById('tbFetchBtn')?.addEventListener('click', fetchReport);
         document.getElementById('tbClearBtn')?.addEventListener('click', clearAll);
+        document.getElementById('tbExportBtn')?.addEventListener('click', exportCurrentResults);
         document.getElementById('tbCriteriaForm')?.addEventListener('submit', e => {
             e.preventDefault();
             fetchReport();
@@ -389,6 +476,7 @@
         await window.PagePermissions?.ready?.();
         bindEvents();
         initDefaults();
+        window.ReportResults?.mountExportButtons?.();
         await loadAyarlar();
     });
 })();

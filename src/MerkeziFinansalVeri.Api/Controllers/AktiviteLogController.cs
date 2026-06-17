@@ -13,6 +13,8 @@ public class AktiviteLogController(AppDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AktiviteLogDto>>> GetList(
         [FromQuery] string? olayTipi,
         [FromQuery] int? kullaniciId,
+        [FromQuery] DateOnly? beginDate,
+        [FromQuery] DateOnly? endDate,
         [FromQuery] int limit = 100,
         CancellationToken cancellationToken = default)
     {
@@ -29,6 +31,18 @@ public class AktiviteLogController(AppDbContext dbContext) : ControllerBase
         if (kullaniciId.HasValue)
         {
             query = query.Where(a => a.KullaniciId == kullaniciId.Value);
+        }
+
+        if (beginDate.HasValue)
+        {
+            var start = beginDate.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(a => a.OlusturmaZamani >= start);
+        }
+
+        if (endDate.HasValue)
+        {
+            var endExclusive = endDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
+            query = query.Where(a => a.OlusturmaZamani < endExclusive);
         }
 
         var items = await query

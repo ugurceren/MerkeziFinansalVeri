@@ -1,0 +1,77 @@
+/* Ortak sorgu sonuç tablosu — Veritabanı Sorgusu, Ters Bakiye, Nazım Hesapları */
+
+.vs-results-wrap {
+    overflow: auto;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    background: var(--rb-card);
+    position: relative;
+}
+
+.vs-results-wrap.is-compact {
+    flex: 1;
+    min-height: 180px;
+    max-height: min(52vh, 480px);
+}
+
+.vs-results-wrap.is-fill {
+    flex: 1;
+    min-height: 0;
+}
+
+.vs-results-wrap.has-data .vs-empty {
+    display: none;
+}
+
+.vs-results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.vs-results-table th,
+.vs-results-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 0.5px solid var(--rb-border);
+    white-space: nowrap;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vs-results-table th {
+    position: sticky;
+    top: 0;
+    background: var(--rb-filter-bg);
+    color: var(--rb-text-secondary);
+    font-weight: 700;
+    z-index: 1;
+}
+
+.vs-results-table tbody tr:not(.virtual-spacer):hover {
+    background: var(--rb-accent-soft);
+}
+
+.vs-results-table tr.virtual-spacer td {
+    padding: 0;
+    border: none;
+    line-height: 0;
+    pointer-events: none;
+}
+
+.vs-results-table tbody tr:not(.virtual-spacer) {
+    height: 33px;
+}
+
+.vs-results-table tbody tr:not(.virtual-spacer) td {
+    max-width: 260px;
+}
+
+.vs-empty {
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}

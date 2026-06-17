@@ -29,6 +29,8 @@ public sealed class TersBakiyeAyarDto
     public IReadOnlyList<string> KolonSira { get; set; } = [];
     public IReadOnlyDictionary<string, string> KolonEtiketleri { get; set; }
         = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string> FiltreKolonMap { get; set; }
+        = new Dictionary<string, string>();
 }
 
 public sealed class TersBakiyeSonucDto

@@ -99,7 +99,7 @@
                         <i class="ti ti-arrows-exchange"></i>
                         <span>Ters Bakiye<br>Raporu</span>
                     </button>
-                    <button class="rbtn" type="button" data-page="Nazım Hesapları Raporu" data-page-id="nazim" data-section="RAPORLAMA" data-href="HomePage.html?page=nazim">
+                    <button class="rbtn" type="button" data-page="Nazım Hesapları Raporu" data-page-id="nazim" data-section="RAPORLAMA" data-href="nazim-hesaplari.html">
                         <i class="ti ti-file-analytics"></i>
                         <span>Nazım Hesapları<br>Raporu</span>
                     </button>
@@ -127,7 +127,7 @@
         </div>`,
         yonetim: `
         <div class="tab-panel" id="tab-yonetim">
-            <div class="ribbon-group">
+            <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
                     <button class="rbtn" type="button" data-page="Kullanıcı Yönetimi" data-page-id="kullanici-yonetimi" data-section="YÖNETİM" data-href="kullanici-yonetimi.html">
                         <i class="ti ti-users"></i>
@@ -137,10 +137,10 @@
                         <i class="ti ti-user-shield"></i>
                         <span>Kişi Bazlı<br>Yetkiler</span>
                     </button>
-                </div>
-            </div>
-            <div class="ribbon-group" style="border-right:none">
-                <div class="rg-buttons">
+                    <button class="rbtn" type="button" data-page="Aktivite Listesi" data-page-id="aktivite-listesi" data-section="YÖNETİM" data-href="aktivite-listesi.html">
+                        <i class="ti ti-history"></i>
+                        <span>Aktivite<br>Listesi</span>
+                    </button>
                     <button class="rbtn" type="button" data-page="Veritabanı Bağlantısı" data-page-id="veritabani-baglantisi" data-section="YÖNETİM" data-href="veritabani-baglantisi.html">
                         <i class="ti ti-plug-connected"></i>
                         <span>Veritabanı<br>Bağlantısı</span>
@@ -239,6 +239,7 @@
         if (path === 'gunluk-kural-sonuclari.html') return { section: 'VERİ KALİTESİ', page: 'Günlük Kural Sonuçları' };
         if (path === 'veritabani-sorgu.html') return { section: 'RAPORLAMA', page: 'Veritabanı Sorgusu' };
         if (path === 'ters-bakiye.html') return { section: 'RAPORLAMA', page: 'Ters Bakiye Raporu' };
+        if (path === 'nazim-hesaplari.html') return { section: 'RAPORLAMA', page: 'Nazım Hesapları Raporu' };
         if (path === 'ayarlar.html') {
             if (view === 'sistem-durumu') return { section: 'AYARLAR', page: 'Sistem Durumu' };
             return { section: 'AYARLAR', page: 'Uygulama Ayarları' };
@@ -246,6 +247,7 @@
         if (path === 'kullanici-yonetimi.html') return { section: 'YÖNETİM', page: 'Kullanıcı Yönetimi' };
         if (path === 'kisi-yetkileri.html') return { section: 'YÖNETİM', page: 'Kişi Bazlı Yetkiler' };
         if (path === 'veritabani-baglantisi.html') return { section: 'YÖNETİM', page: 'Veritabanı Bağlantısı' };
+        if (path === 'aktivite-listesi.html') return { section: 'YÖNETİM', page: 'Aktivite Listesi' };
         return null;
     }
 

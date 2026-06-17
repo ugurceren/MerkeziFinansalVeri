@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="theme-menu.css">
+    <link rel="stylesheet" href="report-results.css">
+    <link rel="stylesheet" href="query-results-table.css">
     <link rel="stylesheet" href="ters-bakiye.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
@@ -55,13 +57,19 @@
         <div class="page-body page-body-tb" id="pageBody">
             <section class="tb-layout" id="tbReportRoot">
                 <header class="tb-toolbar">
-                    <div class="tb-mode-tabs" role="tablist" aria-label="Rapor modu">
-                        <button type="button" class="tb-mode-btn is-active" data-mod="account" role="tab" aria-selected="true">Müşteri - Ek No</button>
-                        <button type="button" class="tb-mode-btn" data-mod="ledger" role="tab" aria-selected="false">Hesap</button>
+                    <div class="tb-toolbar-criteria">
+                        <div class="tb-mode-tabs" role="tablist" aria-label="Rapor modu">
+                            <button type="button" class="tb-mode-btn is-active" data-mod="account" role="tab" aria-selected="true">Müşteri - Ek No</button>
+                            <button type="button" class="tb-mode-btn" data-mod="ledger" role="tab" aria-selected="false">Hesap</button>
+                        </div>
+                        <div class="tb-criteria-toolbar">
+                            <button type="button" class="filter-btn" id="tbFetchBtn">Bilgi Getir</button>
+                            <button type="button" class="filter-btn filter-btn-secondary" id="tbClearBtn">Temizle</button>
+                        </div>
                     </div>
-                    <div class="tb-toolbar-actions">
-                        <button type="button" class="filter-btn" id="tbFetchBtn">Bilgi Getir</button>
-                        <button type="button" class="filter-btn filter-btn-secondary" id="tbClearBtn">Temizle</button>
+                    <div class="report-toolbar-results" id="tbResultsBar">
+                        <p class="report-results-info" id="tbRecordInfo"></p>
+                        <button type="button" class="report-export-btn" id="tbExportBtn" title="Tüm veriyi Excel'e aktar" aria-label="Tüm veriyi Excel'e aktar" disabled></button>
                     </div>
                 </header>
 
@@ -85,20 +93,20 @@
                                 </div>
                             </div>
                             <div class="tb-field">
-                                <label for="tbAccountNumber">Hesap No</label>
-                                <input type="number" id="tbAccountNumber" name="accountNumber" inputmode="numeric" placeholder="Tek hesap (opsiyonel)">
+                                <label for="tbAccountNumber">Müşteri No</label>
+                                <input type="number" id="tbAccountNumber" name="accountNumber" inputmode="numeric" placeholder="Tek müşteri no (opsiyonel)">
                             </div>
                             <div class="tb-field tb-field-account">
-                                <label for="tbAccountList">Hesap Listesi</label>
+                                <label for="tbAccountList">Müşteri No Listesi</label>
                                 <textarea id="tbAccountList" name="accountNumberList" rows="2" placeholder="Virgül veya satır ile: 400139, 400147"></textarea>
                             </div>
                             <div class="tb-field-row tb-field-ledger-row">
                                 <div class="tb-field">
-                                    <label for="tbMinLedger">Min Kebir Kodu</label>
+                                    <label for="tbMinLedger">Min Hesap No</label>
                                     <input type="text" id="tbMinLedger" name="minLedgerCode" maxlength="50">
                                 </div>
                                 <div class="tb-field">
-                                    <label for="tbMaxLedger">Max Kebir Kodu</label>
+                                    <label for="tbMaxLedger">Max Hesap No</label>
                                     <input type="text" id="tbMaxLedger" name="maxLedgerCode" maxlength="50">
                                 </div>
                             </div>
@@ -110,13 +118,13 @@
                             </div>
                             <div class="tb-field-row">
                                 <div class="tb-field">
-                                    <label for="tbFECId">Döviz (FEC)</label>
+                                    <label for="tbFECId">Döviz Kodu</label>
                                     <select id="tbFECId" name="fecId">
                                         <option value="">Hepsi</option>
                                     </select>
                                 </div>
                                 <div class="tb-field">
-                                    <label for="tbLedgerTypeId">Defter Türü</label>
+                                    <label for="tbLedgerTypeId">Defter Tipi</label>
                                     <select id="tbLedgerTypeId" name="ledgerTypeId">
                                         <option value="">Hepsi</option>
                                     </select>
@@ -124,7 +132,7 @@
                             </div>
                             <div class="tb-field-row">
                                 <div class="tb-field">
-                                    <label for="tbCreditCardFlag">Kredi Kartı Defteri</label>
+                                    <label for="tbCreditCardFlag">Kredi Kartı Hesabı</label>
                                     <select id="tbCreditCardFlag" name="creditCardLedgerFlag">
                                         <option value="">Hepsi</option>
                                         <option value="1">Evet</option>
@@ -132,7 +140,7 @@
                                     </select>
                                 </div>
                                 <div class="tb-field">
-                                    <label for="tbIncomeLossFlag">Gelir/Gider Defteri</label>
+                                    <label for="tbIncomeLossFlag">Gelir Gider Hesabı</label>
                                     <select id="tbIncomeLossFlag" name="incomeLossLedgerFlag">
                                         <option value="">Hepsi</option>
                                         <option value="1">Evet</option>
@@ -167,19 +175,16 @@
 
                     <div class="tb-results">
                         <div class="tb-results-status" id="tbStatus" hidden></div>
-                        <div class="tb-results-empty" id="tbEmpty">
-                            <i class="ti ti-table" aria-hidden="true"></i>
-                            <p>Kriterleri girin ve <strong>Bilgi Getir</strong> ile raporu çalıştırın.</p>
-                            <p class="tb-empty-hint">Müşteri - Ek No ve Hesap modları ayrı çalıştırılır; sonuçlar modlar arasında saklanır.</p>
-                        </div>
-                        <div class="tb-results-scroll" id="tbResultsScroll" hidden>
-                            <table class="tb-table" id="tbResultsTable">
-                                <thead id="tbResultsHead"></thead>
-                                <tbody id="tbResultsBody"></tbody>
-                            </table>
+                        <div class="tb-results-main">
+                            <div class="vs-results-wrap is-fill" id="tbResultsWrap">
+                                <p class="vs-empty" id="tbEmpty">Kriterleri girin ve <strong>Bilgi Getir</strong> ile raporu çalıştırın.</p>
+                                <table class="vs-results-table" id="tbResultsTable">
+                                    <thead id="tbResultsHead"></thead>
+                                    <tbody id="tbResultsBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                         <footer class="tb-results-footer" id="tbFooter" hidden>
-                            <span id="tbRecordCount">0 kayıt</span>
                             <span id="tbQueryTime"></span>
                         </footer>
                     </div>
@@ -196,6 +201,8 @@
 <script src="dev-user-switcher.js"></script>
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="report-results.js"></script>
 <script src="ters-bakiye.js"></script>
 </body>
 </html>

@@ -53,19 +53,8 @@ public class TdConnectionService(
             command.CommandText = sql.Trim().TrimEnd(';');
             command.CommandTimeout = timeoutSeconds;
 
-            var satirlar = new List<Dictionary<string, object?>>();
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-            while (await reader.ReadAsync(cancellationToken) && satirlar.Count < maxRows)
-            {
-                var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-                for (var i = 0; i < reader.FieldCount; i++)
-                {
-                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : FormatCell(reader.GetValue(i));
-                }
-
-                satirlar.Add(row);
-            }
+            var satirlar = await ReadRowsAsync(reader, maxRows, cancellationToken);
 
             sw.Stop();
             return new TdQueryResult
@@ -122,19 +111,9 @@ public class TdConnectionService(
                 command.Parameters.Add(parameter);
             }
 
-            var satirlar = new List<Dictionary<string, object?>>();
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-            while (await reader.ReadAsync(cancellationToken) && satirlar.Count < maxRows)
-            {
-                var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-                for (var i = 0; i < reader.FieldCount; i++)
-                {
-                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : FormatCell(reader.GetValue(i));
-                }
-
-                satirlar.Add(row);
-            }
+            var satirlar = await ReadRowsAsync(reader, maxRows, cancellationToken);
 
             sw.Stop();
             return new TdQueryResult
@@ -271,6 +250,39 @@ public class TdConnectionService(
         entity.Durum = durum;
         entity.GuncellemeZamani = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task<List<Dictionary<string, object?>>> ReadRowsAsync(
+        SqlDataReader reader,
+        int maxRows,
+        CancellationToken cancellationToken)
+    {
+        var fieldCount = reader.FieldCount;
+        if (fieldCount == 0)
+        {
+            return [];
+        }
+
+        var columnNames = new string[fieldCount];
+        for (var i = 0; i < fieldCount; i++)
+        {
+            columnNames[i] = reader.GetName(i);
+        }
+
+        var satirlar = new List<Dictionary<string, object?>>(Math.Min(maxRows, 4096));
+
+        while (await reader.ReadAsync(cancellationToken) && satirlar.Count < maxRows)
+        {
+            var row = new Dictionary<string, object?>(fieldCount, StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < fieldCount; i++)
+            {
+                row[columnNames[i]] = reader.IsDBNull(i) ? null : FormatCell(reader.GetValue(i));
+            }
+
+            satirlar.Add(row);
+        }
+
+        return satirlar;
     }
 
     private static bool IsReadOnlyQuery(string sql)

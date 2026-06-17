@@ -2,6 +2,7 @@ using MerkeziFinansalVeri.Api.Middleware;
 using MerkeziFinansalVeri.Infrastructure;
 using MerkeziFinansalVeri.Infrastructure.Data;
 using MerkeziFinansalVeri.Infrastructure.Services;
+using System.IO.Compression;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,11 +43,35 @@ if (File.Exists(tersBakiyeConfigPath))
     builder.Configuration.AddJsonFile(tersBakiyeConfigPath, optional: true, reloadOnChange: true);
 }
 
+var nazimHesaplariConfigPath = Path.Combine(repoRoot, "config", "nazim-hesaplari.json");
+if (File.Exists(nazimHesaplariConfigPath))
+{
+    builder.Configuration.AddJsonFile(nazimHesaplariConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultBufferSize = 65536;
     });
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -65,6 +90,7 @@ builder.Services.AddScoped<ITrustedDataMatrixMapService>(sp => new TrustedDataMa
     repoRoot));
 
 builder.Services.AddScoped<ITersBakiyeService, TersBakiyeService>();
+builder.Services.AddScoped<INazimHesaplariService, NazimHesaplariService>();
 
 builder.Services.AddCors(options =>
 {
@@ -107,6 +133,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseResponseCompression();
 app.UseHttpsRedirection();
 app.UseCors("StaticFiles");
 app.UseMiddleware<CurrentUserMiddleware>();

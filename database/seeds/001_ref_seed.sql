@@ -30,11 +30,12 @@ USING (VALUES
     (N'vk-gunluk',        N'VERİ KALİTESİ',       N'ti-list-check',   N'Günlük Kural Sonuçları',              N'gunluk-kural-sonuclari.html',         11),
     (N'veritabani-sorgu', N'RAPORLAMA',           N'ti-chart-bar',    N'Veritabanı Sorgusu',                  N'veritabani-sorgu.html',               12),
     (N'ters-bakiye',      N'RAPORLAMA',           N'ti-chart-bar',    N'Ters Bakiye Raporu',                  NULL,                                   13),
-    (N'nazim',            N'RAPORLAMA',           N'ti-chart-bar',    N'Nazım Hesapları Raporu',              NULL,                                   14),
+    (N'nazim',            N'RAPORLAMA',           N'ti-chart-bar',    N'Nazım Hesapları Raporu',              N'nazim-hesaplari.html',                14),
     (N'ayarlar',          N'AYARLAR',             N'ti-settings',     N'Ayarlar',                             N'ayarlar.html',                        15),
     (N'kullanici-yonetimi', N'YÖNETİM',           N'ti-users',        N'Kullanıcı Yönetimi',                  N'kullanici-yonetimi.html',             16),
     (N'kisi-yetkileri',   N'YÖNETİM',             N'ti-users',        N'Kişi Bazlı Yetkiler',                 N'kisi-yetkileri.html',                 17),
-    (N'veritabani-baglantisi', N'YÖNETİM',         N'ti-users',        N'Veritabanı Bağlantısı',               N'veritabani-baglantisi.html',          18)
+    (N'veritabani-baglantisi', N'YÖNETİM',         N'ti-users',        N'Veritabanı Bağlantısı',               N'veritabani-baglantisi.html',          18),
+    (N'aktivite-listesi', N'YÖNETİM',            N'ti-history',      N'Aktivite Listesi',                     N'aktivite-listesi.html',               19)
 ) AS src(PageId, Section, SectionIcon, Label, Href, SortOrder)
 ON tgt.PageId = src.PageId
 WHEN MATCHED THEN
