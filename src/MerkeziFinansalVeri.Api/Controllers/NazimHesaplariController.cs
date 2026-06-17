@@ -37,11 +37,14 @@ public class NazimHesaplariController(INazimHesaplariService nazimHesaplariServi
         DataDate = dto.DataDate,
         LevelName = string.IsNullOrWhiteSpace(dto.LevelName) ? null : dto.LevelName.Trim(),
         FECId = dto.FECId,
-        BranchId = dto.BranchId,
+        BranchId = NullIfAll(dto.BranchId, 0),
         MinToLedgerId = dto.MinToLedgerId,
         MaxToLedgerId = dto.MaxToLedgerId,
         MinDifferenceAmount = dto.MinDifferenceAmount
     };
+
+    private static int? NullIfAll(int? value, int allValue) =>
+        value == allValue ? null : value;
 
     private static NazimHesaplariSonucDto ToDto(NazimHesaplariQueryResult result) => new()
     {

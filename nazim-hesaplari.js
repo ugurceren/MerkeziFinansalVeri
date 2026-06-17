@@ -79,15 +79,21 @@
         }
 
         const fecRaw = document.getElementById('nzFECId')?.value;
-        const fecId = fecRaw === '' || fecRaw === null || fecRaw === undefined ? 0 : parseOptionalInt(fecRaw);
+        const fecParsed = fecRaw === '' || fecRaw === null || fecRaw === undefined
+            ? 0
+            : parseOptionalInt(fecRaw);
+        const fecId = fecParsed === null ? 0 : fecParsed;
+
+        const minLedger = document.getElementById('nzMinLedger')?.value?.trim() || null;
+        const maxLedger = document.getElementById('nzMaxLedger')?.value?.trim() || null;
 
         return {
             dataDate,
             levelName: document.getElementById('nzLevelName')?.value?.trim() || null,
-            fecId: fecId ?? 0,
+            fecId,
             branchId: parseOptionalInt(document.getElementById('nzBranchId')?.value),
-            minToLedgerId: document.getElementById('nzMinLedger')?.value?.trim() || null,
-            maxToLedgerId: document.getElementById('nzMaxLedger')?.value?.trim() || null,
+            minToLedgerId: minLedger,
+            maxToLedgerId: maxLedger,
             minDifferenceAmount: parseOptionalDecimal(document.getElementById('nzMinDifference')?.value) ?? 0
         };
     }

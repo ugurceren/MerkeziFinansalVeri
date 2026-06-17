@@ -88,26 +88,22 @@
                             </div>
                             <div class="nz-field-row">
                                 <div class="nz-field">
-                                    <label for="nzFECId">Döviz</label>
-                                    <select id="nzFECId" name="fecId">
-                                        <option value="0" selected>Hepsi</option>
-                                    </select>
+                                    <label for="nzFECId">Döviz Kodu</label>
+                                    <input type="number" id="nzFECId" name="fecId" inputmode="numeric" placeholder="0 = hepsi" value="0">
                                 </div>
                                 <div class="nz-field">
-                                    <label for="nzBranchId">Şube</label>
-                                    <select id="nzBranchId" name="branchId">
-                                        <option value="">Hepsi</option>
-                                    </select>
+                                    <label for="nzBranchId">Şube Kodu</label>
+                                    <input type="number" id="nzBranchId" name="branchId" inputmode="numeric" placeholder="Boş = hepsi">
                                 </div>
                             </div>
                             <div class="nz-field-row">
                                 <div class="nz-field">
-                                    <label for="nzMinLedger">Min Kebir</label>
-                                    <input type="text" id="nzMinLedger" name="minToLedgerId" maxlength="50" value="977">
+                                    <label for="nzMinLedger">Min Hesap No</label>
+                                    <input type="text" id="nzMinLedger" name="minToLedgerId" maxlength="50" value="977" inputmode="text" autocomplete="off">
                                 </div>
                                 <div class="nz-field">
-                                    <label for="nzMaxLedger">Max Kebir</label>
-                                    <input type="text" id="nzMaxLedger" name="maxToLedgerId" maxlength="50" value="9980">
+                                    <label for="nzMaxLedger">Max Hesap No</label>
+                                    <input type="text" id="nzMaxLedger" name="maxToLedgerId" maxlength="50" value="9980" inputmode="text" autocomplete="off">
                                 </div>
                             </div>
                             <div class="nz-field">

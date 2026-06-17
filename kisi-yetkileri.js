@@ -43,9 +43,16 @@
         return USERS.find(u => u.kullaniciId === userId);
     }
 
+    function hasLocalDraft(userId) {
+        return Object.prototype.hasOwnProperty.call(userOverrides, userId);
+    }
+
     function hasCustomPermissions(userId) {
-        return Object.prototype.hasOwnProperty.call(userOverrides, userId)
-            || userHasDbOverrides[userId] === true;
+        return hasLocalDraft(userId) || userHasDbOverrides[userId] === true;
+    }
+
+    function getLocalDraftPages(userId) {
+        return new Set(userOverrides[userId] || []);
     }
 
     async function refreshUserOverrideFlag(userId) {
@@ -55,13 +62,6 @@
         } catch {
             userHasDbOverrides[userId] = false;
         }
-    }
-
-    function getEffectivePages(userId) {
-        if (hasCustomPermissions(userId)) {
-            return new Set(userOverrides[userId]);
-        }
-        return new Set();
     }
 
     async function loadEffectivePages(userId) {
@@ -79,10 +79,17 @@
         if (!user) return new Set();
         try {
             const yetkiler = await ApiClient.getRolYetkiler(user.rolId);
-            return new Set(yetkiler.filter(y => y.izinVerildi && y.rolVarsayilan).map(y => y.sayfaId));
+            return new Set(yetkiler.filter(y => y.izinVerildi).map(y => y.sayfaId));
         } catch {
             return new Set();
         }
+    }
+
+    async function resolveEffectivePages(userId) {
+        if (hasLocalDraft(userId)) {
+            return getLocalDraftPages(userId);
+        }
+        return loadEffectivePages(userId);
     }
 
     function filterUsers() {
@@ -141,9 +148,7 @@
         if (!user) return;
 
         const role = roleMap[user.rolId];
-        const effective = hasCustomPermissions(user.kullaniciId)
-            ? getEffectivePages(user.kullaniciId)
-            : await loadEffectivePages(user.kullaniciId);
+        const effective = await resolveEffectivePages(user.kullaniciId);
         const roleDefault = await getRoleDefaultPages(user.kullaniciId);
         const custom = hasCustomPermissions(user.kullaniciId);
         const allowedCount = PAGE_MENU.flatMap(g => g.pages).filter(p => effective.has(p.id)).length;
@@ -215,11 +220,11 @@
     }
 
     async function ensureOverrideSet(userId) {
-        if (!hasCustomPermissions(userId)) {
+        if (!hasLocalDraft(userId)) {
             const effective = await loadEffectivePages(userId);
             userOverrides[userId] = [...effective];
         }
-        return new Set(userOverrides[userId]);
+        return getLocalDraftPages(userId);
     }
 
     async function togglePagePermission(userId, pageId, allowed) {
@@ -284,7 +289,7 @@
         document.getElementById('kyCollapseAll')?.addEventListener('click', () => expandAll(false));
         document.getElementById('kyResetRole')?.addEventListener('click', resetToRoleDefault);
         document.getElementById('kySaveBtn')?.addEventListener('click', async () => {
-            if (!Object.prototype.hasOwnProperty.call(userOverrides, selectedUserId)) {
+            if (!hasLocalDraft(selectedUserId)) {
                 showSaveHint(true);
                 return;
             }
@@ -304,7 +309,7 @@
 
                 await ApiClient.updateKullaniciYetkiler(selectedUserId, yetkiler);
                 delete userOverrides[selectedUserId];
-                userHasDbOverrides[selectedUserId] = yetkiler.length > 0;
+                await refreshUserOverrideFlag(selectedUserId);
                 showSaveHint(true);
                 renderUserList();
                 await renderPermissionPanel();

@@ -50,7 +50,7 @@
         tbMaxLedger: 'LedgerCode',
         tbBeginDate: 'DataDate',
         tbEndDate: 'DataDate',
-        tbBranchId: 'BranchName',
+        tbBranchId: 'BranchId',
         tbFECId: 'FECId',
         tbLedgerTypeId: 'LedgerTypeName',
         tbCreditCardFlag: 'CreditCardLedgerFlag',
@@ -183,7 +183,9 @@
             mod: currentMod,
             beginDate,
             endDate,
-            accountNumber: parseOptionalInt(document.getElementById('tbAccountNumber')?.value),
+            accountNumber: isAccount
+                ? parseOptionalInt(document.getElementById('tbAccountNumber')?.value)
+                : null,
             accountNumberList: isAccount
                 ? parseAccountList(document.getElementById('tbAccountList')?.value)
                 : null,
@@ -200,6 +202,16 @@
             minBalance: parseOptionalDecimal(document.getElementById('tbMinBalance')?.value),
             accountNumberKTFlag: isAccount && document.getElementById('tbKtFlag')?.checked ? 1 : null
         };
+    }
+
+    function clearAccountOnlyFields() {
+        ['tbAccountNumber', 'tbAccountList', 'tbBranchId', 'tbRiskStatusId'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.value = '';
+        });
+        const kt = document.getElementById('tbKtFlag');
+        if (kt) kt.checked = false;
     }
 
     function setStatus(message, type) {
@@ -351,7 +363,11 @@
     }
 
     function setMod(mod) {
-        currentMod = mod === 'ledger' ? 'ledger' : 'account';
+        const nextMod = mod === 'ledger' ? 'ledger' : 'account';
+        if (nextMod !== currentMod && nextMod === 'ledger') {
+            clearAccountOnlyFields();
+        }
+        currentMod = nextMod;
         document.querySelectorAll('.tb-mode-btn').forEach(btn => {
             const active = btn.dataset.mod === currentMod;
             btn.classList.toggle('is-active', active);

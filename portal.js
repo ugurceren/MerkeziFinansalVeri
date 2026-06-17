@@ -107,7 +107,7 @@
         ayarlar: 'ti-settings',
         'sistem-durumu': 'ti-server',
         'kullanici-yonetimi': 'ti-users',
-        'aktivite-listesi': 'ti-history'
+        'aktivite-listesi': 'ti-history',
         'kisi-yetkileri': 'ti-user-shield',
         'veritabani-baglantisi': 'ti-plug-connected'
     };

@@ -310,10 +310,6 @@
     display: none;
 }
 
-.tb-layout[data-mod="account"] .tb-field-ledger-row {
-    display: none;
-}
-
 .tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance:only-child,
 .tb-layout[data-mod="ledger"] .tb-field-row .tb-field-min-balance {
     grid-column: 1 / -1;

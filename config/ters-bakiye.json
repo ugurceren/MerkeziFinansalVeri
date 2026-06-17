@@ -57,7 +57,7 @@
       "tbMaxLedger": "LedgerCode",
       "tbBeginDate": "DataDate",
       "tbEndDate": "DataDate",
-      "tbBranchId": "BranchName",
+      "tbBranchId": "BranchId",
       "tbFECId": "FECId",
       "tbLedgerTypeId": "LedgerTypeName",
       "tbCreditCardFlag": "CreditCardLedgerFlag",

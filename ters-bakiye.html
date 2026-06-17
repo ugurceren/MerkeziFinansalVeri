@@ -92,7 +92,7 @@
                                     <input type="date" id="tbEndDate" name="endDate" required>
                                 </div>
                             </div>
-                            <div class="tb-field">
+                            <div class="tb-field tb-field-account">
                                 <label for="tbAccountNumber">Müşteri No</label>
                                 <input type="number" id="tbAccountNumber" name="accountNumber" inputmode="numeric" placeholder="Tek müşteri no (opsiyonel)">
                             </div>
@@ -112,22 +112,16 @@
                             </div>
                             <div class="tb-field tb-field-account">
                                 <label for="tbBranchId">Şube</label>
-                                <select id="tbBranchId" name="branchId">
-                                    <option value="">Hepsi</option>
-                                </select>
+                                <input type="number" id="tbBranchId" name="branchId" inputmode="numeric" placeholder="Boş = hepsi">
                             </div>
                             <div class="tb-field-row">
                                 <div class="tb-field">
                                     <label for="tbFECId">Döviz Kodu</label>
-                                    <select id="tbFECId" name="fecId">
-                                        <option value="">Hepsi</option>
-                                    </select>
+                                    <input type="number" id="tbFECId" name="fecId" inputmode="numeric" placeholder="Boş = hepsi">
                                 </div>
                                 <div class="tb-field">
                                     <label for="tbLedgerTypeId">Defter Tipi</label>
-                                    <select id="tbLedgerTypeId" name="ledgerTypeId">
-                                        <option value="">Hepsi</option>
-                                    </select>
+                                    <input type="number" id="tbLedgerTypeId" name="ledgerTypeId" inputmode="numeric" placeholder="Boş = hepsi">
                                 </div>
                             </div>
                             <div class="tb-field-row">
@@ -151,9 +145,7 @@
                             <div class="tb-field-row">
                                 <div class="tb-field tb-field-account">
                                     <label for="tbRiskStatusId">Müşteri Statüsü</label>
-                                    <select id="tbRiskStatusId" name="customerRiskStatusId">
-                                        <option value="">Hepsi</option>
-                                    </select>
+                                    <input type="number" id="tbRiskStatusId" name="customerRiskStatusId" inputmode="numeric" placeholder="Boş = hepsi">
                                 </div>
                                 <div class="tb-field tb-field-min-balance">
                                     <label for="tbMinBalance">Min Bakiye</label>

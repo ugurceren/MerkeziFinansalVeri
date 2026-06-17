@@ -49,9 +49,21 @@ public sealed class TersBakiyeService(
                 return Fail(mod, result.Hata, result.SureMs, ayarlar.MaxSatir);
             }
 
-            var kolonlar = result.Satirlar.Count > 0
-                ? result.Satirlar[0].Keys.ToList()
-                : (IReadOnlyList<string>)[];
+            var satirlar = result.Satirlar;
+            if (mod == "ledger")
+            {
+                satirlar = LedgerLeftFilter.Apply(
+                    satirlar,
+                    "LedgerCode",
+                    istek.MinLedgerCode,
+                    istek.MaxLedgerCode);
+            }
+
+            var kolonlar = satirlar.Count > 0
+                ? satirlar[0].Keys.ToList()
+                : result.Satirlar.Count > 0
+                    ? result.Satirlar[0].Keys.ToList()
+                    : (IReadOnlyList<string>)[];
 
             var kisitlandi = result.Satirlar.Count >= ayarlar.MaxSatir;
             return new TersBakiyeQueryResult
@@ -59,8 +71,8 @@ public sealed class TersBakiyeService(
                 Basarili = true,
                 Mod = mod,
                 Kolonlar = kolonlar,
-                Satirlar = result.Satirlar,
-                SatirSayisi = result.SatirSayisi,
+                Satirlar = satirlar,
+                SatirSayisi = satirlar.Count,
                 SureMs = result.SureMs,
                 Kisitlandi = kisitlandi,
                 MaxSatir = ayarlar.MaxSatir
@@ -82,11 +94,17 @@ public sealed class TersBakiyeService(
         string mod)
     {
         var isAccount = mod == "account";
+        var useLeftLedgerFilter = mod == "ledger";
         var parameters = new List<SqlParameter>
         {
-            new("@AccountNumber", SqlDbType.Int) { Value = ToDbValue(istek.AccountNumber) },
-            new("@minLedgerCode", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MinLedgerCode)) },
-            new("@maxLedgerCode", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MaxLedgerCode)) },
+            new("@minLedgerCode", SqlDbType.VarChar, 50)
+            {
+                Value = useLeftLedgerFilter ? DBNull.Value : ToDbValue(TrimOrNull(istek.MinLedgerCode))
+            },
+            new("@maxLedgerCode", SqlDbType.VarChar, 50)
+            {
+                Value = useLeftLedgerFilter ? DBNull.Value : ToDbValue(TrimOrNull(istek.MaxLedgerCode))
+            },
             new("@BeginDate", SqlDbType.Date) { Value = istek.BeginDate.ToDateTime(TimeOnly.MinValue) },
             new("@EndDate", SqlDbType.Date) { Value = istek.EndDate.ToDateTime(TimeOnly.MinValue) },
             new("@FECId", SqlDbType.Int) { Value = ToDbValue(istek.FECId) },
@@ -101,21 +119,21 @@ public sealed class TersBakiyeService(
             }
         };
 
-        if (!isAccount)
+        if (isAccount)
         {
-            return parameters;
+            parameters.Insert(0, new("@AccountNumber", SqlDbType.Int) { Value = ToDbValue(istek.AccountNumber) });
+
+            var accountList = BuildIntListTable(istek.AccountNumberList);
+            parameters.Insert(1, new SqlParameter("@AccountNumberList", SqlDbType.Structured)
+            {
+                TypeName = intListTypeName,
+                Value = accountList
+            });
+
+            parameters.Add(new("@BranchId", SqlDbType.Int) { Value = ToDbValue(istek.BranchId) });
+            parameters.Add(new("@CustomerRiskStatusId", SqlDbType.Int) { Value = ToDbValue(istek.CustomerRiskStatusId) });
+            parameters.Add(new("@AccountNumberKTFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.AccountNumberKTFlag) });
         }
-
-        var accountList = BuildIntListTable(istek.AccountNumberList);
-        parameters.Insert(1, new SqlParameter("@AccountNumberList", SqlDbType.Structured)
-        {
-            TypeName = intListTypeName,
-            Value = accountList.Rows.Count == 0 ? null : accountList
-        });
-
-        parameters.Add(new("@BranchId", SqlDbType.Int) { Value = ToDbValue(istek.BranchId) });
-        parameters.Add(new("@CustomerRiskStatusId", SqlDbType.Int) { Value = ToDbValue(istek.CustomerRiskStatusId) });
-        parameters.Add(new("@AccountNumberKTFlag", SqlDbType.TinyInt) { Value = ToDbValue(istek.AccountNumberKTFlag) });
 
         return parameters;
     }

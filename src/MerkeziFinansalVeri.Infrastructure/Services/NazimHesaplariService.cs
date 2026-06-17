@@ -46,16 +46,24 @@ public sealed class NazimHesaplariService(
                 return Fail(result.Hata, result.SureMs, ayarlar.MaxSatir);
             }
 
-            var kolonlar = result.Satirlar.Count > 0
-                ? result.Satirlar[0].Keys.ToList()
-                : (IReadOnlyList<string>)[];
+            var satirlar = LedgerLeftFilter.Apply(
+                result.Satirlar,
+                "ToLedgerId",
+                istek.MinToLedgerId,
+                istek.MaxToLedgerId);
+
+            var kolonlar = satirlar.Count > 0
+                ? satirlar[0].Keys.ToList()
+                : result.Satirlar.Count > 0
+                    ? result.Satirlar[0].Keys.ToList()
+                    : (IReadOnlyList<string>)[];
 
             return new NazimHesaplariQueryResult
             {
                 Basarili = true,
                 Kolonlar = kolonlar,
-                Satirlar = result.Satirlar,
-                SatirSayisi = result.SatirSayisi,
+                Satirlar = satirlar,
+                SatirSayisi = satirlar.Count,
                 SureMs = result.SureMs,
                 Kisitlandi = result.Satirlar.Count >= ayarlar.MaxSatir,
                 MaxSatir = ayarlar.MaxSatir
@@ -74,8 +82,8 @@ public sealed class NazimHesaplariService(
         new("@LevelName", SqlDbType.NVarChar, 100) { Value = ToDbValue(TrimOrNull(istek.LevelName)) },
         new("@FECId", SqlDbType.Int) { Value = istek.FECId ?? 0 },
         new("@BranchId", SqlDbType.Int) { Value = ToDbValue(istek.BranchId) },
-        new("@minToLedgerId", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MinToLedgerId)) },
-        new("@maxToLedgerId", SqlDbType.VarChar, 50) { Value = ToDbValue(TrimOrNull(istek.MaxToLedgerId)) },
+        new("@minToLedgerId", SqlDbType.VarChar, 50) { Value = DBNull.Value },
+        new("@maxToLedgerId", SqlDbType.VarChar, 50) { Value = DBNull.Value },
         new("@minDifferenceAmount", SqlDbType.Decimal)
         {
             Precision = 18,
