@@ -158,6 +158,11 @@
     white-space: nowrap;
 }
 
+.status-date {
+    color: var(--rb-header-text, #e5e9f0);
+    font-weight: 500;
+}
+
 .status-sep {
     opacity: 0.5;
 }
@@ -178,7 +183,8 @@
 }
 
 .app-shell .status-user-name,
-.app-shell .status-bar-app {
+.app-shell .status-bar-app,
+.app-shell .status-date {
     color: var(--text-primary, #e5e9f0);
 }
 

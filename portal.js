@@ -135,29 +135,6 @@
         return `${MONTHS_TR[monthIdx] || ay} ${yil}`;
     }
 
-    function getUserContext() {
-        const name = localStorage.getItem('userName') || 'Kullanıcı';
-        const roleId = localStorage.getItem('userRole') || '';
-        const role = window.KullaniciShared?.roleMap?.[roleId];
-        return {
-            name,
-            roleId,
-            roleName: role?.name || roleId || 'Kullanıcı',
-            badgeClass: role?.badgeClass || 'role-viewer'
-        };
-    }
-
-    function buildWelcomeHeader(subtitle) {
-        const user = getUserContext();
-        return `<div class="portal-welcome">
-            <div>
-                <h2>Merhaba, ${escapeHtml(user.name)}</h2>
-                <p class="portal-welcome-sub">${subtitle}</p>
-            </div>
-            <span class="portal-role-badge ${user.badgeClass}">${escapeHtml(user.roleName)}</span>
-        </div>`;
-    }
-
     function resolvePageMeta(page) {
         const quick = PORTAL_QUICK_LINKS.find(p => p.pageId === page.id);
         return {
@@ -325,7 +302,6 @@
 
     function buildQuickAccessContent() {
         return `<section class="dashboard portal-view-quick">
-            ${buildWelcomeHeader('Yetkiniz olan tüm modüller — ağaç menü')}
             <div class="dashboard-panel portal-quick-panel portal-tree-panel">
                 <div class="panel-head"><h4>Menü Ağacı</h4><span>Rolünüze göre erişilebilir sayfalar</span></div>
                 <div class="portal-tree-scroll">${buildQuickAccessTreeHTML()}</div>
@@ -453,29 +429,8 @@
         return `<p class="portal-empty-hint portal-offline-hint"><i class="ti ti-cloud-off"></i>${text}</p>`;
     }
 
-    function buildSummaryStrip(kpi, veriKaynaklari, mutabakatPct, isOffline) {
-        if (isOffline) {
-            return 'Canlı özet verisi yok — hızlı erişim ve modüller kullanılabilir';
-        }
-        const online = veriKaynaklari.filter(v => v.durum === 'connected').length;
-        const total = veriKaynaklari.length;
-        const parts = [
-            `${kpi.acikFarkSayisi ?? 0} açık fark`,
-            `${kpi.bekleyenGorevSayisi ?? 0} bekleyen görev`,
-            `%${mutabakatPct} mutabakat ilerlemesi`
-        ];
-        if (total) {
-            parts.push(`${online}/${total} veri kaynağı çevrimiçi`);
-        }
-        return parts.join(' · ');
-    }
-
     function buildLoadingHTML() {
         return `<section class="dashboard portal-loading">
-            <div class="portal-welcome portal-welcome-skeleton">
-                <div class="skeleton-line wide"></div>
-                <div class="skeleton-line"></div>
-            </div>
             <div class="stat-grid">
                 ${[1, 2, 3, 4].map(() => '<article class="stat-card skeleton-card"></article>').join('')}
             </div>
@@ -491,9 +446,7 @@
         const aktifDonem = isOffline ? null : ozet?.aktifDonem;
         const ekipIlerleme = isOffline ? [] : (ozet?.ekipIlerleme || []);
         const ekipIsYuku = isOffline ? [] : (ozet?.ekipIsYuku || []);
-        const veriKaynaklari = isOffline ? [] : (ozet?.sistemDurumu?.veriKaynaklari || []);
         const vkKpi = isOffline ? null : ozet?.veriKalitesiKpi;
-        const user = getUserContext();
 
         if (!isOffline && aktifDonem?.yilAy) {
             localStorage.setItem('mutabakatPeriod', aktifDonem.yilAy);
@@ -545,7 +498,6 @@
                 </div>`;
             }).join('');
 
-        const summaryStrip = buildSummaryStrip(kpi, veriKaynaklari, mutabakatPct, isOffline);
         const datasetCard = (!isOffline && typeof buildPortalDatasetCardHTML === 'function')
             ? buildPortalDatasetCardHTML()
             : '';
@@ -557,13 +509,6 @@
 
         return `<section class="dashboard${isOffline ? ' portal-offline' : ''}">
             ${offlineBanner}
-            <div class="portal-welcome">
-                <div>
-                    <h2>Merhaba, ${escapeHtml(user.name)}</h2>
-                    <p class="portal-welcome-sub">${summaryStrip}</p>
-                </div>
-                <span class="portal-role-badge ${user.badgeClass}">${escapeHtml(user.roleName)}</span>
-            </div>
             ${donemBand}
             <div class="stat-grid stat-grid-3">
                 <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.fark}">

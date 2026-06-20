@@ -482,22 +482,6 @@
     font-weight: 500;
 }
 
-.portal-role-badge {
-    flex-shrink: 0;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 12px;
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
-.portal-role-badge.role-admin { background: rgba(124, 154, 255, 0.18); color: var(--rb-accent); }
-.portal-role-badge.role-mutabakat { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-.portal-role-badge.role-rapor { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
-.portal-role-badge.role-surec { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
-.portal-role-badge.role-veri-kalitesi { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-.portal-role-badge.role-viewer { background: rgba(132, 145, 168, 0.18); color: var(--rb-text-muted); }
-
 .portal-context-band {
     display: flex;
     align-items: center;
@@ -626,19 +610,6 @@
 
 .portal-loading .skeleton-panel {
     min-height: 200px;
-}
-
-.portal-welcome-skeleton .skeleton-line {
-    height: 14px;
-    border-radius: 6px;
-    background: var(--rb-card);
-    margin-bottom: 8px;
-    width: 40%;
-}
-
-.portal-welcome-skeleton .skeleton-line.wide {
-    width: 55%;
-    height: 20px;
 }
 
 @keyframes portal-shimmer {
@@ -1013,24 +984,6 @@
     width: 100%;
     max-width: 100%;
     gap: 10px;
-}
-
-.portal-view-quick .portal-welcome {
-    padding: 10px 14px;
-}
-
-.portal-view-quick .portal-welcome h2 {
-    margin: 0 0 2px;
-    font-size: 16px;
-}
-
-.portal-view-quick .portal-welcome-sub {
-    font-size: 11px;
-}
-
-.portal-view-quick .portal-role-badge {
-    font-size: 10px;
-    padding: 4px 10px;
 }
 
 .portal-view-quick .panel-head {

@@ -17,6 +17,14 @@
             .substring(0, 2) || 'K';
     }
 
+    function getTodayLabel() {
+        return new Date().toLocaleDateString('tr-TR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
     function buildStatusBar() {
         const userName = getUserName();
         const footer = document.createElement('footer');
@@ -29,6 +37,8 @@
             </div>
             <div class="status-bar-app">${APP_INFO.name}</div>
             <div class="status-bar-about">
+                <span class="status-date" id="statusDate">${getTodayLabel()}</span>
+                <span class="status-sep" aria-hidden="true">·</span>
                 <span>v${APP_INFO.version}</span>
                 <span class="status-sep" aria-hidden="true">·</span>
                 <span class="status-env">${APP_INFO.environment}</span>
