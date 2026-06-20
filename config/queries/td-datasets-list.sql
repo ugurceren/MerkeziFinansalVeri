@@ -12,5 +12,5 @@ SELECT
     Status,
     Status_Responsible,
     StatusChangeDate
-FROM [TDUTIL].[DOC].[TDDataset]
+FROM [DOC].[TDDataset]
 ORDER BY Data_Model, Dataset_Name

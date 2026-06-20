@@ -282,7 +282,7 @@ function buildDatasetErrorContent(message) {
         <i class="ti ti-alert-circle" aria-hidden="true"></i>
         <strong>Dataset katalog yüklenemedi</strong>
         <p>${escapeDatasetHtml(message || 'Bilinmeyen hata')}</p>
-        <p class="ds-error-hint">Kaynak: <code>[TDUTIL].[DOC].[TDDataset]</code> · API: <code>/api/surec/dataset-katalog</code></p>
+        <p class="ds-error-hint">Kaynak: <code>[DOC].[TDDataset]</code> (TDUTIL) · API: <code>/api/surec/dataset-katalog</code></p>
     </div>`;
 }
 

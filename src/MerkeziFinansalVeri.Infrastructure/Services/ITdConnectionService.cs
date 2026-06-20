@@ -13,6 +13,13 @@ public interface ITdConnectionService
         int maxRows = 1000,
         CancellationToken cancellationToken = default);
 
+    Task<TdQueryResult> ExecuteReadOnlyQueryAsync(
+        TdConnectionParams parameters,
+        string sql,
+        int timeoutSeconds = 30,
+        int maxRows = 1000,
+        CancellationToken cancellationToken = default);
+
     Task<TdQueryResult> ExecuteStoredProcedureAsync(
         string katmanKodu,
         string procedureName,

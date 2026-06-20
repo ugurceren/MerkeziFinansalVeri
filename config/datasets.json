@@ -1,6 +1,7 @@
 {
   "DatasetCatalog": {
     "KatmanKodu": "TDUTIL",
+    "VarsayilanBaglantiKullan": true,
     "SorguDosyasi": "config/queries/td-datasets.sql",
     "ListeSorguDosyasi": "config/queries/td-datasets-list.sql",
     "StatusSorguDosyasi": "config/queries/td-datasets-status.sql",

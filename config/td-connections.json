@@ -5,25 +5,25 @@
   "varsayilanSorgu": "SELECT name AS TableName, create_date AS CreateDate\nFROM sys.tables\nORDER BY name;",
   "TdConnections": {
     "TDSTG": {
-      "Server": "10.13.8.238",
+      "Server": "srvdev\\PASIFIK",
       "Database": "TDSTG",
       "Port": 1433,
       "KimlikDogrulama": "windows"
     },
     "TDMAIN": {
-      "Server": "10.13.8.238",
+      "Server": "srvdev\\PASIFIK",
       "Database": "TDMAIN",
       "Port": 1433,
       "KimlikDogrulama": "windows"
     },
     "TDREPORT": {
-      "Server": "10.13.8.238",
+      "Server": "srvdev\\PASIFIK",
       "Database": "TDREPORT",
       "Port": 1433,
       "KimlikDogrulama": "windows"
     },
     "TDUTIL": {
-      "Server": "10.13.8.238",
+      "Server": "srvdev\\PASIFIK",
       "Database": "TDUTIL",
       "Port": 1433,
       "KimlikDogrulama": "windows"

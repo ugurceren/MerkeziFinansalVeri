@@ -25,19 +25,36 @@ public class TdConnectionService(
     public Task<bool> TestConnectionAsync(TdConnectionParams parameters, CancellationToken cancellationToken = default)
         => TestConnectionInternalAsync(parameters.KatmanKodu, parameters, cancellationToken);
 
-    public async Task<TdQueryResult> ExecuteReadOnlyQueryAsync(
+    public Task<TdQueryResult> ExecuteReadOnlyQueryAsync(
         string katmanKodu,
         string sql,
         int timeoutSeconds = 30,
         int maxRows = 1000,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ExecuteReadOnlyQueryInternalAsync(katmanKodu, null, sql, timeoutSeconds, maxRows, cancellationToken);
+
+    public Task<TdQueryResult> ExecuteReadOnlyQueryAsync(
+        TdConnectionParams parameters,
+        string sql,
+        int timeoutSeconds = 30,
+        int maxRows = 1000,
+        CancellationToken cancellationToken = default) =>
+        ExecuteReadOnlyQueryInternalAsync(parameters.KatmanKodu, parameters, sql, timeoutSeconds, maxRows, cancellationToken);
+
+    private async Task<TdQueryResult> ExecuteReadOnlyQueryInternalAsync(
+        string katmanKodu,
+        TdConnectionParams? overrideParams,
+        string sql,
+        int timeoutSeconds,
+        int maxRows,
+        CancellationToken cancellationToken)
     {
         if (!IsReadOnlyQuery(sql))
         {
             return new TdQueryResult { Hata = "Yalnızca okuma sorgularına izin verilir." };
         }
 
-        var kaynak = await ResolveConnectionAsync(katmanKodu, null, cancellationToken);
+        var kaynak = await ResolveConnectionAsync(katmanKodu, overrideParams, cancellationToken);
         if (kaynak is null)
         {
             return new TdQueryResult { Hata = $"Veri kaynağı bulunamadı: {katmanKodu}" };
@@ -67,7 +84,12 @@ public class TdConnectionService(
         catch (Exception ex)
         {
             sw.Stop();
-            logger.LogWarning(ex, "TD sorgu hatası: {KatmanKodu}", katmanKodu);
+            logger.LogWarning(
+                ex,
+                "TD sorgu hatası: {KatmanKodu} ({Sunucu}/{Veritabani})",
+                katmanKodu,
+                kaynak.Sunucu,
+                kaynak.Veritabani);
             return new TdQueryResult
             {
                 Hata = ex.Message,

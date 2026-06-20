@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -216,13 +217,100 @@ public sealed class DatasetCatalogService(
     private Task<TdQueryResult> ExecuteQueryAsync(
         DatasetCatalogAyarlar ayarlar,
         string sql,
-        CancellationToken cancellationToken) =>
-        tdConnectionService.ExecuteReadOnlyQueryAsync(
+        CancellationToken cancellationToken)
+    {
+        var connectionOverride = ResolveConnectionOverride(ayarlar);
+        if (connectionOverride is not null)
+        {
+            logger.LogDebug(
+                "Dataset katalog sorgusu: {Sunucu}/{Veritabani}",
+                connectionOverride.Sunucu,
+                connectionOverride.Veritabani);
+
+            return tdConnectionService.ExecuteReadOnlyQueryAsync(
+                connectionOverride,
+                sql,
+                ayarlar.SorguTimeoutSaniye,
+                ayarlar.MaxSatir,
+                cancellationToken);
+        }
+
+        return tdConnectionService.ExecuteReadOnlyQueryAsync(
             ayarlar.KatmanKodu,
             sql,
             ayarlar.SorguTimeoutSaniye,
             ayarlar.MaxSatir,
             cancellationToken);
+    }
+
+    private TdConnectionParams? ResolveConnectionOverride(DatasetCatalogAyarlar ayarlar)
+    {
+        var sunucu = configuration["DatasetCatalog:Sunucu"];
+        var veritabani = configuration["DatasetCatalog:Veritabani"];
+        if (!string.IsNullOrWhiteSpace(sunucu) && !string.IsNullOrWhiteSpace(veritabani))
+        {
+            return new TdConnectionParams
+            {
+                KatmanKodu = ayarlar.KatmanKodu,
+                Sunucu = sunucu.Trim(),
+                Veritabani = veritabani.Trim(),
+                Port = int.TryParse(configuration["DatasetCatalog:Port"], out var port) ? port : 1433,
+                KimlikDogrulama = configuration["DatasetCatalog:KimlikDogrulama"] ?? "windows",
+                KullaniciAdi = configuration["DatasetCatalog:KullaniciAdi"]
+            };
+        }
+
+        if (!configuration.GetValue("DatasetCatalog:VarsayilanBaglantiKullan", true))
+        {
+            return null;
+        }
+
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return null;
+        }
+
+        try
+        {
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            if (string.IsNullOrWhiteSpace(builder.DataSource) || string.IsNullOrWhiteSpace(builder.InitialCatalog))
+            {
+                return null;
+            }
+
+            var (dataSource, port) = ParseDataSource(builder.DataSource);
+            return new TdConnectionParams
+            {
+                KatmanKodu = ayarlar.KatmanKodu,
+                Sunucu = dataSource,
+                Veritabani = builder.InitialCatalog,
+                Port = port,
+                KimlikDogrulama = builder.IntegratedSecurity ? "windows" : "sql",
+                KullaniciAdi = builder.IntegratedSecurity ? null : builder.UserID
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Dataset katalog için DefaultConnection çözümlenemedi.");
+            return null;
+        }
+    }
+
+    private static (string DataSource, int Port) ParseDataSource(string dataSource)
+    {
+        var commaIndex = dataSource.IndexOf(',');
+        if (commaIndex < 0)
+        {
+            return (dataSource, 1433);
+        }
+
+        var server = dataSource[..commaIndex].Trim();
+        var portPart = dataSource[(commaIndex + 1)..].Trim();
+        return int.TryParse(portPart, out var port)
+            ? (server, port)
+            : (dataSource, 1433);
+    }
 
     private static string? GetCell(IReadOnlyDictionary<string, object?> row, params string[] columnNames)
     {
