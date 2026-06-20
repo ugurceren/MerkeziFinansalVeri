@@ -1,9 +1,11 @@
 SELECT
     el.DataDate,
-    el.TargetDatabase AS DataLayer,
+    pr.MainPackageName AS DataLayer,
     el.TargetTableName AS DatasetCode,
-    el.TargetTableName AS DatasetName,
-    el.StepName AS StepName,
+    COALESCE(NULLIF(pr.Description, ''), el.TargetTableName) AS DatasetName,
+    el.PackageName AS StepName,
     el.ExecutionStatus
 FROM OPR.ETLLoad el
-ORDER BY el.TargetDatabase, el.TargetTableName, el.StepName
+INNER JOIN OPR.ParallelRun pr
+    ON el.ParallelRunId = pr.ParallelRunId
+ORDER BY pr.MainPackageName, el.TargetTableName, el.PackageName

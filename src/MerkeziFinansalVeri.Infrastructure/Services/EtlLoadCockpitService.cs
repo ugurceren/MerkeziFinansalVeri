@@ -171,10 +171,10 @@ public sealed class EtlLoadCockpitService(
 
         foreach (var row in rows)
         {
-            var layer = NormalizeLayerCode(GetCell(row, "DataLayer", "TargetDatabase", "TargetLayer", "LayerCode", "DatabaseName"));
+            var layer = NormalizeLayerCode(GetCell(row, "DataLayer", "MainPackageName", "TargetLayer", "LayerCode"));
             var datasetCode = GetCell(row, "DatasetCode", "TargetTableName", "TableName")?.Trim();
             var datasetLabel = GetCell(row, "DatasetName", "Description", "TargetTableName", "TableName")?.Trim();
-            var stepName = GetCell(row, "StepName", "LoadStep", "TaskName", "PhaseName", "Step")?.Trim();
+            var stepName = GetCell(row, "StepName", "PackageName", "LoadStep", "TaskName", "PhaseName", "Step")?.Trim();
             var executionStatus = GetCell(row, "ExecutionStatus");
 
             if (string.IsNullOrWhiteSpace(layer) || string.IsNullOrWhiteSpace(datasetCode) || string.IsNullOrWhiteSpace(stepName))
