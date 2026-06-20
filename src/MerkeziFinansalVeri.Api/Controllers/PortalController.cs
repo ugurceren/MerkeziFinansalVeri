@@ -18,23 +18,15 @@ public class PortalController(
     public async Task<ActionResult<PortalOzetDto>> GetOzet(CancellationToken cancellationToken)
     {
         var veriTarihi = DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
-        var catalogTask = datasetCatalogService.GetCatalogAsync(cancellationToken);
-        var kokpitTask = etlLoadCockpitService.GetCockpitAsync(veriTarihi, cancellationToken);
 
         var acikFarkSayisi = await dbContext.FarkVerenHesaplar
             .CountAsync(f => !f.SilindiMi && (f.Durum == "acik" || f.Durum == "inceleniyor"), cancellationToken);
 
-        var catalog = await catalogTask;
-        var kokpit = await kokpitTask;
-        var surec = BuildSurecOzet(catalog, kokpit, veriTarihi);
+        var kurumsalHesapSayisi = await dbContext.KurumsalHesaplar
+            .CountAsync(k => !k.SilindiMi, cancellationToken);
 
-        var kpi = new PortalKpiDto
-        {
-            KurumsalHesapSayisi = await dbContext.KurumsalHesaplar.CountAsync(k => !k.SilindiMi, cancellationToken),
-            MutabakatDonemSayisi = await dbContext.MutabakatDonemleri.CountAsync(cancellationToken),
-            AcikFarkSayisi = acikFarkSayisi,
-            BekleyenGorevSayisi = surec.GunlukAkis.DevamEdenAdimSayisi + surec.GunlukAkis.BekleyenAdimSayisi
-        };
+        var mutabakatDonemSayisi = await dbContext.MutabakatDonemleri
+            .CountAsync(cancellationToken);
 
         var ekipler = await dbContext.Ekipler
             .AsNoTracking()
@@ -45,31 +37,6 @@ public class PortalController(
             .AsNoTracking()
             .Where(f => !f.SilindiMi)
             .ToListAsync(cancellationToken);
-
-        var ekipIlerleme = ekipler.Select(e =>
-        {
-            var ekipFarklar = farklar.Where(f => f.EkipId == e.EkipId).ToList();
-            var toplam = ekipFarklar.Count;
-            var kapatilan = ekipFarklar.Count(f => f.Durum == "kapatildi");
-            var yuzde = toplam == 0 ? 100 : (int)(kapatilan * 100.0 / toplam);
-
-            return new EkipIlerlemeDto
-            {
-                EkipId = e.EkipId,
-                EkipAdi = e.Ad,
-                ToplamFark = toplam,
-                KapatilanFark = kapatilan,
-                IlerlemeYuzde = yuzde
-            };
-        }).ToList();
-
-        var ekipIsYuku = ekipler.Select(e => new EkipIsYukuDto
-        {
-            EkipId = e.EkipId,
-            EkipAdi = e.Ad,
-            AcikFarkSayisi = farklar.Count(f => f.EkipId == e.EkipId && (f.Durum == "acik" || f.Durum == "inceleniyor")),
-            BekleyenAksiyonSayisi = farklar.Count(f => f.EkipId == e.EkipId && f.Durum == "acik")
-        }).ToList();
 
         var sonAktiviteler = await dbContext.AktiviteLoglari
             .AsNoTracking()
@@ -108,7 +75,46 @@ public class PortalController(
             })
             .FirstOrDefaultAsync(cancellationToken);
 
+        // TDUTIL sorguları aynı DbContext'i paylaştığı için sıralı çalıştırılır.
+        var catalog = await datasetCatalogService.GetCatalogAsync(cancellationToken);
+        var kokpit = await etlLoadCockpitService.GetCockpitAsync(veriTarihi, cancellationToken);
         var vkSnapshot = await veriKalitesiKpiService.GetKpiAsync(cancellationToken);
+
+        var surec = BuildSurecOzet(catalog, kokpit, veriTarihi);
+
+        var kpi = new PortalKpiDto
+        {
+            KurumsalHesapSayisi = kurumsalHesapSayisi,
+            MutabakatDonemSayisi = mutabakatDonemSayisi,
+            AcikFarkSayisi = acikFarkSayisi,
+            BekleyenGorevSayisi = surec.GunlukAkis.DevamEdenAdimSayisi + surec.GunlukAkis.BekleyenAdimSayisi
+        };
+
+        var ekipIlerleme = ekipler.Select(e =>
+        {
+            var ekipFarklar = farklar.Where(f => f.EkipId == e.EkipId).ToList();
+            var toplam = ekipFarklar.Count;
+            var kapatilan = ekipFarklar.Count(f => f.Durum == "kapatildi");
+            var yuzde = toplam == 0 ? 100 : (int)(kapatilan * 100.0 / toplam);
+
+            return new EkipIlerlemeDto
+            {
+                EkipId = e.EkipId,
+                EkipAdi = e.Ad,
+                ToplamFark = toplam,
+                KapatilanFark = kapatilan,
+                IlerlemeYuzde = yuzde
+            };
+        }).ToList();
+
+        var ekipIsYuku = ekipler.Select(e => new EkipIsYukuDto
+        {
+            EkipId = e.EkipId,
+            EkipAdi = e.Ad,
+            AcikFarkSayisi = farklar.Count(f => f.EkipId == e.EkipId && (f.Durum == "acik" || f.Durum == "inceleniyor")),
+            BekleyenAksiyonSayisi = farklar.Count(f => f.EkipId == e.EkipId && f.Durum == "acik")
+        }).ToList();
+
         var veriKalitesiKpi = new VeriKalitesiKpiDto
         {
             ToplamKuralSayisi = vkSnapshot.ToplamKuralSayisi,

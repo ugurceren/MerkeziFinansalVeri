@@ -35,4 +35,4 @@ echo Durdurmak icin o pencereleri kapatin veya Ctrl+C kullanin.
 echo.
 echo Masaustu kisayolu: baslat.bat dosyasina sag tik ^> Masaustune gonder
 echo.
-pause
+exit /b 0

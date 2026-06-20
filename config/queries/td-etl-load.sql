@@ -5,7 +5,7 @@ SELECT
     COALESCE(NULLIF(pr.Description, ''), el.TargetTableName) AS DatasetName,
     el.PackageName AS StepName,
     el.ExecutionStatus
-FROM OPR.ETLLoad el
-INNER JOIN OPR.ParallelRun pr
+FROM [TDUTIL].[OPR].[ETLLoad] el
+INNER JOIN [TDUTIL].[OPR].[ParallelRun] pr
     ON el.ParallelRunId = pr.ParallelRunId
 ORDER BY pr.MainPackageName, el.TargetTableName, el.PackageName
