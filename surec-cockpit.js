@@ -1,84 +1,35 @@
 const COCKPIT_COLUMNS_FALLBACK = [
     {
-        name: 'TDSTG',
+        name: 'TDSTG.STG',
         role: 'Staging — ham veri katmanı',
+        theme: 'cyan',
+        paketSayisi: 0,
+        tamamlanmaYuzdesi: 0,
+        datasets: []
+    },
+    {
+        name: 'TDSTG.LND',
+        role: 'Landing — ham veri yükleme',
         theme: 'teal',
-        datasets: [
-            { name: 'ds_banka_ham', label: 'Banka Ham Veri', tasks: [
-                { label: 'Yükleme', status: 'done' },
-                { label: 'Validasyon', status: 'done' },
-                { label: 'Staging Onay', status: 'done' }
-            ]},
-            { name: 'ds_muhasebe_raw', label: 'Muhasebe Raw', tasks: [
-                { label: 'Yükleme', status: 'done' },
-                { label: 'Validasyon', status: 'running' },
-                { label: 'Staging Onay', status: 'pending' }
-            ]},
-            { name: 'ds_doviz_kurlari', label: 'Döviz Kurları', tasks: [
-                { label: 'Yükleme', status: 'done' },
-                { label: 'Validasyon', status: 'done' },
-                { label: 'Staging Onay', status: 'done' }
-            ]},
-            { name: 'ds_masraf_stg', label: 'Masraf Staging', tasks: [
-                { label: 'Yükleme', status: 'running' },
-                { label: 'Validasyon', status: 'pending' },
-                { label: 'Staging Onay', status: 'pending' }
-            ]}
-        ]
+        paketSayisi: 0,
+        tamamlanmaYuzdesi: 0,
+        datasets: []
     },
     {
         name: 'TDMAIN',
         role: 'Ana veri — kurumsal çekirdek',
         theme: 'blue',
-        datasets: [
-            { name: 'ds_kebir', label: 'Kebir Defteri', tasks: [
-                { label: 'Dönüşüm', status: 'done' },
-                { label: 'Mutabakat', status: 'running' },
-                { label: 'Ana Veri Onay', status: 'pending' }
-            ]},
-            { name: 'ds_mizan', label: 'Mizan', tasks: [
-                { label: 'Dönüşüm', status: 'done' },
-                { label: 'Mutabakat', status: 'running' },
-                { label: 'Ana Veri Onay', status: 'pending' }
-            ]},
-            { name: 'ds_yevmiye', label: 'Yevmiye', tasks: [
-                { label: 'Dönüşüm', status: 'done' },
-                { label: 'Mutabakat', status: 'pending' },
-                { label: 'Ana Veri Onay', status: 'pending' }
-            ]},
-            { name: 'ds_hesap_plan', label: 'Hesap Planı', tasks: [
-                { label: 'Dönüşüm', status: 'done' },
-                { label: 'Mutabakat', status: 'done' },
-                { label: 'Ana Veri Onay', status: 'done' }
-            ]}
-        ]
+        paketSayisi: 0,
+        tamamlanmaYuzdesi: 0,
+        datasets: []
     },
     {
         name: 'TDREPORT',
         role: 'Raporlama — analitik katman',
         theme: 'purple',
-        datasets: [
-            { name: 'ds_bilanco', label: 'Bilanço', tasks: [
-                { label: 'Agregasyon', status: 'pending' },
-                { label: 'Rapor Üretim', status: 'pending' },
-                { label: 'Yayınlama', status: 'pending' }
-            ]},
-            { name: 'ds_gelir', label: 'Gelir Tablosu', tasks: [
-                { label: 'Agregasyon', status: 'pending' },
-                { label: 'Rapor Üretim', status: 'pending' },
-                { label: 'Yayınlama', status: 'pending' }
-            ]},
-            { name: 'ds_ters_bakiye', label: 'Ters Bakiye', tasks: [
-                { label: 'Agregasyon', status: 'pending' },
-                { label: 'Rapor Üretim', status: 'pending' },
-                { label: 'Yayınlama', status: 'pending' }
-            ]},
-            { name: 'ds_nazim', label: 'Nazım Hesapları', tasks: [
-                { label: 'Agregasyon', status: 'pending' },
-                { label: 'Rapor Üretim', status: 'pending' },
-                { label: 'Yayınlama', status: 'pending' }
-            ]}
-        ]
+        paketSayisi: 0,
+        tamamlanmaYuzdesi: 0,
+        datasets: []
     }
 ];
 
@@ -144,36 +95,74 @@ const DATASET_DOMAINS_FALLBACK = [
 
 let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
 let DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+let gunlukAkisDataDate = null;
 
-async function loadSurecData() {
+function getDefaultGunlukAkisDate() {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().slice(0, 10);
+}
+
+function getGunlukAkisDate() {
+    return gunlukAkisDataDate || getDefaultGunlukAkisDate();
+}
+
+function mapDatasetKatalog(domainler) {
+    return domainler.map(d => ({
+        id: d.domainId,
+        name: d.ad,
+        theme: d.tema,
+        datasets: d.datasets.map(ds => ({ name: ds.kod, label: ds.etiket }))
+    }));
+}
+
+async function loadDatasetCatalogData() {
     if (typeof ApiClient === 'undefined') return;
     try {
-        const kokpit = await ApiClient.getSurecKokpit();
+        const katalog = await ApiClient.getSurecDatasetKatalog();
+        if (katalog?.length) {
+            DATASET_DOMAINS = mapDatasetKatalog(katalog);
+        }
+    } catch (err) {
+        console.warn('Dataset katalog API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
+        DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+    }
+}
+
+async function loadSurecData(options = {}) {
+    if (typeof ApiClient === 'undefined') return;
+    const dataDate = options.dataDate ?? getGunlukAkisDate();
+    gunlukAkisDataDate = dataDate;
+    try {
+        const kokpit = await ApiClient.getSurecKokpit({ dataDate });
         if (kokpit?.length) {
             COCKPIT_COLUMNS = kokpit.map(k => ({
                 name: k.katmanKodu,
                 role: k.rol,
                 theme: k.tema,
+                paketSayisi: k.paketSayisi ?? 0,
+                basariliAdimSayisi: k.basariliAdimSayisi ?? 0,
+                tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
                 datasets: k.datasets.map(d => ({
                     name: d.kod,
                     label: d.etiket,
-                    tasks: d.gorevler.map(g => ({ label: g.etiket, status: g.durum }))
+                    tasks: d.gorevler.map(g => ({
+                        label: g.etiket,
+                        status: g.durum,
+                        statusText: g.durumMetni || 'Not Started'
+                    }))
                 }))
             }));
         }
-        const domainler = await ApiClient.getSurecDomainler();
-        if (domainler?.length) {
-            DATASET_DOMAINS = domainler.map(d => ({
-                id: d.domainId,
-                name: d.ad,
-                theme: d.tema,
-                datasets: d.datasets.map(ds => ({ name: ds.kod, label: ds.etiket }))
-            }));
+        if (!options.kokpitOnly) {
+            await loadDatasetCatalogData();
         }
     } catch (err) {
         console.warn('Süreç verisi API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
         COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
-        DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+        if (!options.kokpitOnly) {
+            DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+        }
     }
 }
 
@@ -228,30 +217,25 @@ function buildDatasetCatalogHTML() {
     </section>`;
 }
 
-function buildCockpitColumn({ name, role, theme, datasets }) {
-    let doneTasks = 0;
-    let totalTasks = 0;
-    datasets.forEach(ds => {
-        ds.tasks.forEach(t => {
-            totalTasks++;
-            if (t.status === 'done') doneTasks++;
-        });
-    });
-    const pct = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
-    const allDone = doneTasks === totalTasks;
+function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
+    const pct = tamamlanmaYuzdesi ?? 0;
+    const allDone = pct >= 100;
     const hasRunning = datasets.some(ds => ds.tasks.some(t => t.status === 'running'));
-    const colStatus = allDone ? 'done' : hasRunning ? 'running' : 'waiting';
+    const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed'));
+    const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
 
-    const datasetHtml = datasets.map(ds => {
-        const dsDone = ds.tasks.every(t => t.status === 'done');
-        const dsRunning = ds.tasks.some(t => t.status === 'running');
-        const dsStatus = dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-        const tasksHtml = ds.tasks.map(t => `
+    const datasetHtml = datasets.length
+        ? datasets.map(ds => {
+            const dsDone = ds.tasks.length > 0 && ds.tasks.every(t => t.status === 'done');
+            const dsRunning = ds.tasks.some(t => t.status === 'running');
+            const dsFailed = ds.tasks.some(t => t.status === 'failed');
+            const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
+            const tasksHtml = ds.tasks.map(t => `
             <div class="flow-step ${t.status}">
-                <span class="flow-icon">${t.status === 'done' ? '✓' : t.status === 'running' ? '◉' : t.status === 'failed' ? '✕' : '○'}</span>
+                <span class="flow-status-text">${t.statusText || 'Not Started'}</span>
                 <span class="flow-label">${t.label}</span>
             </div>`).join('');
-        return `
+            return `
             <article class="dataset-card ${dsStatus}">
                 <div class="dataset-head">
                     <strong>${ds.label}</strong>
@@ -259,7 +243,8 @@ function buildCockpitColumn({ name, role, theme, datasets }) {
                 </div>
                 <div class="task-flow">${tasksHtml}</div>
             </article>`;
-    }).join('');
+        }).join('')
+        : '<div class="cockpit-empty">Bu katmanda kayıt bulunamadı.</div>';
 
     return `
         <div class="cockpit-col theme-${theme} status-${colStatus}">
@@ -273,12 +258,12 @@ function buildCockpitColumn({ name, role, theme, datasets }) {
                 </div>
                 <div class="col-meta">
                     <span class="col-pct">${pct}%</span>
-                    <span class="col-status-badge">${allDone ? 'Tamam' : hasRunning ? 'Aktif' : 'Bekliyor'}</span>
+                    <span class="col-pct-caption">Tamamlanma</span>
+                    <span class="col-status-badge">${hasFailed ? 'Hata' : allDone ? 'Tamam' : hasRunning ? 'Aktif' : 'Bekliyor'}</span>
                 </div>
             </header>
             <div class="col-stats">
-                <span><strong>${datasets.length}</strong> dataset</span>
-                <span><strong>${doneTasks}/${totalTasks}</strong> task</span>
+                <span><strong>${paketSayisi ?? 0}</strong> paket</span>
             </div>
             <div class="dataset-list">${datasetHtml}</div>
         </div>`;
@@ -286,21 +271,46 @@ function buildCockpitColumn({ name, role, theme, datasets }) {
 
 function buildSurecHTML() {
     const now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dataDate = getGunlukAkisDate();
     const columns = COCKPIT_COLUMNS.map(buildCockpitColumn).join('');
     return `<section class="cockpit">
         <div class="cockpit-head">
             <div>
-                <h3>Süreç Kokpiti</h3>
-                <p>Dataset ve task akışlarının canlı durumu</p>
+                <h3>Günlük Akış</h3>
+                <p>ETLLoad tabanlı dataset adım durumları</p>
             </div>
-            <div class="cockpit-live">
-                <span class="live-dot"></span>
-                <span>Canlı</span>
-                <time id="cockpitClock">${now}</time>
+            <div class="cockpit-head-actions">
+                <label class="cockpit-date-filter">
+                    <span>Veri Tarihi</span>
+                    <input type="date" id="cockpitDataDate" value="${dataDate}" aria-label="Veri tarihi">
+                </label>
+                <div class="cockpit-live">
+                    <span class="live-dot"></span>
+                    <span>Canlı</span>
+                    <time id="cockpitClock">${now}</time>
+                </div>
             </div>
         </div>
         <div class="cockpit-grid">${columns}</div>
     </section>`;
+}
+
+function bindSurecCockpitDateFilter(container) {
+    const root = container || document.getElementById('pageBody');
+    if (!root) return;
+    const input = root.querySelector('#cockpitDataDate');
+    if (!input || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+
+    input.addEventListener('change', async () => {
+        if (!input.value) return;
+        gunlukAkisDataDate = input.value;
+        root.innerHTML = '<div class="cockpit-loading">Yükleniyor…</div>';
+        await loadSurecData({ dataDate: input.value, kokpitOnly: true });
+        root.innerHTML = buildSurecHTML();
+        bindSurecCockpit();
+        bindSurecCockpitDateFilter(root);
+    });
 }
 
 function bindSurecCockpit() {
@@ -315,9 +325,13 @@ function bindSurecCockpit() {
 async function initSurecCockpit(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
-    await loadSurecData();
+    if (!gunlukAkisDataDate) {
+        gunlukAkisDataDate = getDefaultGunlukAkisDate();
+    }
+    await loadSurecData({ dataDate: gunlukAkisDataDate, kokpitOnly: true });
     el.innerHTML = buildSurecHTML();
     bindSurecCockpit();
+    bindSurecCockpitDateFilter(el);
 }
 
 async function initDatasetCatalog(container) {
@@ -327,7 +341,7 @@ async function initDatasetCatalog(container) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
-    await loadSurecData();
+    await loadDatasetCatalogData();
     el.innerHTML = buildDatasetCatalogHTML();
 }
 
@@ -338,7 +352,32 @@ const TASK_STATUS_LABELS = {
     failed: 'Hata'
 };
 
-function flattenTaskMappings() {
+let TASK_LIST_ROWS = [];
+
+function mapTaskListesiRows(items) {
+    return items.map(item => ({
+        layer: item.katman || '—',
+        datasetCode: item.datasetKod || '',
+        datasetLabel: item.datasetEtiket || item.datasetKod || '',
+        task: item.etiket || '',
+        loadPeriodType: item.yuklemePeriyodu || '—',
+        transferTypeId: item.transferTypeId,
+        transferType: item.transferTipi || '—',
+        status: item.durum || 'pending'
+    }));
+}
+
+function formatTransferTypeCell(row) {
+    if (row.transferTypeId != null && row.transferType && row.transferType !== '—') {
+        return `<code>${row.transferTypeId}</code> ${row.transferType}`;
+    }
+    if (row.transferTypeId != null) {
+        return `<code>${row.transferTypeId}</code>`;
+    }
+    return row.transferType || '—';
+}
+
+function buildTaskListRowsFromCockpit() {
     const rows = [];
     COCKPIT_COLUMNS.forEach(col => {
         col.datasets.forEach(ds => {
@@ -348,6 +387,7 @@ function flattenTaskMappings() {
                     datasetCode: ds.name,
                     datasetLabel: ds.label,
                     task: task.label,
+                    loadPeriodType: '—',
                     taskOrder: idx + 1,
                     status: task.status
                 });
@@ -357,16 +397,38 @@ function flattenTaskMappings() {
     return rows;
 }
 
+async function loadTaskListesiData() {
+    if (typeof ApiClient === 'undefined') return;
+    try {
+        const items = await ApiClient.getTaskListesi();
+        if (items?.length) {
+            TASK_LIST_ROWS = mapTaskListesiRows(items);
+        } else {
+            TASK_LIST_ROWS = [];
+        }
+    } catch (err) {
+        console.warn('Paket listesi API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
+        if (!COCKPIT_COLUMNS.length) {
+            COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
+        }
+        TASK_LIST_ROWS = buildTaskListRowsFromCockpit();
+    }
+}
+
+function getTaskListRows() {
+    return TASK_LIST_ROWS.length ? TASK_LIST_ROWS : buildTaskListRowsFromCockpit();
+}
+
 function taskRowSearchKey(row) {
     const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
-    return [row.layer, row.datasetCode, row.datasetLabel, row.task, statusLabel, row.status]
+    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferTypeId, row.transferType, statusLabel, row.status]
         .join(' ')
         .toLocaleLowerCase('tr-TR');
 }
 
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
-        return '<tr><td colspan="5" class="tl-empty">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
+        return '<tr><td colspan="7" class="tl-empty">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
     }
     return rows.map(row => {
         const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
@@ -375,23 +437,25 @@ function renderTaskListesiRows(rows) {
             <td><code>${row.datasetCode}</code></td>
             <td>${row.datasetLabel}</td>
             <td>${row.task}</td>
+            <td>${row.loadPeriodType}</td>
+            <td>${formatTransferTypeCell(row)}</td>
             <td><span class="tl-badge ${row.status}">${statusLabel}</span></td>
         </tr>`;
     }).join('');
 }
 
 function buildTaskListesiHTML() {
-    const rows = flattenTaskMappings();
+    const rows = getTaskListRows();
     return `<div class="tl-layout">
         <div class="tl-head">
-            <h3>Task Listesi</h3>
-            <p>Süreç task'ları ile dataset eşleştirmesi — arama ile filtreleyin.</p>
+            <h3>Paket Listesi</h3>
+            <p>ParallelRun paket envanteri — arama ile filtreleyin.</p>
         </div>
         <div class="tl-card">
             <div class="tl-toolbar">
                 <label class="tl-search">
                     <i class="ti ti-search" aria-hidden="true"></i>
-                    <input type="search" id="tlSearch" placeholder="Task, dataset veya katman ara…" autocomplete="off">
+                    <input type="search" id="tlSearch" placeholder="Paket, dataset, katman, transfer tipi veya yükleme periyodu ara…" autocomplete="off">
                 </label>
                 <span class="tl-count" id="tlCount">${rows.length} kayıt</span>
             </div>
@@ -403,6 +467,8 @@ function buildTaskListesiHTML() {
                             <th>Dataset Kodu</th>
                             <th>Dataset</th>
                             <th>Task</th>
+                            <th>Yükleme Periyodu</th>
+                            <th>Transfer Tipi</th>
                             <th>Durum</th>
                         </tr>
                     </thead>
@@ -421,7 +487,7 @@ function bindTaskListesiSearch(container) {
     const count = root.querySelector('#tlCount');
     if (!input || !body || !count) return;
 
-    const allRows = flattenTaskMappings();
+    const allRows = getTaskListRows();
 
     function applyFilter() {
         const q = input.value.trim().toLocaleLowerCase('tr-TR');
@@ -442,12 +508,20 @@ async function initTaskListesi(container) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
-    await loadSurecData();
+    await loadTaskListesiData();
     el.innerHTML = buildTaskListesiHTML();
     bindTaskListesiSearch(el);
 }
 
 function getLayerProgress(col) {
+    if (col.tamamlanmaYuzdesi != null) {
+        return {
+            done: col.basariliAdimSayisi ?? 0,
+            total: col.paketSayisi ?? 0,
+            pct: col.tamamlanmaYuzdesi ?? 0
+        };
+    }
+
     let done = 0;
     let total = 0;
     col.datasets.forEach(ds => {
@@ -475,7 +549,7 @@ function buildPortalDatasetCardHTML() {
                     <strong>${col.name}</strong>
                     <span class="portal-ds-badge ${statusClass}">${statusLabel}</span>
                 </div>
-                <div class="portal-ds-meta">${col.datasets.length} dataset · ${pct}% task tamamlandı</div>
+                <div class="portal-ds-meta">${col.paketSayisi ?? 0} paket · ${pct}% tamamlanma</div>
                 <div class="portal-ds-bar"><div class="portal-ds-fill theme-${col.theme}" style="width:${pct}%"></div></div>
             </div>`;
     }).join('');
@@ -503,7 +577,7 @@ function buildPortalDatasetCardHTML() {
             <div class="portal-ds-layers">${layers}</div>
             <div class="portal-ds-footer">
                 <a href="surec.html?view=datasetler"><i class="ti ti-stack-2"></i> Dataset Kataloğu</a>
-                <a href="surec.html?view=task-listesi"><i class="ti ti-list-check"></i> Task Listesi</a>
+                <a href="surec.html?view=task-listesi"><i class="ti ti-list-check"></i> Paket Listesi</a>
             </div>
         </div>`;
 }
@@ -513,4 +587,4 @@ window.initDatasetCatalog = initDatasetCatalog;
 window.buildDatasetCatalogHTML = buildDatasetCatalogHTML;
 window.buildPortalDatasetCardHTML = buildPortalDatasetCardHTML;
 window.initTaskListesi = initTaskListesi;
-window.flattenTaskMappings = flattenTaskMappings;
+window.getTaskListRows = getTaskListRows;

@@ -1,5 +1,6 @@
 using MerkeziFinansalVeri.Api.Dtos;
 using MerkeziFinansalVeri.Infrastructure.Data;
+using MerkeziFinansalVeri.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,11 @@ namespace MerkeziFinansalVeri.Api.Controllers;
 
 [ApiController]
 [Route("api/surec")]
-public class SurecController(AppDbContext dbContext) : ControllerBase
+public class SurecController(
+    AppDbContext dbContext,
+    IDatasetCatalogService datasetCatalogService,
+    IParallelRunTaskListService parallelRunTaskListService,
+    IEtlLoadCockpitService etlLoadCockpitService) : ControllerBase
 {
     [HttpGet("cockpit")]
     public async Task<ActionResult<SurecCockpitDto>> GetCockpit(CancellationToken cancellationToken)
@@ -36,63 +41,44 @@ public class SurecController(AppDbContext dbContext) : ControllerBase
     }
 
     [HttpGet("kokpit")]
-    public async Task<ActionResult<IReadOnlyList<SurecKokpitKatmanDto>>> GetKokpit(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<SurecKokpitKatmanDto>>> GetKokpit(
+        [FromQuery] string? dataDate,
+        CancellationToken cancellationToken)
     {
-        var donemId = await dbContext.MutabakatDonemleri
-            .AsNoTracking()
-            .Where(d => d.AktifMi)
-            .Select(d => (int?)d.DonemId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var katmanlar = await dbContext.VeriKatmanlari
-            .AsNoTracking()
-            .OrderBy(k => k.Sira)
-            .ToListAsync(cancellationToken);
-
-        var datasets = await dbContext.SurecDatasetleri
-            .AsNoTracking()
-            .Include(d => d.SurecGorevTanimlari)
-            .Where(d => d.KatmanKodu != null)
-            .OrderBy(d => d.Sira)
-            .ToListAsync(cancellationToken);
-
-        var durumlar = await dbContext.SurecGorevDurumlari
-            .AsNoTracking()
-            .Where(g => g.DonemId == donemId)
-            .ToDictionaryAsync(g => g.GorevTanimId, cancellationToken);
-
-        var result = katmanlar.Select(katman =>
+        DateOnly? parsedDate = null;
+        if (!string.IsNullOrWhiteSpace(dataDate) && DateOnly.TryParse(dataDate, out var date))
         {
-            var katmanDatasets = datasets
-                .Where(d => d.KatmanKodu == katman.KatmanKodu)
-                .Select(d => new SurecKokpitDatasetDto
-                {
-                    Kod = d.Kod,
-                    Etiket = d.Etiket,
-                    Gorevler = d.SurecGorevTanimlari
-                        .OrderBy(g => g.Sira)
-                        .Select(g =>
-                        {
-                            durumlar.TryGetValue(g.GorevTanimId, out var durum);
-                            return new SurecKokpitGorevDto
-                            {
-                                GorevTanimId = g.GorevTanimId,
-                                Etiket = g.Etiket,
-                                Durum = durum?.Durum ?? "pending"
-                            };
-                        }).ToList()
-                }).ToList();
+            parsedDate = date;
+        }
 
-            return new SurecKokpitKatmanDto
+        var result = await etlLoadCockpitService.GetCockpitAsync(parsedDate, cancellationToken);
+        if (!result.Basarili)
+        {
+            return StatusCode(502, new { error = result.Hata ?? "Günlük akış sorgusu başarısız." });
+        }
+
+        var items = result.Katmanlar.Select(layer => new SurecKokpitKatmanDto
+        {
+            KatmanKodu = layer.KatmanKodu,
+            Rol = layer.Rol,
+            Tema = layer.Tema,
+            PaketSayisi = layer.PaketSayisi,
+            BasariliAdimSayisi = layer.BasariliAdimSayisi,
+            TamamlanmaYuzdesi = layer.TamamlanmaYuzdesi,
+            Datasets = layer.Datasets.Select(dataset => new SurecKokpitDatasetDto
             {
-                KatmanKodu = katman.KatmanKodu,
-                Rol = katman.Rol,
-                Tema = katman.Tema,
-                Datasets = katmanDatasets
-            };
+                Kod = dataset.Kod,
+                Etiket = dataset.Etiket,
+                Gorevler = dataset.Adimlar.Select(step => new SurecKokpitGorevDto
+                {
+                    Etiket = step.Etiket,
+                    Durum = step.Durum,
+                    DurumMetni = step.DurumMetni
+                }).ToList()
+            }).ToList()
         }).ToList();
 
-        return Ok(result);
+        return Ok(items);
     }
 
     [HttpGet("domainler")]
@@ -121,6 +107,33 @@ public class SurecController(AppDbContext dbContext) : ControllerBase
         }).ToList();
 
         return Ok(result);
+    }
+
+    [HttpGet("dataset-katalog")]
+    public async Task<ActionResult<IReadOnlyList<VeriDomainDto>>> GetDatasetKatalog(CancellationToken cancellationToken)
+    {
+        var result = await datasetCatalogService.GetCatalogAsync(cancellationToken);
+        if (!result.Basarili)
+        {
+            return StatusCode(502, new { error = result.Hata ?? "Dataset katalog sorgusu başarısız." });
+        }
+
+        var items = result.Kategoriler.Select(kategori => new VeriDomainDto
+        {
+            DomainId = kategori.KategoriId,
+            Ad = kategori.Ad,
+            Tema = kategori.Tema,
+            Datasets = kategori.Datasetler
+                .Select(dataset => new SurecKokpitDatasetDto
+                {
+                    Kod = dataset.Ad,
+                    Etiket = dataset.Ad,
+                    Gorevler = []
+                })
+                .ToList()
+        }).ToList();
+
+        return Ok(items);
     }
 
     [HttpGet("datasets")]
@@ -197,38 +210,24 @@ public class SurecController(AppDbContext dbContext) : ControllerBase
     [HttpGet("task-listesi")]
     public async Task<ActionResult<IReadOnlyList<TaskListesiDto>>> GetTaskListesi(CancellationToken cancellationToken)
     {
-        var donemId = await dbContext.MutabakatDonemleri
-            .AsNoTracking()
-            .Where(d => d.AktifMi)
-            .Select(d => (int?)d.DonemId)
-            .FirstOrDefaultAsync(cancellationToken);
+        var result = await parallelRunTaskListService.GetTaskListAsync(cancellationToken);
+        if (!result.Basarili)
+        {
+            return StatusCode(502, new { error = result.Hata ?? "Paket listesi sorgusu başarısız." });
+        }
 
-        var tanimlar = await dbContext.SurecGorevTanimlari
-            .AsNoTracking()
-            .Include(t => t.Dataset)
-            .OrderBy(t => t.Dataset.Sira).ThenBy(t => t.Sira)
-            .ToListAsync(cancellationToken);
-
-        var durumlar = await dbContext.SurecGorevDurumlari
-            .AsNoTracking()
-            .Where(d => d.DonemId == donemId)
-            .ToDictionaryAsync(d => d.GorevTanimId, cancellationToken);
-
-        var items = tanimlar
-            .Where(t => !durumlar.TryGetValue(t.GorevTanimId, out var d) || d.Durum is not "done")
-            .Select(t =>
-            {
-                durumlar.TryGetValue(t.GorevTanimId, out var durum);
-                return new TaskListesiDto
-                {
-                    GorevTanimId = t.GorevTanimId,
-                    Etiket = t.Etiket,
-                    DatasetKod = t.Dataset.Kod,
-                    Durum = durum?.Durum ?? "pending",
-                    SonGuncelleme = durum?.SonGuncelleme
-                };
-            })
-            .ToList();
+        var items = result.Kayitlar.Select(item => new TaskListesiDto
+        {
+            Katman = item.Katman,
+            DatasetKod = item.DatasetKod,
+            DatasetEtiket = item.DatasetEtiket,
+            Etiket = item.Task,
+            YuklemePeriyodu = item.YuklemePeriyodu,
+            TransferTypeId = item.TransferTypeId,
+            TransferTipi = item.TransferTipi,
+            Durum = item.Durum,
+            SonGuncelleme = item.SonGuncelleme
+        }).ToList();
 
         return Ok(items);
     }

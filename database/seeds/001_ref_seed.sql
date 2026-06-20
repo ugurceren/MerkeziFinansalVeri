@@ -18,9 +18,9 @@ GO
 MERGE VIB.ref_Page AS tgt
 USING (VALUES
     (N'portal',           N'PORTAL',              N'ti-home',         N'Portal',                              N'HomePage.html',                        1),
-    (N'surec',            N'SÜREÇ',               N'ti-timeline',     N'Süreç',                               N'surec.html',                           2),
+    (N'surec',            N'SÜREÇ',               N'ti-timeline',     N'Günlük Akış',                         N'surec.html',                           2),
     (N'datasetler',       N'SÜREÇ',               N'ti-timeline',     N'Datasetler',                          N'surec.html?view=datasetler',           3),
-    (N'task-listesi',     N'SÜREÇ',               N'ti-timeline',     N'Task Listesi',                        N'surec.html?view=task-listesi',         4),
+    (N'task-listesi',     N'SÜREÇ',               N'ti-timeline',     N'Paket Listesi',                       N'surec.html?view=task-listesi',         4),
     (N'mizan',            N'MUTABAKAT',           N'ti-scale',        N'Mizan',                               N'mizan.html',                           5),
     (N'mutabakat-donem',  N'MUTABAKAT',           N'ti-scale',        N'Dönem',                               N'mutabakat.html?view=donem',            6),
     (N'fark-veren',       N'MUTABAKAT',           N'ti-scale',        N'Fark Veren Hesaplar',                 N'mutabakat.html?view=fark-veren',       7),

@@ -1,4 +1,4 @@
-/* Task Listesi — task / dataset mapping tablosu */
+/* Paket Listesi — ParallelRun paket tablosu */
 
 .tl-layout {
     display: flex;
@@ -82,7 +82,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 12px;
-    min-width: 720px;
+    min-width: 980px;
 }
 
 .tl-table th {

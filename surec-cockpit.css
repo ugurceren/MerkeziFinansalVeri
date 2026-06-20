@@ -21,6 +21,49 @@
     gap: 12px;
     padding: 4px 2px 8px;
     flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.cockpit-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.cockpit-date-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+}
+
+.cockpit-date-filter input {
+    height: 30px;
+    padding: 0 10px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    font-size: 12px;
+    font-family: inherit;
+    color-scheme: light dark;
+}
+
+.cockpit-date-filter input:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.cockpit-loading {
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    font-size: 13px;
+    color: var(--rb-text-muted);
 }
 
 .cockpit-head h3 {
@@ -67,8 +110,8 @@
 
 .cockpit-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
     flex: 1;
     min-height: 0;
     align-items: stretch;
@@ -87,10 +130,12 @@
 }
 
 .cockpit-col.theme-teal { --col-accent: #2dd4bf; --col-soft: rgba(45, 212, 191, 0.14); }
+.cockpit-col.theme-cyan { --col-accent: #22d3ee; --col-soft: rgba(34, 211, 238, 0.14); }
 .cockpit-col.theme-blue { --col-accent: #7c9aff; --col-soft: rgba(124, 154, 255, 0.14); }
 .cockpit-col.theme-purple { --col-accent: #a855f7; --col-soft: rgba(168, 85, 247, 0.14); }
 .cockpit-col.status-running { border-color: color-mix(in srgb, var(--col-accent) 45%, var(--rb-border)); }
 .cockpit-col.status-done { border-color: rgba(34, 197, 94, 0.35); }
+.cockpit-col.status-failed { border-color: rgba(239, 68, 68, 0.35); }
 
 .col-header {
     display: flex;
@@ -139,6 +184,15 @@
     font-weight: 800;
     color: var(--col-accent);
     line-height: 1;
+}
+
+.col-pct-caption {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+    line-height: 1.1;
 }
 
 .col-status-badge {
@@ -204,6 +258,11 @@
 
 .dataset-card.done { border-color: rgba(34, 197, 94, 0.25); }
 
+.dataset-card.failed {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.06);
+}
+
 .dataset-head {
     display: flex;
     align-items: center;
@@ -228,75 +287,92 @@
 }
 
 .task-flow {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
-    flex-wrap: wrap;
 }
 
 .flow-step {
-    flex: 1;
-    min-width: 72px;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 6px 4px;
-    border-radius: 8px;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 3px;
+    border-radius: 7px;
     background: var(--rb-card);
     border: 0.5px solid var(--rb-border);
 }
 
-.flow-icon {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-size: 10px;
+.flow-status-text {
+    font-size: 8px;
     font-weight: 700;
-    line-height: 1;
+    line-height: 1.15;
+    text-align: center;
+    letter-spacing: 0.01em;
+    color: var(--rb-text-muted);
+    word-break: break-word;
 }
 
 .flow-label {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 600;
     color: var(--rb-text-muted);
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.15;
 }
 
-.flow-step.done .flow-icon {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
-    border: 0.5px solid rgba(34, 197, 94, 0.35);
-}
-
+.flow-step.done .flow-status-text { color: #22c55e; }
 .flow-step.done .flow-label { color: #22c55e; }
-
-.flow-step.running .flow-icon {
-    background: var(--col-soft);
-    color: var(--col-accent);
-    border: 0.5px solid var(--col-accent);
-    animation: cockpit-pulse 1.8s infinite;
+.flow-step.done {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.08);
 }
 
+.flow-step.running .flow-status-text { color: var(--col-accent); }
 .flow-step.running .flow-label { color: var(--col-accent); }
+.flow-step.running {
+    border-color: color-mix(in srgb, var(--col-accent) 40%, var(--rb-border));
+    background: var(--col-soft);
+}
 
-.flow-step.pending .flow-icon {
-    background: var(--rb-bg);
+.flow-step.not-started .flow-status-text,
+.flow-step.pending .flow-status-text {
+    color: var(--rb-text-muted);
+}
+
+.flow-step.not-started,
+.flow-step.pending {
+    border-style: dashed;
+}
+
+.flow-step.failed .flow-status-text { color: #ef4444; }
+.flow-step.failed .flow-label { color: #ef4444; }
+.flow-step.failed {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.cockpit-empty {
+    padding: 18px 12px;
+    text-align: center;
+    font-size: 11px;
     color: var(--rb-text-muted);
     border: 0.5px dashed var(--rb-border);
-}
-
-.flow-step.failed .flow-icon {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    border-radius: 10px;
+    background: var(--rb-bg);
 }
 
 .page-ribbon .cockpit-head h3 { font-size: 16px; }
 .page-ribbon .col-title h4 { font-size: 15px; }
 .page-ribbon .dataset-head strong { font-size: 13px; }
-.page-ribbon .flow-label { font-size: 10px; }
+.page-ribbon .flow-status-text { font-size: 9px; }
+.page-ribbon .flow-label { font-size: 9px; }
+
+@media (max-width: 1400px) {
+    .cockpit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 @media (max-width: 1100px) {
     .cockpit-grid { grid-template-columns: 1fr; }

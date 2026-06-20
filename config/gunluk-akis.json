@@ -1,0 +1,9 @@
+{
+  "GunlukAkis": {
+    "KatmanKodu": "TDUTIL",
+    "SorguDosyasi": "config/queries/td-etl-load.sql",
+    "ParallelRunSorguDosyasi": "config/queries/td-parallel-run-packages.sql",
+    "MaxSatir": 100000,
+    "SorguTimeoutSaniye": 120
+  }
+}

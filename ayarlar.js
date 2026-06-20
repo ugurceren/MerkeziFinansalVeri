@@ -5,7 +5,7 @@
 
     const DEFAULT_PAGES = [
         { value: 'HomePage.html', label: 'Portal' },
-        { value: 'surec.html', label: 'Süreç Kokpiti' },
+        { value: 'surec.html', label: 'Günlük Akış' },
         { value: 'kebir-hesaplari.html', label: 'Kebir Hesapları Sorumluluk Listesi' },
         { value: 'veritabani-sorgu.html', label: 'Veritabanı Sorgusu' },
         { value: 'kullanici-yonetimi.html', label: 'Kullanıcı Yönetimi' }

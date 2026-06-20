@@ -49,6 +49,24 @@ if (File.Exists(nazimHesaplariConfigPath))
     builder.Configuration.AddJsonFile(nazimHesaplariConfigPath, optional: true, reloadOnChange: true);
 }
 
+var datasetsConfigPath = Path.Combine(repoRoot, "config", "datasets.json");
+if (File.Exists(datasetsConfigPath))
+{
+    builder.Configuration.AddJsonFile(datasetsConfigPath, optional: true, reloadOnChange: true);
+}
+
+var taskListesiConfigPath = Path.Combine(repoRoot, "config", "task-listesi.json");
+if (File.Exists(taskListesiConfigPath))
+{
+    builder.Configuration.AddJsonFile(taskListesiConfigPath, optional: true, reloadOnChange: true);
+}
+
+var gunlukAkisConfigPath = Path.Combine(repoRoot, "config", "gunluk-akis.json");
+if (File.Exists(gunlukAkisConfigPath))
+{
+    builder.Configuration.AddJsonFile(gunlukAkisConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -91,6 +109,21 @@ builder.Services.AddScoped<ITrustedDataMatrixMapService>(sp => new TrustedDataMa
 
 builder.Services.AddScoped<ITersBakiyeService, TersBakiyeService>();
 builder.Services.AddScoped<INazimHesaplariService, NazimHesaplariService>();
+builder.Services.AddScoped<IDatasetCatalogService>(sp => new DatasetCatalogService(
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<DatasetCatalogService>>(),
+    repoRoot));
+builder.Services.AddScoped<IParallelRunTaskListService>(sp => new ParallelRunTaskListService(
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<ParallelRunTaskListService>>(),
+    repoRoot));
+builder.Services.AddScoped<IEtlLoadCockpitService>(sp => new EtlLoadCockpitService(
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<EtlLoadCockpitService>>(),
+    repoRoot));
 
 builder.Services.AddCors(options =>
 {

@@ -14,7 +14,7 @@
         { pageId: 'kebir', label: 'Kebir Hesapları Listesi', href: 'kebir-hesaplari.html', icon: 'ti-notebook' },
         { pageId: 'mizan', label: 'Mizan Görüntüle', href: 'mizan.html', icon: 'ti-scale' },
         { pageId: 'fark-veren', label: 'Fark Veren Hesaplar', href: 'mutabakat.html?view=fark-veren', icon: 'ti-arrows-diff' },
-        { pageId: 'surec', label: 'Süreç Kokpiti', href: 'surec.html', icon: 'ti-timeline' },
+        { pageId: 'surec', label: 'Günlük Akış', href: 'surec.html', icon: 'ti-timeline' },
         { pageId: 'veritabani-sorgu', label: 'Veritabanı Sorgusu', href: 'veritabani-sorgu.html', icon: 'ti-database' },
         { pageId: 'mutabakat-donem', label: 'Mutabakat Dönemi', href: 'mutabakat.html?view=donem', icon: 'ti-calendar' },
         { pageId: 'vk-kurallar', label: 'Veri Kalitesi Kuralları', href: 'veri-kalitesi-kurallari.html', icon: 'ti-list-check' },

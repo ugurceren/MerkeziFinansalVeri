@@ -113,8 +113,14 @@
         },
 
         // Süreç / Mizan
-        getSurecKokpit() { return request('/surec/kokpit'); },
+        getSurecKokpit(params = {}) {
+            const q = new URLSearchParams();
+            if (params.dataDate) q.set('dataDate', params.dataDate);
+            const qs = q.toString();
+            return request(`/surec/kokpit${qs ? `?${qs}` : ''}`);
+        },
         getSurecDomainler() { return request('/surec/domainler'); },
+        getSurecDatasetKatalog() { return request('/surec/dataset-katalog'); },
         getSurecGorevler(params = {}) {
             const q = new URLSearchParams();
             if (params.datasetId) q.set('datasetId', params.datasetId);

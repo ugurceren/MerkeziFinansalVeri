@@ -9,9 +9,9 @@
             section: 'SÜREÇ',
             icon: 'ti-timeline',
             pages: [
-                { id: 'surec', label: 'Süreç', href: 'surec.html' },
+                { id: 'surec', label: 'Günlük Akış', href: 'surec.html' },
                 { id: 'datasetler', label: 'Datasetler', href: 'surec.html?view=datasetler' },
-                { id: 'task-listesi', label: 'Task Listesi', href: 'surec.html?view=task-listesi' }
+                { id: 'task-listesi', label: 'Paket Listesi', href: 'surec.html?view=task-listesi' }
             ]
         },
         {

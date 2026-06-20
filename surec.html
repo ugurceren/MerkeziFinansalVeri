@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Süreç | Merkezi Güvenilir Finansal Veri</title>
+    <title>Günlük Akış | Merkezi Güvenilir Finansal Veri</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
@@ -75,9 +75,9 @@
 <script src="surec-cockpit.js"></script>
 <script>
     window.handleRibbonPage = function(section, page) {
-        if (page === 'Süreç') initSurecCockpit();
+        if (page === 'Günlük Akış') initSurecCockpit();
         if (page === 'Datasetler') initDatasetCatalog();
-        if (page === 'Task Listesi') initTaskListesi();
+        if (page === 'Paket Listesi') initTaskListesi();
     };
 
     document.addEventListener('ribbon-ready', async function() {

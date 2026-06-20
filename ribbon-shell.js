@@ -19,9 +19,9 @@
         <div class="tab-panel" id="tab-surec">
             <div class="ribbon-group">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Süreç" data-page-id="surec" data-section="SÜREÇ" data-href="surec.html">
+                    <button class="rbtn" type="button" data-page="Günlük Akış" data-page-id="surec" data-section="SÜREÇ" data-href="surec.html">
                         <i class="ti ti-timeline"></i>
-                        <span>Süreç</span>
+                        <span>Günlük<br>Akış</span>
                     </button>
                 </div>
             </div>
@@ -35,9 +35,9 @@
             </div>
             <div class="ribbon-group" style="border-right:none">
                 <div class="rg-buttons">
-                    <button class="rbtn" type="button" data-page="Task Listesi" data-page-id="task-listesi" data-section="SÜREÇ" data-href="surec.html?view=task-listesi">
+                    <button class="rbtn" type="button" data-page="Paket Listesi" data-page-id="task-listesi" data-section="SÜREÇ" data-href="surec.html?view=task-listesi">
                         <i class="ti ti-list-check"></i>
-                        <span>Task<br>Listesi</span>
+                        <span>Paket<br>Listesi</span>
                     </button>
                 </div>
             </div>
@@ -225,8 +225,8 @@
         }
         if (path === 'surec.html') {
             if (view === 'datasetler') return { section: 'SÜREÇ', page: 'Datasetler' };
-            if (view === 'task-listesi') return { section: 'SÜREÇ', page: 'Task Listesi' };
-            return { section: 'SÜREÇ', page: 'Süreç' };
+            if (view === 'task-listesi') return { section: 'SÜREÇ', page: 'Paket Listesi' };
+            return { section: 'SÜREÇ', page: 'Günlük Akış' };
         }
         if (path === 'mizan.html') return { section: 'MUTABAKAT', page: 'Mizan' };
         if (path === 'mutabakat.html') {

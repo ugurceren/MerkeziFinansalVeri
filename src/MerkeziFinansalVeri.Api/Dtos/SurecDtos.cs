@@ -14,6 +14,9 @@ public sealed class SurecKokpitKatmanDto
     public string KatmanKodu { get; set; } = string.Empty;
     public string Rol { get; set; } = string.Empty;
     public string Tema { get; set; } = string.Empty;
+    public int PaketSayisi { get; set; }
+    public int BasariliAdimSayisi { get; set; }
+    public int TamamlanmaYuzdesi { get; set; }
     public IReadOnlyList<SurecKokpitDatasetDto> Datasets { get; set; } = [];
 }
 
@@ -29,6 +32,7 @@ public sealed class SurecKokpitGorevDto
     public int GorevTanimId { get; set; }
     public string Etiket { get; set; } = string.Empty;
     public string Durum { get; set; } = string.Empty;
+    public string DurumMetni { get; set; } = string.Empty;
 }
 
 public sealed class VeriDomainDto
@@ -63,9 +67,13 @@ public sealed class SurecGorevDto
 
 public sealed class TaskListesiDto
 {
-    public int GorevTanimId { get; set; }
-    public string Etiket { get; set; } = string.Empty;
+    public string Katman { get; set; } = string.Empty;
     public string DatasetKod { get; set; } = string.Empty;
+    public string DatasetEtiket { get; set; } = string.Empty;
+    public string Etiket { get; set; } = string.Empty;
+    public string YuklemePeriyodu { get; set; } = string.Empty;
+    public int? TransferTypeId { get; set; }
+    public string TransferTipi { get; set; } = string.Empty;
     public string Durum { get; set; } = string.Empty;
     public DateTime? SonGuncelleme { get; set; }
 }

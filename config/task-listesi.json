@@ -1,0 +1,8 @@
+{
+  "TaskListesi": {
+    "KatmanKodu": "TDUTIL",
+    "SorguDosyasi": "config/queries/td-parallel-run.sql",
+    "MaxSatir": 100000,
+    "SorguTimeoutSaniye": 120
+  }
+}
