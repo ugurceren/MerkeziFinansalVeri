@@ -1,7 +1,8 @@
 SELECT
     pr.MainPackageName,
+    pr.TargetTableName,
     COUNT(*) AS PaketSayisi
 FROM [TDUTIL].[OPR].[ParallelRun] pr
 WHERE pr.ActiveFlag = 1
    OR pr.ActiveFlag IS NULL
-GROUP BY pr.MainPackageName
+GROUP BY pr.MainPackageName, pr.TargetTableName

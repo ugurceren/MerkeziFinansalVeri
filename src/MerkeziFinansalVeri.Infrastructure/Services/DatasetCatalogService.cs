@@ -40,6 +40,11 @@ public sealed class DatasetCatalogService(
             return Fail(result.Hata ?? "Dataset katalog sorgusu çalıştırılamadı.", result.SureMs);
         }
 
+        if (result.Satirlar.Count == 0)
+        {
+            logger.LogWarning("Dataset katalog sorgusu boş döndü: {Sorgu}", ayarlar.SorguDosyasi);
+        }
+
         var grouped = new Dictionary<string, List<DatasetCatalogItem>>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var row in result.Satirlar)
@@ -85,6 +90,13 @@ public sealed class DatasetCatalogService(
                     .ToList()
             })
             .ToList();
+
+        if (result.Satirlar.Count > 0 && kategoriler.Count == 0)
+        {
+            logger.LogWarning(
+                "Dataset katalog satırları okundu ancak eşleşen kolon bulunamadı. İlk satır kolonları: {Columns}",
+                string.Join(", ", result.Satirlar[0].Keys));
+        }
 
         return new DatasetCatalogResult
         {

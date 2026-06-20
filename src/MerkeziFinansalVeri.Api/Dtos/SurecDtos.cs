@@ -75,6 +75,7 @@ public sealed class TaskListesiDto
     public int? TransferTypeId { get; set; }
     public string TransferTipi { get; set; } = string.Empty;
     public string Durum { get; set; } = string.Empty;
+    public bool? Aktif { get; set; }
     public DateTime? SonGuncelleme { get; set; }
 }
 

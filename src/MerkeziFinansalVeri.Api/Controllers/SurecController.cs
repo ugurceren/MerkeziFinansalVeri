@@ -215,6 +215,7 @@ public class SurecController(
             TransferTypeId = item.TransferTypeId,
             TransferTipi = item.TransferTipi,
             Durum = item.Durum,
+            Aktif = item.Aktif,
             SonGuncelleme = item.SonGuncelleme
         }).ToList();
 

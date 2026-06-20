@@ -123,7 +123,7 @@ public sealed class EtlLoadCockpitService(
         foreach (var row in result.Satirlar)
         {
             var mainPackage = GetCell(row, "MainPackageName", "DataLayer", "TargetDatabase");
-            var targetTable = GetCell(row, "TargetTableName", "DatasetCode", "TableName");
+            var targetTable = GetCell(row, "TargetTableName", "LayerTableName", "DatasetCode", "TableName");
             var layer = ResolveLayerCode(mainPackage, targetTable);
             if (string.IsNullOrWhiteSpace(layer))
             {
@@ -136,14 +136,9 @@ public sealed class EtlLoadCockpitService(
                 continue;
             }
 
-            if (string.Equals(mainPackage?.Trim(), "TDSTG", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
             if (counts.ContainsKey(layer))
             {
-                counts[layer] = paketSayisi;
+                counts[layer] += paketSayisi;
             }
         }
 
@@ -200,14 +195,16 @@ public sealed class EtlLoadCockpitService(
         foreach (var row in rows)
         {
             var mainPackage = GetCell(row, "DataLayer", "MainPackageName", "TargetLayer", "LayerCode");
-            var targetTable = GetCell(row, "DatasetCode", "TargetTableName", "TableName")?.Trim();
-            var layer = ResolveLayerCode(mainPackage, targetTable);
-            var datasetCode = targetTable;
+            var layerTableName = GetCell(row, "LayerTableName", "ParallelTargetTableName", "TargetTableName")?.Trim();
+            var datasetCode = GetCell(row, "DatasetCode", "TargetTableName", "TableName")?.Trim();
+            var layer = ResolveLayerCode(mainPackage, layerTableName ?? datasetCode);
             var datasetLabel = GetCell(row, "DatasetName", "Description", "TargetTableName", "TableName")?.Trim();
             var stepName = GetCell(row, "StepName", "PackageName", "LoadStep", "TaskName", "PhaseName", "Step")?.Trim();
             var executionStatus = GetCell(row, "ExecutionStatus");
 
-            if (string.IsNullOrWhiteSpace(layer) || string.IsNullOrWhiteSpace(datasetCode) || string.IsNullOrWhiteSpace(stepName))
+            if (string.IsNullOrWhiteSpace(layer)
+                || string.IsNullOrWhiteSpace(datasetCode)
+                || string.IsNullOrWhiteSpace(stepName))
             {
                 continue;
             }
@@ -264,7 +261,7 @@ public sealed class EtlLoadCockpitService(
             {
                 Kod = entry.Key,
                 Etiket = entry.Value.Label,
-                Adimlar = BuildDatasetSteps(entry.Value.Steps)
+                Adimlar = BuildDatasetSteps(entry.Value.Steps, layer.KatmanKodu)
             })
             .ToList();
 
@@ -286,7 +283,15 @@ public sealed class EtlLoadCockpitService(
         };
     }
 
-    private static IReadOnlyList<EtlLoadCockpitStep> BuildDatasetSteps(Dictionary<string, string?> stepStatuses)
+    private static readonly HashSet<string> HideSuccessStepLabelLayers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "TDMAIN",
+        "TDREPORT"
+    };
+
+    private static IReadOnlyList<EtlLoadCockpitStep> BuildDatasetSteps(
+        Dictionary<string, string?> stepStatuses,
+        string katmanKodu)
     {
         var mappedSteps = stepStatuses
             .Select(entry => new
@@ -301,10 +306,13 @@ public sealed class EtlLoadCockpitService(
             {
                 var match = mappedSteps.FirstOrDefault(step => step.Mapped.Durum == slot.Durum);
                 var hasMatch = match is not null;
+                var hideSuccessLabel = slot.Durum == "done"
+                    && HideSuccessStepLabelLayers.Contains(katmanKodu);
+                var showLabel = hasMatch && !hideSuccessLabel;
 
                 return new EtlLoadCockpitStep
                 {
-                    Etiket = hasMatch ? match!.PackageName : "—",
+                    Etiket = showLabel ? match!.PackageName : "—",
                     Durum = hasMatch ? slot.Durum : "not-started",
                     DurumMetni = slot.DurumMetni
                 };
@@ -351,13 +359,26 @@ public sealed class EtlLoadCockpitService(
         }
 
         var normalized = targetTableName.Trim().Replace("[", string.Empty).Replace("]", string.Empty);
-        var separatorIndex = normalized.IndexOf('.');
-        if (separatorIndex <= 0)
+        var parts = normalized.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
         {
             return string.Empty;
         }
 
-        return normalized[..separatorIndex].Trim();
+        foreach (var part in parts)
+        {
+            if (part.Equals("LND", StringComparison.OrdinalIgnoreCase))
+            {
+                return "LND";
+            }
+
+            if (part.Equals("STG", StringComparison.OrdinalIgnoreCase))
+            {
+                return "STG";
+            }
+        }
+
+        return string.Empty;
     }
 
     internal static (string Durum, string DurumMetni) MapExecutionStatus(string? statusRaw)

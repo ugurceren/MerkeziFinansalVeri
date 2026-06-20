@@ -1,6 +1,7 @@
 SELECT
     el.DataDate,
     pr.MainPackageName AS DataLayer,
+    pr.TargetTableName AS LayerTableName,
     el.TargetTableName AS DatasetCode,
     COALESCE(NULLIF(pr.Description, ''), el.TargetTableName) AS DatasetName,
     el.PackageName AS StepName,

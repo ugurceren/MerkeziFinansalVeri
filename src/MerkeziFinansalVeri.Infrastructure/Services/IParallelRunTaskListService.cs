@@ -33,5 +33,6 @@ public sealed class ParallelRunTaskListItem
     public int? TransferTypeId { get; init; }
     public string TransferTipi { get; init; } = string.Empty;
     public string Durum { get; init; } = "pending";
+    public bool? Aktif { get; init; }
     public DateTime? SonGuncelleme { get; init; }
 }

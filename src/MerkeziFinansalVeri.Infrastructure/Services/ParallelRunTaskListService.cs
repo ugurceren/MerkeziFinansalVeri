@@ -84,6 +84,7 @@ public sealed class ParallelRunTaskListService(
         var loadPeriodTypeName = GetCell(row, "LoadPeriodTypeName")?.Trim();
         var transferTypeId = GetCellByte(row, "TransferTypeId");
         var transferTypeName = GetCell(row, "TransferTypeName")?.Trim();
+        var activeFlag = GetCellBool(row, "ActiveFlag");
 
         return new ParallelRunTaskListItem
         {
@@ -95,6 +96,7 @@ public sealed class ParallelRunTaskListService(
             TransferTypeId = transferTypeId,
             TransferTipi = string.IsNullOrWhiteSpace(transferTypeName) ? "—" : transferTypeName,
             Durum = NormalizeStatus(statusRaw),
+            Aktif = activeFlag,
             SonGuncelleme = lastExecution
         };
     }
@@ -146,6 +148,32 @@ public sealed class ParallelRunTaskListService(
         }
 
         return byte.TryParse(text, out var parsed) ? parsed : null;
+    }
+
+    private static bool? GetCellBool(IReadOnlyDictionary<string, object?> row, string columnName)
+    {
+        var text = GetCell(row, columnName);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        if (bool.TryParse(text, out var boolValue))
+        {
+            return boolValue;
+        }
+
+        if (byte.TryParse(text, out var byteValue))
+        {
+            return byteValue != 0;
+        }
+
+        if (int.TryParse(text, out var intValue))
+        {
+            return intValue != 0;
+        }
+
+        return null;
     }
 
     private static DateTime? GetCellDate(IReadOnlyDictionary<string, object?> row, string columnName)

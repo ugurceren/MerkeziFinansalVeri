@@ -37,7 +37,7 @@
             let detail = response.statusText;
             try {
                 const err = await response.json();
-                detail = err.title || err.detail || err.message || detail;
+                detail = err.error || err.title || err.detail || err.message || detail;
             } catch { /* ignore */ }
             throw new Error(detail || `HTTP ${response.status}`);
         }

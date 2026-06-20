@@ -33,68 +33,8 @@ const COCKPIT_COLUMNS_FALLBACK = [
     }
 ];
 
-const DATASET_DOMAINS_FALLBACK = [
-    {
-        id: 'fon-kullandirim',
-        name: 'Fon Kullandırım',
-        theme: 'teal',
-        datasets: [
-            { label: 'Fon Hareket', stagingTable: 'ds_fon_hareket' },
-            { label: 'Fon Limit', stagingTable: 'ds_fon_limit' },
-            { label: 'Fon Faiz', stagingTable: 'ds_fon_faiz' },
-            { label: 'Fon İzleme', stagingTable: 'ds_fon_izleme' }
-        ]
-    },
-    {
-        id: 'hazine',
-        name: 'Hazine',
-        theme: 'blue',
-        datasets: [
-            { label: 'Hazine Portföy', stagingTable: 'ds_hazine_portfoy' },
-            { label: 'Hazine İşlem', stagingTable: 'ds_hazine_islem' },
-            { label: 'Hazine Değerleme', stagingTable: 'ds_hazine_deger' },
-            { label: 'Hazine Risk', stagingTable: 'ds_hazine_risk' },
-            { label: 'Hazine Mutabakat', stagingTable: 'ds_hazine_mutabakat' }
-        ]
-    },
-    {
-        id: 'mevduat',
-        name: 'Mevduat',
-        theme: 'purple',
-        datasets: [
-            { label: 'Vadeli Mevduat', stagingTable: 'ds_mevduat_vadeli' },
-            { label: 'Vadesiz Mevduat', stagingTable: 'ds_mevduat_vadesiz' },
-            { label: 'Mevduat Faiz', stagingTable: 'ds_mevduat_faiz' },
-            { label: 'Mevduat Müşteri', stagingTable: 'ds_mevduat_musteri' },
-            { label: 'Mevduat Hareket', stagingTable: 'ds_mevduat_hareket' },
-            { label: 'Mevduat Rapor', stagingTable: 'ds_mevduat_rapor' }
-        ]
-    },
-    {
-        id: 'masraf',
-        name: 'Masraf',
-        theme: 'amber',
-        datasets: [
-            { label: 'Masraf Hesap', stagingTable: 'ds_masraf_hesap' },
-            { label: 'Masraf Dağıtım', stagingTable: 'ds_masraf_dagitim' },
-            { label: 'Masraf Bütçe', stagingTable: 'ds_masraf_butce' },
-            { label: 'Masraf Staging', stagingTable: 'ds_masraf_stg' }
-        ]
-    },
-    {
-        id: 'reeskont',
-        name: 'Reeskont',
-        theme: 'rose',
-        datasets: [
-            { label: 'Reeskont Portföy', stagingTable: 'ds_reeskont_portfoy' },
-            { label: 'Reeskont Faiz', stagingTable: 'ds_reeskont_faiz' },
-            { label: 'Reeskont Vade', stagingTable: 'ds_reeskont_vade' }
-        ]
-    }
-];
-
 let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
-let DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+let DATASET_DOMAINS = [];
 let gunlukAkisDataDate = null;
 
 function getDefaultGunlukAkisDate() {
@@ -120,16 +60,13 @@ function mapDatasetKatalog(domainler) {
 }
 
 async function loadDatasetCatalogData() {
-    if (typeof ApiClient === 'undefined') return;
-    try {
-        const katalog = await ApiClient.getSurecDatasetKatalog();
-        if (katalog?.length) {
-            DATASET_DOMAINS = mapDatasetKatalog(katalog);
-        }
-    } catch (err) {
-        console.warn('Dataset katalog API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
-        DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
+    if (typeof ApiClient === 'undefined') {
+        throw new Error('API istemcisi yüklenemedi.');
     }
+
+    const katalog = await ApiClient.getSurecDatasetKatalog();
+    DATASET_DOMAINS = mapDatasetKatalog(Array.isArray(katalog) ? katalog : []);
+    return DATASET_DOMAINS;
 }
 
 async function loadSurecData(options = {}) {
@@ -158,14 +95,16 @@ async function loadSurecData(options = {}) {
             }));
         }
         if (!options.kokpitOnly) {
-            await loadDatasetCatalogData();
+            try {
+                await loadDatasetCatalogData();
+            } catch (catalogErr) {
+                console.warn('Dataset katalog yüklenemedi:', catalogErr.message);
+                DATASET_DOMAINS = [];
+            }
         }
     } catch (err) {
-        console.warn('Süreç verisi API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
+        console.warn('Süreç verisi API\'den yüklenemedi:', err.message);
         COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
-        if (!options.kokpitOnly) {
-            DATASET_DOMAINS = DATASET_DOMAINS_FALLBACK;
-        }
     }
 }
 
@@ -288,11 +227,13 @@ function buildDatasetPageShell(activeView) {
 
     return `<section class="dataset-catalog dataset-view-${activeView}">
         <div class="ds-page-head">
-            <div class="ds-page-head-text">
-                <h3>${title}</h3>
-                <p>${subtitle}</p>
+            <div class="ds-page-head-left">
+                <div class="ds-page-head-text">
+                    <h3>${title}</h3>
+                    <span class="ds-page-head-subtitle">${subtitle}</span>
+                </div>
+                <div class="ds-page-head-toolbar">${buildDatasetViewToolbar(activeView)}</div>
             </div>
-            <div class="ds-page-head-toolbar">${buildDatasetViewToolbar(activeView)}</div>
             <div class="ds-page-head-summary">${buildDatasetSummaryBlocks()}</div>
         </div>
         <div class="ds-page-content"><div class="ds-loading">Yükleniyor…</div></div>
@@ -305,7 +246,7 @@ function updateDatasetPageChrome(shell, activeView) {
 
     const textEl = shell.querySelector('.ds-page-head-text');
     if (textEl) {
-        textEl.innerHTML = `<h3>${title}</h3><p>${subtitle}</p>`;
+        textEl.innerHTML = `<h3>${title}</h3><span class="ds-page-head-subtitle">${subtitle}</span>`;
     }
 
     const summaryEl = shell.querySelector('.ds-page-head-summary');
@@ -329,8 +270,20 @@ function buildDatasetContentOnly(activeView) {
 }
 
 function buildDatasetCatalogContent() {
+    if (!DATASET_DOMAINS.length) {
+        return '<div class="ds-empty">DOC.TDDataset kaydı bulunamadı.</div>';
+    }
     const cards = DATASET_DOMAINS.map(buildDomainCard).join('');
     return `<div class="domain-grid">${cards}</div>`;
+}
+
+function buildDatasetErrorContent(message) {
+    return `<div class="ds-error-box">
+        <i class="ti ti-alert-circle" aria-hidden="true"></i>
+        <strong>Dataset katalog yüklenemedi</strong>
+        <p>${escapeDatasetHtml(message || 'Bilinmeyen hata')}</p>
+        <p class="ds-error-hint">Kaynak: <code>[TDUTIL].[DOC].[TDDataset]</code> · API: <code>/api/surec/dataset-katalog</code></p>
+    </div>`;
 }
 
 function buildDatasetCatalogHTML() {
@@ -642,23 +595,60 @@ async function renderDatasetPage(container) {
         contentEl.innerHTML = '<div class="ds-loading">Yükleniyor…</div>';
     }
 
-    if (datasetPageView === 'liste') {
-        await Promise.all([loadDatasetCatalogData(), loadDatasetListData()]);
-    } else if (datasetPageView === 'statu') {
-        await Promise.all([loadDatasetCatalogData(), loadDatasetStatusData()]);
-    } else {
+    let loadError = null;
+
+    try {
         await loadDatasetCatalogData();
+    } catch (err) {
+        loadError = err.message || 'Dataset katalog alınamadı.';
+        console.warn('Dataset katalog yüklenemedi:', loadError);
+        DATASET_DOMAINS = [];
+    }
+
+    if (datasetPageView === 'liste') {
+        try {
+            await loadDatasetListData();
+        } catch (err) {
+            if (!loadError) {
+                loadError = err.message || 'Dataset listesi alınamadı.';
+            }
+            console.warn('Dataset liste yüklenemedi:', err.message);
+            DATASET_LIST_ROWS = [];
+        }
+    } else if (datasetPageView === 'statu') {
+        try {
+            await loadDatasetStatusData();
+        } catch (err) {
+            if (!loadError) {
+                loadError = err.message || 'Dataset statü özeti alınamadı.';
+            }
+            console.warn('Dataset statü yüklenemedi:', err.message);
+            DATASET_STATUS_ROWS = [];
+        }
     }
 
     updateDatasetPageChrome(shell, datasetPageView);
 
     if (contentEl) {
-        contentEl.innerHTML = buildDatasetContentOnly(datasetPageView);
+        if (loadError && datasetPageView === 'katalog') {
+            contentEl.innerHTML = buildDatasetErrorContent(loadError);
+        } else if (loadError && datasetPageView !== 'katalog') {
+            contentEl.innerHTML = buildDatasetErrorContent(loadError) + buildDatasetContentOnly(datasetPageView);
+        } else {
+            contentEl.innerHTML = buildDatasetContentOnly(datasetPageView);
+        }
     }
 
     if (datasetPageView === 'liste') {
         bindDatasetListSearch(shell);
     }
+}
+
+function shouldShowFlowStepLabel(layerName, task) {
+    if (task.status === 'done' && (layerName === 'TDMAIN' || layerName === 'TDREPORT')) {
+        return false;
+    }
+    return !!(task.label && task.label !== '—');
 }
 
 function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
@@ -674,11 +664,14 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
             const dsRunning = ds.tasks.some(t => t.status === 'running');
             const dsFailed = ds.tasks.some(t => t.status === 'failed');
             const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-            const tasksHtml = ds.tasks.map(t => `
+            const tasksHtml = ds.tasks.map(t => {
+                const showLabel = shouldShowFlowStepLabel(name, t);
+                return `
             <div class="flow-step ${t.status}">
                 <span class="flow-status-text">${t.statusText || 'Not Started'}</span>
-                <span class="flow-label">${t.label}</span>
-            </div>`).join('');
+                ${showLabel ? `<span class="flow-label">${t.label}</span>` : ''}
+            </div>`;
+            }).join('');
             return `
             <article class="dataset-card ${dsStatus}">
                 <div class="dataset-head">
@@ -807,8 +800,19 @@ function mapTaskListesiRows(items) {
         loadPeriodType: item.yuklemePeriyodu || '—',
         transferTypeId: item.transferTypeId,
         transferType: item.transferTipi || '—',
+        active: item.aktif,
         status: item.durum || 'pending'
     }));
+}
+
+function formatAktiflikCell(active) {
+    if (active === true) {
+        return '<span class="tl-badge aktif">Aktif</span>';
+    }
+    if (active === false) {
+        return '<span class="tl-badge pasif">Pasif</span>';
+    }
+    return '—';
 }
 
 function formatTransferTypeCell(row) {
@@ -833,6 +837,7 @@ function buildTaskListRowsFromCockpit() {
                     task: task.label,
                     loadPeriodType: '—',
                     taskOrder: idx + 1,
+                    active: null,
                     status: task.status
                 });
             });
@@ -865,14 +870,15 @@ function getTaskListRows() {
 
 function taskRowSearchKey(row) {
     const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
-    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferTypeId, row.transferType, statusLabel, row.status]
+    const activeLabel = row.active === true ? 'aktif' : row.active === false ? 'pasif' : '';
+    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferTypeId, row.transferType, activeLabel, statusLabel, row.status]
         .join(' ')
         .toLocaleLowerCase('tr-TR');
 }
 
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
-        return '<tr><td colspan="7" class="tl-empty">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
+        return '<tr><td colspan="8" class="tl-empty">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
     }
     return rows.map(row => {
         const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
@@ -883,6 +889,7 @@ function renderTaskListesiRows(rows) {
             <td>${row.task}</td>
             <td>${row.loadPeriodType}</td>
             <td>${formatTransferTypeCell(row)}</td>
+            <td>${formatAktiflikCell(row.active)}</td>
             <td><span class="tl-badge ${row.status}">${statusLabel}</span></td>
         </tr>`;
     }).join('');
@@ -899,7 +906,7 @@ function buildTaskListesiHTML() {
             <div class="tl-toolbar">
                 <label class="tl-search">
                     <i class="ti ti-search" aria-hidden="true"></i>
-                    <input type="search" id="tlSearch" placeholder="Paket, dataset, katman, transfer tipi veya yükleme periyodu ara…" autocomplete="off">
+                    <input type="search" id="tlSearch" placeholder="Paket, dataset, katman, aktiflik, transfer tipi veya yükleme periyodu ara…" autocomplete="off">
                 </label>
                 <span class="tl-count" id="tlCount">${rows.length} kayıt</span>
             </div>
@@ -913,6 +920,7 @@ function buildTaskListesiHTML() {
                             <th>Task</th>
                             <th>Yükleme Periyodu</th>
                             <th>Transfer Tipi</th>
+                            <th>Aktiflik</th>
                             <th>Durum</th>
                         </tr>
                     </thead>
