@@ -7,6 +7,13 @@ using System.IO.Compression;
 var builder = WebApplication.CreateBuilder(args);
 
 var repoRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
+var webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+if (!Directory.Exists(webRootPath))
+{
+    Directory.CreateDirectory(webRootPath);
+}
+
+builder.Environment.WebRootPath = webRootPath;
 var tdConfigPath = Path.Combine(repoRoot, "config", "td-connections.json");
 if (File.Exists(tdConfigPath))
 {

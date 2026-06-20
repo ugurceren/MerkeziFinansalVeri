@@ -524,6 +524,17 @@
     text-decoration: underline;
 }
 
+/* Portal — mutabakat paneli dar, iş yükü geniş */
+.dashboard .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 40%);
+}
+
+@media (max-width: 1100px) {
+    .dashboard .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Portal — tıklanabilir KPI */
 .page-ribbon .stat-card-link {
     display: block;
@@ -1049,6 +1060,34 @@
     grid-template-columns: repeat(3, 1fr);
 }
 
+.stat-grid.stat-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.portal-ds-head-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.portal-ds-head-meta {
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.portal-ds-badge.failed {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
 @media (max-width: 1100px) {
     .portal-vk-stat-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1057,6 +1096,7 @@
 
 @media (max-width: 640px) {
     .stat-grid.stat-grid-3,
+    .stat-grid.stat-grid-4,
     .portal-vk-stat-grid {
         grid-template-columns: 1fr;
     }

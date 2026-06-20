@@ -288,7 +288,7 @@
 
 .task-flow {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
 }
 
@@ -528,9 +528,24 @@
 }
 
 .ds-item-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--rb-text);
+    flex: 1;
+    min-width: 0;
+}
+
+.ds-item-staging {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--rb-text-muted);
+    font-family: Consolas, 'Segoe UI', monospace;
+    text-align: right;
+    flex-shrink: 0;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ds-item code {
@@ -545,3 +560,291 @@
 .page-ribbon .ds-catalog-head h3 { font-size: 16px; }
 .page-ribbon .domain-title h4 { font-size: 14px; }
 .page-ribbon .ds-item-label { font-size: 13px; }
+
+.ds-catalog-head-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ds-page-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(168px, auto);
+    align-items: center;
+    gap: 16px;
+    min-height: 72px;
+    padding: 4px 2px 8px;
+    flex-shrink: 0;
+}
+
+.ds-page-head-text {
+    min-width: 0;
+}
+
+.ds-page-head-text h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.ds-page-head-text p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.ds-page-head-toolbar {
+    flex-shrink: 0;
+    justify-self: center;
+}
+
+.ds-page-head-summary {
+    justify-self: end;
+    min-width: 168px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.ds-view-toolbar {
+    display: inline-flex;
+    gap: 8px;
+    padding: 5px;
+    border-radius: 10px;
+    background: var(--rb-card);
+    border: 0.5px solid var(--rb-border);
+    flex-shrink: 0;
+}
+
+.ds-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 112px;
+    height: 38px;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--rb-text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.ds-view-btn i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.ds-view-btn:hover {
+    color: var(--rb-text);
+    background: var(--rb-bg);
+}
+
+.ds-view-btn.is-active {
+    color: var(--rb-accent);
+    background: var(--rb-accent-soft);
+    border-color: transparent;
+}
+
+.ds-page-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dataset-view-liste .ds-page-content,
+.dataset-view-statu .ds-page-content {
+    overflow: hidden;
+}
+
+.ds-loading {
+    padding: 24px;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 13px;
+}
+
+.ds-table-card {
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ds-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+    flex-wrap: wrap;
+}
+
+.ds-table-toolbar h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.ds-table-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 240px;
+    max-width: 420px;
+}
+
+.ds-table-search i {
+    color: var(--rb-text-muted);
+}
+
+.ds-table-search input {
+    flex: 1;
+    height: 32px;
+    padding: 0 10px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.ds-table-search input:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.ds-table-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+}
+
+.ds-table-scroll {
+    overflow: auto;
+    max-height: calc(100vh - 280px);
+}
+
+.ds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.ds-table th,
+.ds-table td {
+    padding: 8px 12px;
+    border-bottom: 0.5px solid var(--rb-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.ds-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--rb-card);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--rb-text-muted);
+    white-space: nowrap;
+}
+
+.ds-table tbody tr:hover {
+    background: var(--rb-bg);
+}
+
+.ds-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ds-status-badge.is-done { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.ds-status-badge.is-running { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.ds-status-badge.is-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.ds-status-badge.is-failed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.ds-status-badge.is-neutral { background: var(--rb-bg); color: var(--rb-text-muted); }
+
+.dataset-view-statu {
+    gap: 12px;
+}
+
+.ds-status-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ds-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+}
+
+.ds-status-chip strong {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.ds-status-chip span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ds-status-chip.is-done { border-color: rgba(34, 197, 94, 0.35); }
+.ds-status-chip.is-running { border-color: rgba(59, 130, 246, 0.35); }
+.ds-status-chip.is-pending { border-color: rgba(245, 158, 11, 0.35); }
+.ds-status-chip.is-failed { border-color: rgba(239, 68, 68, 0.35); }
+
+.ds-status-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ds-status-mini {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--rb-bg);
+    color: var(--rb-text-muted);
+}
+
+.ds-status-mini.is-done { color: #22c55e; }
+.ds-status-mini.is-running { color: #3b82f6; }
+.ds-status-mini.is-pending { color: #f59e0b; }
+.ds-status-mini.is-failed { color: #ef4444; }
+
+.ds-status-empty {
+    padding: 12px;
+    color: var(--rb-text-muted);
+    font-size: 12px;
+}

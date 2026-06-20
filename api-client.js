@@ -121,6 +121,8 @@
         },
         getSurecDomainler() { return request('/surec/domainler'); },
         getSurecDatasetKatalog() { return request('/surec/dataset-katalog'); },
+        getSurecDatasetListe() { return request('/surec/dataset-liste'); },
+        getSurecDatasetStatus() { return request('/surec/dataset-status'); },
         getSurecGorevler(params = {}) {
             const q = new URLSearchParams();
             if (params.datasetId) q.set('datasetId', params.datasetId);

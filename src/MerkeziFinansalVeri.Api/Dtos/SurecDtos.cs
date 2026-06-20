@@ -95,3 +95,28 @@ public sealed class MizanYenidenBaslatDto
 {
     public int GorevTanimId { get; set; }
 }
+
+public sealed class TdDatasetListeDto
+{
+    public string DatasetName { get; set; } = string.Empty;
+    public string? DescriptionScope { get; set; }
+    public string Layer { get; set; } = string.Empty;
+    public string StagingTableName { get; set; } = string.Empty;
+    public string KtResponsibleItUnit { get; set; } = string.Empty;
+    public string? Note { get; set; }
+    public string TdAnalyst { get; set; } = string.Empty;
+    public string Tester { get; set; } = string.Empty;
+    public string DataModel { get; set; } = string.Empty;
+    public string? KtSpName { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string StatusResponsible { get; set; } = string.Empty;
+    public DateTime? StatusChangeDate { get; set; }
+}
+
+public sealed class TdDatasetStatusSatirDto
+{
+    public string DataModel { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int Adet { get; set; }
+    public DateTime? SonDurumTarihi { get; set; }
+}

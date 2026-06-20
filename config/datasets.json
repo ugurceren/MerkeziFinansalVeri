@@ -2,6 +2,8 @@
   "DatasetCatalog": {
     "KatmanKodu": "TDUTIL",
     "SorguDosyasi": "config/queries/td-datasets.sql",
+    "ListeSorguDosyasi": "config/queries/td-datasets-list.sql",
+    "StatusSorguDosyasi": "config/queries/td-datasets-status.sql",
     "MaxSatir": 100000,
     "SorguTimeoutSaniye": 120
   }

@@ -10,19 +10,30 @@ namespace MerkeziFinansalVeri.Api.Controllers;
 [Route("api/portal")]
 public class PortalController(
     AppDbContext dbContext,
-    IVeriKalitesiKpiService veriKalitesiKpiService) : ControllerBase
+    IVeriKalitesiKpiService veriKalitesiKpiService,
+    IDatasetCatalogService datasetCatalogService,
+    IEtlLoadCockpitService etlLoadCockpitService) : ControllerBase
 {
     [HttpGet("ozet")]
     public async Task<ActionResult<PortalOzetDto>> GetOzet(CancellationToken cancellationToken)
     {
+        var veriTarihi = DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
+        var catalogTask = datasetCatalogService.GetCatalogAsync(cancellationToken);
+        var kokpitTask = etlLoadCockpitService.GetCockpitAsync(veriTarihi, cancellationToken);
+
+        var acikFarkSayisi = await dbContext.FarkVerenHesaplar
+            .CountAsync(f => !f.SilindiMi && (f.Durum == "acik" || f.Durum == "inceleniyor"), cancellationToken);
+
+        var catalog = await catalogTask;
+        var kokpit = await kokpitTask;
+        var surec = BuildSurecOzet(catalog, kokpit, veriTarihi);
+
         var kpi = new PortalKpiDto
         {
             KurumsalHesapSayisi = await dbContext.KurumsalHesaplar.CountAsync(k => !k.SilindiMi, cancellationToken),
             MutabakatDonemSayisi = await dbContext.MutabakatDonemleri.CountAsync(cancellationToken),
-            AcikFarkSayisi = await dbContext.FarkVerenHesaplar
-                .CountAsync(f => !f.SilindiMi && (f.Durum == "acik" || f.Durum == "inceleniyor"), cancellationToken),
-            BekleyenGorevSayisi = await dbContext.SurecGorevDurumlari
-                .CountAsync(g => g.Durum == "running" || g.Durum == "pending", cancellationToken)
+            AcikFarkSayisi = acikFarkSayisi,
+            BekleyenGorevSayisi = surec.GunlukAkis.DevamEdenAdimSayisi + surec.GunlukAkis.BekleyenAdimSayisi
         };
 
         var ekipler = await dbContext.Ekipler
@@ -112,6 +123,7 @@ public class PortalController(
         return Ok(new PortalOzetDto
         {
             Kpi = kpi,
+            Surec = surec,
             VeriKalitesiKpi = veriKalitesiKpi,
             AktifDonem = aktifDonem,
             EkipIlerleme = ekipIlerleme,
@@ -119,5 +131,111 @@ public class PortalController(
             EkipIsYuku = ekipIsYuku,
             SistemDurumu = new SistemDurumuDto { VeriKaynaklari = veriKaynaklari }
         });
+    }
+
+    private static PortalSurecOzetDto BuildSurecOzet(
+        DatasetCatalogResult catalog,
+        EtlLoadCockpitResult kokpit,
+        DateOnly veriTarihi)
+    {
+        var domainSayisi = catalog.Basarili ? catalog.Kategoriler.Count : 0;
+        var datasetSayisi = catalog.Basarili
+            ? catalog.Kategoriler.Sum(k => k.Datasetler.Count)
+            : 0;
+
+        var bekleyen = 0;
+        var devam = 0;
+        var basarili = 0;
+        var hatali = 0;
+        var katmanlar = new List<PortalGunlukAkisKatmanOzetDto>();
+
+        if (kokpit.Basarili)
+        {
+            foreach (var layer in kokpit.Katmanlar)
+            {
+                var layerFailed = false;
+                var layerRunning = false;
+                var layerAllDone = layer.Datasets.Count > 0;
+
+                foreach (var dataset in layer.Datasets)
+                {
+                    foreach (var adim in dataset.Adimlar)
+                    {
+                        switch (adim.Durum)
+                        {
+                            case "done":
+                                basarili++;
+                                break;
+                            case "running":
+                                devam++;
+                                layerRunning = true;
+                                layerAllDone = false;
+                                break;
+                            case "failed":
+                                hatali++;
+                                layerFailed = true;
+                                layerAllDone = false;
+                                break;
+                            default:
+                                bekleyen++;
+                                layerAllDone = false;
+                                break;
+                        }
+                    }
+                }
+
+                if (layer.Datasets.Count == 0)
+                {
+                    layerAllDone = false;
+                }
+
+                var durum = layerFailed
+                    ? "failed"
+                    : layerAllDone
+                        ? "done"
+                        : layerRunning
+                            ? "running"
+                            : "pending";
+
+                katmanlar.Add(new PortalGunlukAkisKatmanOzetDto
+                {
+                    KatmanKodu = layer.KatmanKodu,
+                    Etiket = string.IsNullOrWhiteSpace(layer.Rol) ? layer.KatmanKodu : layer.Rol,
+                    Tema = layer.Tema,
+                    PaketSayisi = layer.PaketSayisi,
+                    TamamlanmaYuzdesi = layer.TamamlanmaYuzdesi,
+                    Durum = durum
+                });
+            }
+        }
+
+        var toplamAdim = basarili + devam + bekleyen + hatali;
+        var tamamlanmaYuzdesi = toplamAdim > 0
+            ? (int)Math.Round(basarili * 100.0 / toplamAdim)
+            : kokpit.Basarili && kokpit.Katmanlar.Count > 0
+                ? (int)Math.Round(kokpit.Katmanlar.Average(l => l.TamamlanmaYuzdesi))
+                : 0;
+
+        return new PortalSurecOzetDto
+        {
+            Dataset = new PortalDatasetOzetDto
+            {
+                DomainSayisi = domainSayisi,
+                DatasetSayisi = datasetSayisi,
+                Basarili = catalog.Basarili
+            },
+            GunlukAkis = new PortalGunlukAkisOzetDto
+            {
+                VeriTarihi = veriTarihi.ToString("yyyy-MM-dd"),
+                TamamlanmaYuzdesi = tamamlanmaYuzdesi,
+                ToplamAdimSayisi = toplamAdim,
+                BasariliAdimSayisi = basarili,
+                DevamEdenAdimSayisi = devam,
+                BekleyenAdimSayisi = bekleyen,
+                HataliAdimSayisi = hatali,
+                Basarili = kokpit.Basarili,
+                Katmanlar = katmanlar
+            }
+        };
     }
 }

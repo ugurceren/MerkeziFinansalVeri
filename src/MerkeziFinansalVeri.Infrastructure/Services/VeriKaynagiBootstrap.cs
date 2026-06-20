@@ -27,8 +27,16 @@ public class VeriKaynagiBootstrap(
 
             if (!layerExists)
             {
-                logger.LogWarning("Veri katmanı bulunamadı, atlanıyor: {KatmanKodu}", katmanKodu);
-                continue;
+                dbContext.VeriKatmanlari.Add(new VeriKatmani
+                {
+                    KatmanKodu = katmanKodu,
+                    Rol = katmanKodu == "TDUTIL"
+                        ? "Operasyon / metadata"
+                        : $"{katmanKodu} veri katmanı",
+                    Tema = katmanKodu == "TDUTIL" ? "gray" : "blue",
+                    Sira = katmanKodu == "TDUTIL" ? 4 : 99
+                });
+                logger.LogInformation("Eksik veri katmanı oluşturuldu: {KatmanKodu}", katmanKodu);
             }
 
             var entity = await dbContext.VeriKaynaklari

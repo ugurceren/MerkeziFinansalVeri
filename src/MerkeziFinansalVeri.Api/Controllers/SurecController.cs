@@ -21,21 +21,17 @@ public class SurecController(
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.AktifMi, cancellationToken);
 
-        var donemId = aktifDonem?.DonemId;
-
-        var gorevDurumlari = await dbContext.SurecGorevDurumlari
-            .AsNoTracking()
-            .Where(g => g.DonemId == donemId || (donemId == null && g.DonemId == null))
-            .ToListAsync(cancellationToken);
-
-        var toplamDataset = await dbContext.SurecDatasetleri.CountAsync(cancellationToken);
+        var catalog = await datasetCatalogService.GetCatalogAsync(cancellationToken);
+        var toplamDataset = catalog.Basarili
+            ? catalog.Kategoriler.Sum(k => k.Datasetler.Count)
+            : 0;
 
         return Ok(new SurecCockpitDto
         {
             ToplamDataset = toplamDataset,
-            TamamlananGorev = gorevDurumlari.Count(g => g.Durum == "done"),
-            BekleyenGorev = gorevDurumlari.Count(g => g.Durum is "pending" or "running"),
-            HataliGorev = gorevDurumlari.Count(g => g.Durum == "failed"),
+            TamamlananGorev = 0,
+            BekleyenGorev = 0,
+            HataliGorev = 0,
             AktifDonem = aktifDonem?.YilAy
         });
     }
@@ -82,32 +78,8 @@ public class SurecController(
     }
 
     [HttpGet("domainler")]
-    public async Task<ActionResult<IReadOnlyList<VeriDomainDto>>> GetDomainler(CancellationToken cancellationToken)
-    {
-        var domainler = await dbContext.VeriDomainleri
-            .AsNoTracking()
-            .OrderBy(d => d.Sira)
-            .ToListAsync(cancellationToken);
-
-        var datasets = await dbContext.SurecDatasetleri
-            .AsNoTracking()
-            .Where(d => d.DomainId != null)
-            .OrderBy(d => d.Sira)
-            .ToListAsync(cancellationToken);
-
-        var result = domainler.Select(domain => new VeriDomainDto
-        {
-            DomainId = domain.DomainId,
-            Ad = domain.Ad,
-            Tema = domain.Tema,
-            Datasets = datasets
-                .Where(d => d.DomainId == domain.DomainId)
-                .Select(d => new SurecKokpitDatasetDto { Kod = d.Kod, Etiket = d.Etiket, Gorevler = [] })
-                .ToList()
-        }).ToList();
-
-        return Ok(result);
-    }
+    public Task<ActionResult<IReadOnlyList<VeriDomainDto>>> GetDomainler(CancellationToken cancellationToken) =>
+        GetDatasetKatalog(cancellationToken);
 
     [HttpGet("dataset-katalog")]
     public async Task<ActionResult<IReadOnlyList<VeriDomainDto>>> GetDatasetKatalog(CancellationToken cancellationToken)
@@ -126,7 +98,7 @@ public class SurecController(
             Datasets = kategori.Datasetler
                 .Select(dataset => new SurecKokpitDatasetDto
                 {
-                    Kod = dataset.Ad,
+                    Kod = dataset.StagingTableName,
                     Etiket = dataset.Ad,
                     Gorevler = []
                 })
@@ -136,76 +108,93 @@ public class SurecController(
         return Ok(items);
     }
 
+    [HttpGet("dataset-liste")]
+    public async Task<ActionResult<IReadOnlyList<TdDatasetListeDto>>> GetDatasetListe(CancellationToken cancellationToken)
+    {
+        var result = await datasetCatalogService.GetListAsync(cancellationToken);
+        if (!result.Basarili)
+        {
+            return StatusCode(502, new { error = result.Hata ?? "Dataset liste sorgusu başarısız." });
+        }
+
+        var items = result.Kayitlar.Select(item => new TdDatasetListeDto
+        {
+            DatasetName = item.DatasetName,
+            DescriptionScope = item.DescriptionScope,
+            Layer = item.Layer,
+            StagingTableName = item.StagingTableName,
+            KtResponsibleItUnit = item.KtResponsibleItUnit,
+            Note = item.Note,
+            TdAnalyst = item.TdAnalyst,
+            Tester = item.Tester,
+            DataModel = item.DataModel,
+            KtSpName = item.KtSpName,
+            Status = item.Status,
+            StatusResponsible = item.StatusResponsible,
+            StatusChangeDate = item.StatusChangeDate
+        }).ToList();
+
+        return Ok(items);
+    }
+
+    [HttpGet("dataset-status")]
+    public async Task<ActionResult<IReadOnlyList<TdDatasetStatusSatirDto>>> GetDatasetStatus(CancellationToken cancellationToken)
+    {
+        var result = await datasetCatalogService.GetStatusAsync(cancellationToken);
+        if (!result.Basarili)
+        {
+            return StatusCode(502, new { error = result.Hata ?? "Dataset statü sorgusu başarısız." });
+        }
+
+        var items = result.Satirlar.Select(row => new TdDatasetStatusSatirDto
+        {
+            DataModel = row.DataModel,
+            Status = row.Status,
+            Adet = row.Adet,
+            SonDurumTarihi = row.SonDurumTarihi
+        }).ToList();
+
+        return Ok(items);
+    }
+
     [HttpGet("datasets")]
     public async Task<ActionResult<IReadOnlyList<SurecDatasetDto>>> GetDatasets(CancellationToken cancellationToken)
     {
-        var items = await dbContext.SurecDatasetleri
-            .AsNoTracking()
-            .OrderBy(d => d.Sira)
-            .Select(d => new SurecDatasetDto
+        var result = await datasetCatalogService.GetCatalogAsync(cancellationToken);
+        if (!result.Basarili)
+        {
+            return Ok(Array.Empty<SurecDatasetDto>());
+        }
+
+        var items = new List<SurecDatasetDto>();
+        var datasetId = 1;
+        foreach (var kategori in result.Kategoriler)
+        {
+            var sira = 1;
+            foreach (var dataset in kategori.Datasetler)
             {
-                DatasetId = d.DatasetId,
-                Kod = d.Kod,
-                Etiket = d.Etiket,
-                KatmanKodu = d.KatmanKodu,
-                DomainId = d.DomainId,
-                Sira = d.Sira,
-                GorevSayisi = d.SurecGorevTanimlari.Count
-            })
-            .ToListAsync(cancellationToken);
+                items.Add(new SurecDatasetDto
+                {
+                    DatasetId = datasetId++,
+                    Kod = dataset.StagingTableName,
+                    Etiket = dataset.Ad,
+                    KatmanKodu = kategori.Ad,
+                    DomainId = kategori.KategoriId,
+                    Sira = sira++,
+                    GorevSayisi = 0
+                });
+            }
+        }
 
         return Ok(items);
     }
 
     [HttpGet("gorevler")]
-    public async Task<ActionResult<IReadOnlyList<SurecGorevDto>>> GetGorevler(
+    public ActionResult<IReadOnlyList<SurecGorevDto>> GetGorevler(
         [FromQuery] int? datasetId,
         [FromQuery] int? donemId,
-        CancellationToken cancellationToken)
-    {
-        if (!donemId.HasValue)
-        {
-            donemId = await dbContext.MutabakatDonemleri
-                .AsNoTracking()
-                .Where(d => d.AktifMi)
-                .Select(d => (int?)d.DonemId)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        var query = dbContext.SurecGorevTanimlari
-            .AsNoTracking()
-            .Include(g => g.Dataset)
-            .AsQueryable();
-
-        if (datasetId.HasValue)
-        {
-            query = query.Where(g => g.DatasetId == datasetId.Value);
-        }
-
-        var tanimlar = await query.OrderBy(g => g.Sira).ToListAsync(cancellationToken);
-
-        var durumlar = await dbContext.SurecGorevDurumlari
-            .AsNoTracking()
-            .Where(d => d.DonemId == donemId)
-            .ToDictionaryAsync(d => d.GorevTanimId, cancellationToken);
-
-        var items = tanimlar.Select(t =>
-        {
-            durumlar.TryGetValue(t.GorevTanimId, out var durum);
-            return new SurecGorevDto
-            {
-                GorevTanimId = t.GorevTanimId,
-                DatasetId = t.DatasetId,
-                DatasetKod = t.Dataset.Kod,
-                Etiket = t.Etiket,
-                Sira = t.Sira,
-                Durum = durum?.Durum ?? "pending",
-                SonGuncelleme = durum?.SonGuncelleme
-            };
-        }).ToList();
-
-        return Ok(items);
-    }
+        CancellationToken cancellationToken) =>
+        Ok(Array.Empty<SurecGorevDto>());
 
     [HttpGet("task-listesi")]
     public async Task<ActionResult<IReadOnlyList<TaskListesiDto>>> GetTaskListesi(CancellationToken cancellationToken)

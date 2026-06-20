@@ -55,7 +55,8 @@ MERGE VIB.ref_DataLayer AS tgt
 USING (VALUES
     (N'TDSTG',   N'Staging — ham veri katmanı',      N'teal',   1),
     (N'TDMAIN',  N'Ana veri — kurumsal çekirdek',    N'blue',   2),
-    (N'TDREPORT', N'Raporlama — analitik katman',    N'purple', 3)
+    (N'TDREPORT', N'Raporlama — analitik katman',    N'purple', 3),
+    (N'TDUTIL',  N'Operasyon / metadata',            N'gray',   4)
 ) AS src(LayerCode, LayerRole, Theme, SortOrder)
 ON tgt.LayerCode = src.LayerCode
 WHEN MATCHED THEN

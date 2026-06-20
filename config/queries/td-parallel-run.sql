@@ -7,7 +7,7 @@ SELECT
     pr.LastExecutionDate,
     pr.TransferTypeId,
     tt.TransferTypeName,
-    lpt.LoadPeriodTypeName
+    lpt.LoadPeriodTypeName AS LoadPeriodTypeName
 FROM OPR.ParallelRun pr
 LEFT JOIN OPR.TransferTypeDefinition tt
     ON pr.TransferTypeId = tt.TransferTypeId

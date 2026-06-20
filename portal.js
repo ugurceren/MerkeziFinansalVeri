@@ -2,7 +2,8 @@
     const KPI_LINKS = {
         fark: 'mutabakat.html?view=fark-veren',
         mutabakat: 'mutabakat.html?view=donem',
-        gorev: 'surec.html'
+        dataset: 'surec.html?view=datasetler',
+        gunlukAkis: 'surec.html'
     };
 
     const VK_KPI_LINKS = {
@@ -32,7 +33,7 @@
         {
             section: 'SÜREÇ',
             title: 'Süreç',
-            desc: 'Dataset ve görev yönetimi',
+            desc: 'Dataset kataloğu ve günlük ETL akışı',
             icon: 'ti-timeline',
             pages: ['surec', 'datasetler', 'task-listesi']
         },
@@ -133,6 +134,13 @@
         const [yil, ay] = yilAy.split('-');
         const monthIdx = parseInt(ay, 10) - 1;
         return `${MONTHS_TR[monthIdx] || ay} ${yil}`;
+    }
+
+    function formatVeriTarihi(isoDate) {
+        if (!isoDate) return '';
+        const date = new Date(`${isoDate}T12:00:00`);
+        if (Number.isNaN(date.getTime())) return isoDate;
+        return date.toLocaleDateString('tr-TR');
     }
 
     function resolvePageMeta(page) {
@@ -498,19 +506,29 @@
                 </div>`;
             }).join('');
 
+        const surec = isOffline ? null : ozet?.surec;
+        const datasetOzet = surec?.dataset || {};
+        const gunlukAkis = surec?.gunlukAkis || {};
+
         const datasetCard = (!isOffline && typeof buildPortalDatasetCardHTML === 'function')
-            ? buildPortalDatasetCardHTML()
+            ? buildPortalDatasetCardHTML(surec)
             : '';
 
         const statMuted = isOffline ? ' stat-card-offline' : '';
         const kpiFark = isOffline ? '—' : (kpi.acikFarkSayisi ?? '—');
         const kpiMutabakat = isOffline ? '—' : `${mutabakatPct}%`;
-        const kpiGorev = isOffline ? '—' : (kpi.bekleyenGorevSayisi ?? '—');
+        const kpiDataset = isOffline ? '—' : (datasetOzet.datasetSayisi ?? '—');
+        const kpiGunlukAkis = isOffline ? '—' : `${gunlukAkis.tamamlanmaYuzdesi ?? 0}%`;
+        const gunlukAkisSub = isOffline
+            ? ''
+            : (gunlukAkis.veriTarihi
+                ? `<span class="stat-sub">${formatVeriTarihi(gunlukAkis.veriTarihi)}</span>`
+                : '');
 
         return `<section class="dashboard${isOffline ? ' portal-offline' : ''}">
             ${offlineBanner}
             ${donemBand}
-            <div class="stat-grid stat-grid-3">
+            <div class="stat-grid stat-grid-4">
                 <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.fark}">
                     <div class="stat-card-header"><div class="stat-icon amber"><i class="ti ti-alert-triangle"></i></div></div>
                     <p class="stat-value">${kpiFark}</p>
@@ -521,10 +539,16 @@
                     <p class="stat-value">${kpiMutabakat}</p>
                     <p class="stat-label">Mutabakat Tamamlanma</p>
                 </a>
-                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.gorev}">
-                    <div class="stat-card-header"><div class="stat-icon purple"><i class="ti ti-list-check"></i></div></div>
-                    <p class="stat-value">${kpiGorev}</p>
-                    <p class="stat-label">Bekleyen Görev</p>
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.dataset}">
+                    <div class="stat-card-header"><div class="stat-icon blue"><i class="ti ti-stack-2"></i></div></div>
+                    <p class="stat-value">${kpiDataset}</p>
+                    <p class="stat-label">Dataset (Katalog)</p>
+                </a>
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.gunlukAkis}">
+                    <div class="stat-card-header"><div class="stat-icon purple"><i class="ti ti-timeline"></i></div></div>
+                    <p class="stat-value">${kpiGunlukAkis}</p>
+                    <p class="stat-label">Günlük Akış Tamamlanma</p>
+                    ${gunlukAkisSub}
                 </a>
             </div>
             ${buildVkKpiSectionHTML(vkKpi, isOffline)}
@@ -559,9 +583,9 @@
 
         const isOffline = !!loadError && !ozet;
 
-        if (!isOffline && typeof loadSurecData === 'function') {
+        if (!isOffline && typeof loadSurecData === 'function' && !ozet?.surec?.gunlukAkis?.basarili) {
             try {
-                await loadSurecData();
+                await loadSurecData({ kokpitOnly: true });
             } catch (err) {
                 console.warn('Süreç verisi yüklenemedi:', err);
             }

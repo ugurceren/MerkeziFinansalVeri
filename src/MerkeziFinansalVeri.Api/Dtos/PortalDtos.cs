@@ -3,12 +3,49 @@ namespace MerkeziFinansalVeri.Api.Dtos;
 public sealed class PortalOzetDto
 {
     public PortalKpiDto Kpi { get; set; } = new();
+    public PortalSurecOzetDto Surec { get; set; } = new();
     public VeriKalitesiKpiDto VeriKalitesiKpi { get; set; } = new();
     public AktifDonemOzetDto? AktifDonem { get; set; }
     public IReadOnlyList<EkipIlerlemeDto> EkipIlerleme { get; set; } = [];
     public IReadOnlyList<AktiviteLogDto> SonAktiviteler { get; set; } = [];
     public IReadOnlyList<EkipIsYukuDto> EkipIsYuku { get; set; } = [];
     public SistemDurumuDto SistemDurumu { get; set; } = new();
+}
+
+public sealed class PortalSurecOzetDto
+{
+    public PortalDatasetOzetDto Dataset { get; set; } = new();
+    public PortalGunlukAkisOzetDto GunlukAkis { get; set; } = new();
+}
+
+public sealed class PortalDatasetOzetDto
+{
+    public int DomainSayisi { get; set; }
+    public int DatasetSayisi { get; set; }
+    public bool Basarili { get; set; }
+}
+
+public sealed class PortalGunlukAkisOzetDto
+{
+    public string? VeriTarihi { get; set; }
+    public int TamamlanmaYuzdesi { get; set; }
+    public int ToplamAdimSayisi { get; set; }
+    public int BasariliAdimSayisi { get; set; }
+    public int DevamEdenAdimSayisi { get; set; }
+    public int BekleyenAdimSayisi { get; set; }
+    public int HataliAdimSayisi { get; set; }
+    public bool Basarili { get; set; }
+    public IReadOnlyList<PortalGunlukAkisKatmanOzetDto> Katmanlar { get; set; } = [];
+}
+
+public sealed class PortalGunlukAkisKatmanOzetDto
+{
+    public string KatmanKodu { get; set; } = string.Empty;
+    public string Etiket { get; set; } = string.Empty;
+    public string Tema { get; set; } = "blue";
+    public int PaketSayisi { get; set; }
+    public int TamamlanmaYuzdesi { get; set; }
+    public string Durum { get; set; } = "pending";
 }
 
 public sealed class AktifDonemOzetDto

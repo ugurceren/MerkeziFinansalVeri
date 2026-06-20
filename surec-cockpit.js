@@ -39,10 +39,10 @@ const DATASET_DOMAINS_FALLBACK = [
         name: 'Fon Kullandırım',
         theme: 'teal',
         datasets: [
-            { name: 'ds_fon_hareket', label: 'Fon Hareket' },
-            { name: 'ds_fon_limit', label: 'Fon Limit' },
-            { name: 'ds_fon_faiz', label: 'Fon Faiz' },
-            { name: 'ds_fon_izleme', label: 'Fon İzleme' }
+            { label: 'Fon Hareket', stagingTable: 'ds_fon_hareket' },
+            { label: 'Fon Limit', stagingTable: 'ds_fon_limit' },
+            { label: 'Fon Faiz', stagingTable: 'ds_fon_faiz' },
+            { label: 'Fon İzleme', stagingTable: 'ds_fon_izleme' }
         ]
     },
     {
@@ -50,11 +50,11 @@ const DATASET_DOMAINS_FALLBACK = [
         name: 'Hazine',
         theme: 'blue',
         datasets: [
-            { name: 'ds_hazine_portfoy', label: 'Hazine Portföy' },
-            { name: 'ds_hazine_islem', label: 'Hazine İşlem' },
-            { name: 'ds_hazine_deger', label: 'Hazine Değerleme' },
-            { name: 'ds_hazine_risk', label: 'Hazine Risk' },
-            { name: 'ds_hazine_mutabakat', label: 'Hazine Mutabakat' }
+            { label: 'Hazine Portföy', stagingTable: 'ds_hazine_portfoy' },
+            { label: 'Hazine İşlem', stagingTable: 'ds_hazine_islem' },
+            { label: 'Hazine Değerleme', stagingTable: 'ds_hazine_deger' },
+            { label: 'Hazine Risk', stagingTable: 'ds_hazine_risk' },
+            { label: 'Hazine Mutabakat', stagingTable: 'ds_hazine_mutabakat' }
         ]
     },
     {
@@ -62,12 +62,12 @@ const DATASET_DOMAINS_FALLBACK = [
         name: 'Mevduat',
         theme: 'purple',
         datasets: [
-            { name: 'ds_mevduat_vadeli', label: 'Vadeli Mevduat' },
-            { name: 'ds_mevduat_vadesiz', label: 'Vadesiz Mevduat' },
-            { name: 'ds_mevduat_faiz', label: 'Mevduat Faiz' },
-            { name: 'ds_mevduat_musteri', label: 'Mevduat Müşteri' },
-            { name: 'ds_mevduat_hareket', label: 'Mevduat Hareket' },
-            { name: 'ds_mevduat_rapor', label: 'Mevduat Rapor' }
+            { label: 'Vadeli Mevduat', stagingTable: 'ds_mevduat_vadeli' },
+            { label: 'Vadesiz Mevduat', stagingTable: 'ds_mevduat_vadesiz' },
+            { label: 'Mevduat Faiz', stagingTable: 'ds_mevduat_faiz' },
+            { label: 'Mevduat Müşteri', stagingTable: 'ds_mevduat_musteri' },
+            { label: 'Mevduat Hareket', stagingTable: 'ds_mevduat_hareket' },
+            { label: 'Mevduat Rapor', stagingTable: 'ds_mevduat_rapor' }
         ]
     },
     {
@@ -75,10 +75,10 @@ const DATASET_DOMAINS_FALLBACK = [
         name: 'Masraf',
         theme: 'amber',
         datasets: [
-            { name: 'ds_masraf_hesap', label: 'Masraf Hesap' },
-            { name: 'ds_masraf_dagitim', label: 'Masraf Dağıtım' },
-            { name: 'ds_masraf_butce', label: 'Masraf Bütçe' },
-            { name: 'ds_masraf_stg', label: 'Masraf Staging' }
+            { label: 'Masraf Hesap', stagingTable: 'ds_masraf_hesap' },
+            { label: 'Masraf Dağıtım', stagingTable: 'ds_masraf_dagitim' },
+            { label: 'Masraf Bütçe', stagingTable: 'ds_masraf_butce' },
+            { label: 'Masraf Staging', stagingTable: 'ds_masraf_stg' }
         ]
     },
     {
@@ -86,9 +86,9 @@ const DATASET_DOMAINS_FALLBACK = [
         name: 'Reeskont',
         theme: 'rose',
         datasets: [
-            { name: 'ds_reeskont_portfoy', label: 'Reeskont Portföy' },
-            { name: 'ds_reeskont_faiz', label: 'Reeskont Faiz' },
-            { name: 'ds_reeskont_vade', label: 'Reeskont Vade' }
+            { label: 'Reeskont Portföy', stagingTable: 'ds_reeskont_portfoy' },
+            { label: 'Reeskont Faiz', stagingTable: 'ds_reeskont_faiz' },
+            { label: 'Reeskont Vade', stagingTable: 'ds_reeskont_vade' }
         ]
     }
 ];
@@ -112,7 +112,10 @@ function mapDatasetKatalog(domainler) {
         id: d.domainId,
         name: d.ad,
         theme: d.tema,
-        datasets: d.datasets.map(ds => ({ name: ds.kod, label: ds.etiket }))
+        datasets: d.datasets.map(ds => ({
+            label: ds.etiket,
+            stagingTable: ds.kod || ''
+        }))
     }));
 }
 
@@ -166,6 +169,70 @@ async function loadSurecData(options = {}) {
     }
 }
 
+let DATASET_LIST_ROWS = [];
+let DATASET_STATUS_ROWS = [];
+let datasetPageView = 'katalog';
+
+function getDatasetPageView() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('dsView');
+    return view === 'liste' || view === 'statu' ? view : 'katalog';
+}
+
+function setDatasetPageView(view) {
+    datasetPageView = view;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'datasetler');
+    if (view === 'katalog') {
+        url.searchParams.delete('dsView');
+    } else {
+        url.searchParams.set('dsView', view);
+    }
+    history.replaceState(null, '', url);
+}
+
+function buildDatasetViewToolbar(activeView) {
+    const tabs = [
+        { id: 'katalog', label: 'Katalog', icon: 'ti-layout-grid' },
+        { id: 'liste', label: 'Liste', icon: 'ti-list' },
+        { id: 'statu', label: 'Statü', icon: 'ti-chart-dots' }
+    ];
+
+    const buttons = tabs.map(tab => `
+        <button type="button"
+            class="ds-view-btn${activeView === tab.id ? ' is-active' : ''}"
+            data-ds-view="${tab.id}">
+            <i class="ti ${tab.icon}" aria-hidden="true"></i>
+            ${tab.label}
+        </button>`).join('');
+
+    return `<div class="ds-view-toolbar" role="tablist" aria-label="Dataset görünümü">${buttons}</div>`;
+}
+
+function formatDatasetDate(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleDateString('tr-TR');
+}
+
+function escapeDatasetHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function statusBadgeClass(status) {
+    const key = String(status || '').toLowerCase();
+    if (key.includes('tamam') || key.includes('complete') || key.includes('done') || key.includes('aktif')) return 'is-done';
+    if (key.includes('devam') || key.includes('progress') || key.includes('running')) return 'is-running';
+    if (key.includes('bekl') || key.includes('wait') || key.includes('pending')) return 'is-pending';
+    if (key.includes('hata') || key.includes('fail') || key.includes('iptal')) return 'is-failed';
+    return 'is-neutral';
+}
+
 function getDatasetTotals() {
     const domainCount = DATASET_DOMAINS.length;
     const datasetCount = DATASET_DOMAINS.reduce((sum, d) => sum + d.datasets.length, 0);
@@ -176,7 +243,7 @@ function buildDomainCard(domain) {
     const items = domain.datasets.map(ds => `
         <li class="ds-item">
             <span class="ds-item-label">${ds.label}</span>
-            <code>${ds.name}</code>
+            <span class="ds-item-staging">${ds.stagingTable || '—'}</span>
         </li>`).join('');
 
     return `
@@ -192,29 +259,406 @@ function buildDomainCard(domain) {
         </article>`;
 }
 
-function buildDatasetCatalogHTML() {
+function buildDatasetSummaryBlocks() {
     const { domainCount, datasetCount } = getDatasetTotals();
-    const cards = DATASET_DOMAINS.map(buildDomainCard).join('');
-
-    return `<section class="dataset-catalog">
-        <div class="ds-catalog-head">
-            <div>
-                <h3>Dataset Kataloğu</h3>
-                <p>Domain bazında tanımlı dataset envanteri</p>
+    return `
+        <div class="ds-summary">
+            <div class="ds-summary-item">
+                <strong>${domainCount}</strong>
+                <span>domain</span>
             </div>
-            <div class="ds-summary">
-                <div class="ds-summary-item">
-                    <strong>${domainCount}</strong>
-                    <span>domain</span>
-                </div>
-                <div class="ds-summary-item">
-                    <strong>${datasetCount}</strong>
-                    <span>dataset</span>
-                </div>
+            <div class="ds-summary-item">
+                <strong>${datasetCount}</strong>
+                <span>dataset</span>
+            </div>
+        </div>`;
+}
+
+function getDatasetPageMeta(activeView) {
+    const meta = {
+        katalog: ['Dataset Kataloğu', 'Domain bazında tanımlı dataset envanteri'],
+        liste: ['Dataset Listesi', 'DOC.TDDataset tablosunun tam listesi'],
+        statu: ['Dataset Statü Özeti', 'Data Model ve Statü bazında dataset dağılımı']
+    };
+    return meta[activeView] || meta.katalog;
+}
+
+function buildDatasetPageShell(activeView) {
+    const [title, subtitle] = getDatasetPageMeta(activeView);
+
+    return `<section class="dataset-catalog dataset-view-${activeView}">
+        <div class="ds-page-head">
+            <div class="ds-page-head-text">
+                <h3>${title}</h3>
+                <p>${subtitle}</p>
+            </div>
+            <div class="ds-page-head-toolbar">${buildDatasetViewToolbar(activeView)}</div>
+            <div class="ds-page-head-summary">${buildDatasetSummaryBlocks()}</div>
+        </div>
+        <div class="ds-page-content"><div class="ds-loading">Yükleniyor…</div></div>
+    </section>`;
+}
+
+function updateDatasetPageChrome(shell, activeView) {
+    const [title, subtitle] = getDatasetPageMeta(activeView);
+    shell.className = `dataset-catalog dataset-view-${activeView}`;
+
+    const textEl = shell.querySelector('.ds-page-head-text');
+    if (textEl) {
+        textEl.innerHTML = `<h3>${title}</h3><p>${subtitle}</p>`;
+    }
+
+    const summaryEl = shell.querySelector('.ds-page-head-summary');
+    if (summaryEl) {
+        summaryEl.innerHTML = buildDatasetSummaryBlocks();
+    }
+
+    shell.querySelectorAll('[data-ds-view]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-ds-view') === activeView);
+    });
+}
+
+function buildDatasetContentOnly(activeView) {
+    if (activeView === 'liste') {
+        return buildDatasetListeContent();
+    }
+    if (activeView === 'statu') {
+        return buildDatasetStatusContent();
+    }
+    return buildDatasetCatalogContent();
+}
+
+function buildDatasetCatalogContent() {
+    const cards = DATASET_DOMAINS.map(buildDomainCard).join('');
+    return `<div class="domain-grid">${cards}</div>`;
+}
+
+function buildDatasetCatalogHTML() {
+    return buildDatasetPageShell('katalog').replace(
+        '<div class="ds-loading">Yükleniyor…</div>',
+        buildDatasetCatalogContent()
+    );
+}
+
+function buildDatasetListRows(rows) {
+    if (!rows.length) {
+        return '<tr><td colspan="13">Kayıt bulunamadı.</td></tr>';
+    }
+
+    return rows.map(row => `
+        <tr>
+            <td>${escapeDatasetHtml(row.datasetName)}</td>
+            <td>${escapeDatasetHtml(row.dataModel)}</td>
+            <td>${escapeDatasetHtml(row.stagingTableName)}</td>
+            <td>${escapeDatasetHtml(row.layer)}</td>
+            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
+            <td>${formatDatasetDate(row.statusChangeDate)}</td>
+            <td>${escapeDatasetHtml(row.statusResponsible)}</td>
+            <td>${escapeDatasetHtml(row.tdAnalyst)}</td>
+            <td>${escapeDatasetHtml(row.tester)}</td>
+            <td>${escapeDatasetHtml(row.ktResponsibleItUnit)}</td>
+            <td>${escapeDatasetHtml(row.ktSpName || '—')}</td>
+            <td>${escapeDatasetHtml(row.descriptionScope || '—')}</td>
+            <td>${escapeDatasetHtml(row.note || '—')}</td>
+        </tr>`).join('');
+}
+
+function buildDatasetListeContent() {
+    const count = DATASET_LIST_ROWS.length;
+
+    return `
+        <div class="ds-table-card">
+            <div class="ds-table-toolbar">
+                <label class="ds-table-search">
+                    <i class="ti ti-search" aria-hidden="true"></i>
+                    <input type="search" id="dsListSearch" placeholder="Dataset, model, staging, statü ara…">
+                </label>
+                <span class="ds-table-count">${count} kayıt</span>
+            </div>
+            <div class="ds-table-scroll">
+                <table class="ds-table" id="dsListTable">
+                    <thead>
+                        <tr>
+                            <th>Dataset</th>
+                            <th>Data Model</th>
+                            <th>Staging Tablo</th>
+                            <th>Layer</th>
+                            <th>Statü</th>
+                            <th>Statü Tarihi</th>
+                            <th>Statü Sorumlusu</th>
+                            <th>TD Analist</th>
+                            <th>Tester</th>
+                            <th>KT IT Birimi</th>
+                            <th>KT SP</th>
+                            <th>Kapsam</th>
+                            <th>Not</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildDatasetListRows(DATASET_LIST_ROWS)}</tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+function buildDatasetListeHTML() {
+    return buildDatasetPageShell('liste').replace(
+        '<div class="ds-loading">Yükleniyor…</div>',
+        buildDatasetListeContent()
+    );
+}
+
+function buildDatasetStatusSummary(rows) {
+    const byStatus = new Map();
+    rows.forEach(row => {
+        const current = byStatus.get(row.status) || 0;
+        byStatus.set(row.status, current + row.adet);
+    });
+
+    if (!byStatus.size) {
+        return '<div class="ds-status-empty">Statü özeti bulunamadı.</div>';
+    }
+
+    return Array.from(byStatus.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([status, adet]) => `
+            <div class="ds-status-chip ${statusBadgeClass(status)}">
+                <strong>${adet}</strong>
+                <span>${escapeDatasetHtml(status)}</span>
+            </div>`).join('');
+}
+
+function buildDatasetStatusModelRows(rows) {
+    const models = new Map();
+
+    rows.forEach(row => {
+        if (!models.has(row.dataModel)) {
+            models.set(row.dataModel, {
+                dataModel: row.dataModel,
+                toplam: 0,
+                sonTarih: null,
+                durumlar: []
+            });
+        }
+
+        const model = models.get(row.dataModel);
+        model.toplam += row.adet;
+        model.durumlar.push({ status: row.status, adet: row.adet });
+
+        if (row.sonDurumTarihi) {
+            const current = model.sonTarih ? new Date(model.sonTarih) : null;
+            const next = new Date(row.sonDurumTarihi);
+            if (!current || next > current) {
+                model.sonTarih = row.sonDurumTarihi;
+            }
+        }
+    });
+
+    const sorted = Array.from(models.values())
+        .sort((a, b) => a.dataModel.localeCompare(b.dataModel, 'tr'));
+
+    if (!sorted.length) {
+        return '<tr><td colspan="4">Kayıt bulunamadı.</td></tr>';
+    }
+
+    return sorted.map(model => {
+        const breakdown = model.durumlar
+            .sort((a, b) => b.adet - a.adet)
+            .map(item => `<span class="ds-status-mini ${statusBadgeClass(item.status)}">${escapeDatasetHtml(item.status)}: ${item.adet}</span>`)
+            .join('');
+
+        const latestStatus = model.durumlar
+            .slice()
+            .sort((a, b) => b.adet - a.adet)[0]?.status || '—';
+
+        return `
+            <tr>
+                <td>${escapeDatasetHtml(model.dataModel)}</td>
+                <td><strong>${model.toplam}</strong></td>
+                <td><span class="ds-status-badge ${statusBadgeClass(latestStatus)}">${escapeDatasetHtml(latestStatus)}</span></td>
+                <td>${formatDatasetDate(model.sonTarih)}</td>
+                <td><div class="ds-status-breakdown">${breakdown}</div></td>
+            </tr>`;
+    }).join('');
+}
+
+function buildDatasetStatusDetailRows(rows) {
+    if (!rows.length) {
+        return '<tr><td colspan="4">Kayıt bulunamadı.</td></tr>';
+    }
+
+    return rows.map(row => `
+        <tr>
+            <td>${escapeDatasetHtml(row.dataModel)}</td>
+            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
+            <td><strong>${row.adet}</strong></td>
+            <td>${formatDatasetDate(row.sonDurumTarihi)}</td>
+        </tr>`).join('');
+}
+
+function buildDatasetStatusContent() {
+    return `
+        <div class="ds-status-summary">${buildDatasetStatusSummary(DATASET_STATUS_ROWS)}</div>
+        <div class="ds-table-card">
+            <div class="ds-table-toolbar">
+                <h4>Data Model Özeti</h4>
+            </div>
+            <div class="ds-table-scroll">
+                <table class="ds-table">
+                    <thead>
+                        <tr>
+                            <th>Data Model</th>
+                            <th>Toplam</th>
+                            <th>Önde Gelen Statü</th>
+                            <th>Son Durum Tarihi</th>
+                            <th>Statü Dağılımı</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildDatasetStatusModelRows(DATASET_STATUS_ROWS)}</tbody>
+                </table>
             </div>
         </div>
-        <div class="domain-grid">${cards}</div>
-    </section>`;
+        <div class="ds-table-card">
+            <div class="ds-table-toolbar">
+                <h4>Data Model × Statü Detayı</h4>
+            </div>
+            <div class="ds-table-scroll">
+                <table class="ds-table">
+                    <thead>
+                        <tr>
+                            <th>Data Model</th>
+                            <th>Statü</th>
+                            <th>Adet</th>
+                            <th>Son Durum Tarihi</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildDatasetStatusDetailRows(DATASET_STATUS_ROWS)}</tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+function buildDatasetStatusHTML() {
+    return buildDatasetPageShell('statu').replace(
+        '<div class="ds-loading">Yükleniyor…</div>',
+        buildDatasetStatusContent()
+    );
+}
+
+async function loadDatasetListData() {
+    if (typeof ApiClient === 'undefined') return;
+    try {
+        const items = await ApiClient.getSurecDatasetListe();
+        DATASET_LIST_ROWS = (items || []).map(item => ({
+            datasetName: item.datasetName || '',
+            descriptionScope: item.descriptionScope || '',
+            layer: item.layer || '',
+            stagingTableName: item.stagingTableName || '',
+            ktResponsibleItUnit: item.ktResponsibleItUnit || '',
+            note: item.note || '',
+            tdAnalyst: item.tdAnalyst || '',
+            tester: item.tester || '',
+            dataModel: item.dataModel || '',
+            ktSpName: item.ktSpName || '',
+            status: item.status || '',
+            statusResponsible: item.statusResponsible || '',
+            statusChangeDate: item.statusChangeDate || null
+        }));
+    } catch (err) {
+        console.warn('Dataset liste API\'den yüklenemedi:', err.message);
+        DATASET_LIST_ROWS = [];
+    }
+}
+
+async function loadDatasetStatusData() {
+    if (typeof ApiClient === 'undefined') return;
+    try {
+        const items = await ApiClient.getSurecDatasetStatus();
+        DATASET_STATUS_ROWS = (items || []).map(item => ({
+            dataModel: item.dataModel || '',
+            status: item.status || '',
+            adet: item.adet || 0,
+            sonDurumTarihi: item.sonDurumTarihi || null
+        }));
+    } catch (err) {
+        console.warn('Dataset statü API\'den yüklenemedi:', err.message);
+        DATASET_STATUS_ROWS = [];
+    }
+}
+
+function bindDatasetListSearch(root) {
+    const input = root.querySelector('#dsListSearch');
+    const tbody = root.querySelector('#dsListTable tbody');
+    const countEl = root.querySelector('.ds-table-count');
+    if (!input || !tbody) return;
+
+    input.addEventListener('input', () => {
+        const term = input.value.trim().toLowerCase();
+        const filtered = !term
+            ? DATASET_LIST_ROWS
+            : DATASET_LIST_ROWS.filter(row =>
+                [row.datasetName, row.dataModel, row.stagingTableName, row.status, row.layer, row.tdAnalyst, row.tester]
+                    .some(value => String(value || '').toLowerCase().includes(term))
+            );
+
+        tbody.innerHTML = buildDatasetListRows(filtered);
+        if (countEl) {
+            countEl.textContent = `${filtered.length} kayıt`;
+        }
+    });
+}
+
+function bindDatasetViewToolbar(root) {
+    const shell = root.querySelector('.dataset-catalog');
+    if (!shell || shell.dataset.toolbarBound === '1') return;
+    shell.dataset.toolbarBound = '1';
+
+    shell.addEventListener('click', async event => {
+        const btn = event.target.closest('[data-ds-view]');
+        if (!btn) return;
+
+        const nextView = btn.getAttribute('data-ds-view');
+        if (!nextView || nextView === datasetPageView) return;
+
+        setDatasetPageView(nextView);
+        await renderDatasetPage(root);
+    });
+}
+
+async function renderDatasetPage(container) {
+    const el = container || document.getElementById('pageBody');
+    if (!el) return;
+
+    let shell = el.querySelector('.dataset-catalog');
+    if (!shell) {
+        el.innerHTML = buildDatasetPageShell(datasetPageView);
+        shell = el.querySelector('.dataset-catalog');
+        bindDatasetViewToolbar(el);
+    } else {
+        updateDatasetPageChrome(shell, datasetPageView);
+    }
+
+    const contentEl = shell.querySelector('.ds-page-content');
+    if (contentEl) {
+        contentEl.innerHTML = '<div class="ds-loading">Yükleniyor…</div>';
+    }
+
+    if (datasetPageView === 'liste') {
+        await Promise.all([loadDatasetCatalogData(), loadDatasetListData()]);
+    } else if (datasetPageView === 'statu') {
+        await Promise.all([loadDatasetCatalogData(), loadDatasetStatusData()]);
+    } else {
+        await loadDatasetCatalogData();
+    }
+
+    updateDatasetPageChrome(shell, datasetPageView);
+
+    if (contentEl) {
+        contentEl.innerHTML = buildDatasetContentOnly(datasetPageView);
+    }
+
+    if (datasetPageView === 'liste') {
+        bindDatasetListSearch(shell);
+    }
 }
 
 function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
@@ -341,8 +785,8 @@ async function initDatasetCatalog(container) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
-    await loadDatasetCatalogData();
-    el.innerHTML = buildDatasetCatalogHTML();
+    datasetPageView = getDatasetPageView();
+    await renderDatasetPage(el);
 }
 
 const TASK_STATUS_LABELS = {
@@ -533,16 +977,52 @@ function getLayerProgress(col) {
     return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
-function buildPortalDatasetCardHTML() {
-    const { domainCount, datasetCount } = getDatasetTotals();
-    const pipelineDatasets = COCKPIT_COLUMNS.reduce((sum, col) => sum + col.datasets.length, 0);
+function buildPortalDatasetCardHTML(surecOzet) {
+    const datasetFromApi = surecOzet?.dataset;
+    const gunlukFromApi = surecOzet?.gunlukAkis;
+    const useApi = !!(datasetFromApi?.basarili || gunlukFromApi?.basarili);
 
-    const layers = COCKPIT_COLUMNS.map(col => {
-        const { pct } = getLayerProgress(col);
-        const running = col.datasets.some(ds => ds.tasks.some(t => t.status === 'running'));
-        const allDone = col.datasets.every(ds => ds.tasks.every(t => t.status === 'done'));
-        const statusLabel = allDone ? 'Tamam' : running ? 'Aktif' : 'Bekliyor';
-        const statusClass = allDone ? 'done' : running ? 'running' : 'pending';
+    const fallbackTotals = getDatasetTotals();
+    const domainCount = useApi && datasetFromApi?.domainSayisi != null
+        ? datasetFromApi.domainSayisi
+        : fallbackTotals.domainCount;
+    const datasetCount = useApi && datasetFromApi?.datasetSayisi != null
+        ? datasetFromApi.datasetSayisi
+        : fallbackTotals.datasetCount;
+
+    const layerSource = useApi && gunlukFromApi?.katmanlar?.length
+        ? gunlukFromApi.katmanlar.map(k => ({
+            name: k.katmanKodu,
+            theme: k.tema || 'blue',
+            paketSayisi: k.paketSayisi ?? 0,
+            tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
+            durum: k.durum
+        }))
+        : COCKPIT_COLUMNS.map(col => {
+            const { pct } = getLayerProgress(col);
+            const running = col.datasets.some(ds => ds.tasks.some(t => t.status === 'running'));
+            const failed = col.datasets.some(ds => ds.tasks.some(t => t.status === 'failed'));
+            const allDone = col.datasets.length > 0 && col.datasets.every(ds => ds.tasks.every(t => t.status === 'done'));
+            return {
+                name: col.name,
+                theme: col.theme,
+                paketSayisi: col.paketSayisi ?? 0,
+                tamamlanmaYuzdesi: pct,
+                durum: failed ? 'failed' : allDone ? 'done' : running ? 'running' : 'pending'
+            };
+        });
+
+    const statusLabels = {
+        done: 'Tamam',
+        running: 'Aktif',
+        failed: 'Hata',
+        pending: 'Bekliyor'
+    };
+
+    const layers = layerSource.map(col => {
+        const pct = col.tamamlanmaYuzdesi ?? 0;
+        const statusClass = col.durum || 'pending';
+        const statusLabel = statusLabels[statusClass] || 'Bekliyor';
         return `
             <div class="portal-ds-row">
                 <div class="portal-ds-row-head">
@@ -554,29 +1034,40 @@ function buildPortalDatasetCardHTML() {
             </div>`;
     }).join('');
 
+    const veriTarihiLabel = gunlukFromApi?.veriTarihi
+        ? formatDatasetDate(gunlukFromApi.veriTarihi)
+        : '';
+    const akisMeta = useApi && gunlukFromApi
+        ? `<span class="portal-ds-head-meta">${veriTarihiLabel ? veriTarihiLabel + ' · ' : ''}${gunlukFromApi.basariliAdimSayisi ?? 0} başarılı · ${gunlukFromApi.devamEdenAdimSayisi ?? 0} devam · ${gunlukFromApi.hataliAdimSayisi ?? 0} hata</span>`
+        : '';
+
     return `
         <div class="dashboard-panel portal-dataset-card">
             <div class="panel-head">
-                <h4>Dataset Özeti</h4>
-                <a class="portal-ds-link" href="surec.html?view=datasetler">Tümünü gör</a>
+                <h4>Günlük Akış Özeti</h4>
+                <div class="portal-ds-head-links">
+                    ${akisMeta}
+                    <a class="portal-ds-link" href="surec.html">Günlük Akış</a>
+                </div>
             </div>
             <div class="portal-ds-summary">
-                <div class="portal-ds-stat">
-                    <strong>${pipelineDatasets}</strong>
-                    <span>Süreç dataset</span>
-                </div>
-                <div class="portal-ds-stat">
-                    <strong>${datasetCount}</strong>
-                    <span>Domain dataset</span>
-                </div>
                 <div class="portal-ds-stat">
                     <strong>${domainCount}</strong>
                     <span>İş domain</span>
                 </div>
+                <div class="portal-ds-stat">
+                    <strong>${datasetCount}</strong>
+                    <span>Katalog dataset</span>
+                </div>
+                <div class="portal-ds-stat">
+                    <strong>${gunlukFromApi?.tamamlanmaYuzdesi ?? 0}%</strong>
+                    <span>ETL tamamlanma</span>
+                </div>
             </div>
-            <div class="portal-ds-layers">${layers}</div>
+            <div class="portal-ds-layers">${layers || '<p class="portal-empty-hint">Katman verisi yok.</p>'}</div>
             <div class="portal-ds-footer">
-                <a href="surec.html?view=datasetler"><i class="ti ti-stack-2"></i> Dataset Kataloğu</a>
+                <a href="surec.html?view=datasetler"><i class="ti ti-stack-2"></i> Datasetler</a>
+                <a href="surec.html"><i class="ti ti-timeline"></i> Günlük Akış</a>
                 <a href="surec.html?view=task-listesi"><i class="ti ti-list-check"></i> Paket Listesi</a>
             </div>
         </div>`;
