@@ -1,9 +1,22 @@
-/* Paket Listesi — ParallelRun paket tablosu */
+/* Paket Listesi — Veritabanı Sorgusu ile aynı tablo (query-results-table.css) */
+
+.page-body:has(.tl-layout) {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+}
 
 .tl-layout {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    height: 100%;
+    min-height: 0;
+}
+
+.tl-head {
+    flex-shrink: 0;
 }
 
 .tl-head h3 {
@@ -20,6 +33,10 @@
 }
 
 .tl-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     background: var(--rb-surface);
     border: 0.5px solid var(--rb-border);
     border-radius: 12px;
@@ -35,6 +52,7 @@
     border-bottom: 0.5px solid var(--rb-border);
     background: var(--rb-card);
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .tl-search {
@@ -72,43 +90,29 @@
     font-size: 11px;
     color: var(--rb-text-muted);
     font-weight: 600;
+    flex-shrink: 0;
 }
 
-.tl-scroll {
-    overflow-x: auto;
+.tl-card .vs-results-wrap {
+    flex: 1;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--rb-card);
 }
 
-.tl-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    min-width: 1060px;
-}
-
-.tl-table th {
-    padding: 8px 12px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--rb-text-muted);
-    background: var(--rb-filter-bg);
-    border-bottom: 0.5px solid var(--rb-border);
-    white-space: nowrap;
-}
-
-.tl-table td {
-    padding: 8px 12px;
-    border-bottom: 0.5px solid var(--rb-border);
-    color: var(--rb-text);
-}
-
-.tl-table tr:hover td {
-    background: var(--rb-row-hover);
-}
-
-.tl-table code {
+.tl-card .vs-results-table code {
     font-size: 11px;
     color: var(--rb-text-secondary);
+}
+
+.tl-empty-cell {
+    padding: 28px !important;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 13px;
+    white-space: normal !important;
+    max-width: none !important;
 }
 
 .tl-badge {
@@ -149,12 +153,5 @@
     color: var(--rb-text-muted);
 }
 
-.tl-empty {
-    padding: 28px;
-    text-align: center;
-    color: var(--rb-text-muted);
-    font-size: 13px;
-}
-
 .page-ribbon .tl-head h3 { font-size: 16px; }
-.page-ribbon .tl-table { font-size: 13px; }
+.page-ribbon .tl-card .vs-results-table { font-size: 13px; }

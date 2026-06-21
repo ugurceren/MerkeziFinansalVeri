@@ -111,6 +111,24 @@ async function loadSurecData(options = {}) {
 let DATASET_LIST_ROWS = [];
 let DATASET_STATUS_ROWS = [];
 let datasetPageView = 'katalog';
+let datasetCatalogFocusId = null;
+
+function getDatasetCatalogFocusId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('dsDomain') || null;
+}
+
+function setDatasetCatalogFocus(domainId) {
+    datasetCatalogFocusId = domainId || null;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'datasetler');
+    if (datasetCatalogFocusId) {
+        url.searchParams.set('dsDomain', datasetCatalogFocusId);
+    } else {
+        url.searchParams.delete('dsDomain');
+    }
+    history.replaceState(null, '', url);
+}
 
 function getDatasetPageView() {
     const params = new URLSearchParams(window.location.search);
@@ -126,6 +144,8 @@ function setDatasetPageView(view) {
         url.searchParams.delete('dsView');
     } else {
         url.searchParams.set('dsView', view);
+        url.searchParams.delete('dsDomain');
+        datasetCatalogFocusId = null;
     }
     history.replaceState(null, '', url);
 }
@@ -178,24 +198,125 @@ function getDatasetTotals() {
     return { domainCount, datasetCount };
 }
 
-function buildDomainCard(domain) {
-    const items = domain.datasets.map(ds => `
-        <li class="ds-item">
-            <span class="ds-item-label">${ds.label}</span>
-            <span class="ds-item-staging">${ds.stagingTable || '—'}</span>
+function getSortedDatasetDomains() {
+    return [...DATASET_DOMAINS].sort((a, b) => {
+        const countDiff = b.datasets.length - a.datasets.length;
+        if (countDiff !== 0) return countDiff;
+        return a.name.localeCompare(b.name, 'tr');
+    });
+}
+
+function getDomainCatalogContext(domainId) {
+    const sortedDomains = getSortedDatasetDomains();
+    const maxCount = sortedDomains.reduce((max, d) => Math.max(max, d.datasets.length), 0);
+    const rank = sortedDomains.findIndex(d => d.id === domainId) + 1;
+    const domain = sortedDomains.find(d => d.id === domainId) || null;
+    const totalDatasets = sortedDomains.reduce((sum, d) => sum + d.datasets.length, 0);
+    return { sortedDomains, maxCount, rank, domain, totalDatasets, domainCount: sortedDomains.length };
+}
+
+function buildDomainTile(domain, rank, maxCount) {
+    const count = domain.datasets.length;
+    const barWidth = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+    const safeName = escapeDatasetHtml(domain.name);
+    const safeId = escapeDatasetHtml(domain.id);
+
+    const items = domain.datasets.slice(0, 4).map(ds => `
+        <li class="domain-tile-item" title="${escapeDatasetHtml(ds.stagingTable || ds.label)}">
+            <span class="domain-tile-dot" aria-hidden="true"></span>
+            <span class="domain-tile-label">${escapeDatasetHtml(ds.label)}</span>
         </li>`).join('');
+    const overflow = count > 4
+        ? `<li class="domain-tile-more">+${count - 4} dataset daha</li>`
+        : '';
 
     return `
-        <article class="domain-card theme-${domain.theme}">
-            <div class="domain-head">
-                <div class="domain-title">
-                    <i class="ti ti-folder" aria-hidden="true"></i>
-                    <h4>${domain.name}</h4>
-                </div>
-                <span class="domain-count">${domain.datasets.length} dataset</span>
+        <article class="domain-tile theme-${domain.theme}"
+            data-domain-id="${safeId}"
+            role="button"
+            tabindex="0"
+            aria-label="${safeName}, ${count} dataset. Detay için tıklayın.">
+            <div class="domain-tile-accent" aria-hidden="true"></div>
+            <header class="domain-tile-head">
+                <span class="domain-tile-rank">${rank}</span>
+                <h4 class="domain-tile-name" title="${safeName}">${safeName}</h4>
+                <span class="domain-tile-count">${count}</span>
+            </header>
+            <div class="domain-tile-bar" role="presentation" aria-hidden="true">
+                <span style="width:${barWidth}%"></span>
             </div>
-            <ul class="domain-datasets">${items}</ul>
+            <ul class="domain-tile-list">${items}${overflow}</ul>
+            <span class="domain-tile-cta">Detay <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
         </article>`;
+}
+
+function buildDomainDetailRows(datasets) {
+    return datasets.map((ds, index) => `
+        <tr>
+            <td class="domain-detail-num">${index + 1}</td>
+            <td class="domain-detail-name">${escapeDatasetHtml(ds.label)}</td>
+            <td class="domain-detail-staging"><code>${escapeDatasetHtml(ds.stagingTable || '—')}</code></td>
+        </tr>`).join('');
+}
+
+function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDatasets) {
+    const count = domain.datasets.length;
+    const barWidth = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+    const sharePct = totalDatasets > 0 ? Math.round((count / totalDatasets) * 100) : 0;
+    const safeName = escapeDatasetHtml(domain.name);
+    const safeId = escapeDatasetHtml(domain.id);
+
+    return `
+        <div class="domain-detail theme-${domain.theme}" data-domain-id="${safeId}">
+            <div class="domain-detail-toolbar">
+                <button type="button" class="domain-detail-back" data-domain-back>
+                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                    Tüm domainler
+                </button>
+                <span class="domain-detail-toolbar-meta">${domainCount} domain · ${totalDatasets} dataset</span>
+            </div>
+
+            <header class="domain-detail-hero">
+                <div class="domain-detail-hero-main">
+                    <span class="domain-detail-rank">#${rank}</span>
+                    <div class="domain-detail-hero-text">
+                        <h2>${safeName}</h2>
+                        <p>Data Model · ${count} dataset · Toplam envanterin %${sharePct}'i</p>
+                    </div>
+                    <div class="domain-detail-hero-stat">
+                        <strong>${count}</strong>
+                        <span>dataset</span>
+                    </div>
+                </div>
+                <div class="domain-detail-hero-bar" role="presentation" aria-hidden="true">
+                    <span style="width:${barWidth}%"></span>
+                </div>
+            </header>
+
+            <div class="domain-detail-panel">
+                <div class="domain-detail-panel-head">
+                    <h3>Dataset listesi</h3>
+                    <label class="domain-detail-search">
+                        <i class="ti ti-search" aria-hidden="true"></i>
+                        <input type="search" id="dsDomainSearch" placeholder="Dataset veya staging tablo ara…" autocomplete="off">
+                    </label>
+                </div>
+                <div class="domain-detail-table-wrap">
+                    <table class="domain-detail-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Dataset</th>
+                                <th>Staging tablo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dsDomainTableBody">
+                            ${buildDomainDetailRows(domain.datasets)}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>`;
 }
 
 function buildDatasetSummaryBlocks() {
@@ -273,8 +394,28 @@ function buildDatasetCatalogContent() {
     if (!DATASET_DOMAINS.length) {
         return '<div class="ds-empty">DOC.TDDataset kaydı bulunamadı.</div>';
     }
-    const cards = DATASET_DOMAINS.map(buildDomainCard).join('');
-    return `<div class="domain-grid">${cards}</div>`;
+
+    const focusId = datasetCatalogFocusId || getDatasetCatalogFocusId();
+    const { sortedDomains, maxCount, rank, domain, totalDatasets, domainCount } = getDomainCatalogContext(focusId || '');
+
+    if (focusId && !domain) {
+        datasetCatalogFocusId = null;
+    }
+
+    if (focusId && domain) {
+        return buildDomainDetailView(domain, rank, maxCount, domainCount, totalDatasets);
+    }
+
+    const tiles = sortedDomains.map((entry, index) => buildDomainTile(entry, index + 1, maxCount)).join('');
+
+    return `
+        <div class="domain-mosaic-wrap">
+            <p class="domain-mosaic-hint">
+                <i class="ti ti-sort-descending" aria-hidden="true"></i>
+                Domainler dataset sayısına göre sıralı · detay için karta tıklayın
+            </p>
+            <div class="domain-mosaic">${tiles}</div>
+        </div>`;
 }
 
 function buildDatasetErrorContent(message) {
@@ -538,6 +679,87 @@ async function loadDatasetStatusData() {
     }
 }
 
+function bindDatasetCatalogInteractions(root) {
+    const shell = root.querySelector('.dataset-catalog');
+    if (!shell || shell.dataset.catalogBound === '1') return;
+    shell.dataset.catalogBound = '1';
+
+    shell.addEventListener('click', event => {
+        const backBtn = event.target.closest('[data-domain-back]');
+        if (backBtn) {
+            setDatasetCatalogFocus(null);
+            refreshDatasetCatalogContent(shell);
+            return;
+        }
+
+        const tile = event.target.closest('.domain-tile[data-domain-id]');
+        if (!tile) return;
+
+        const domainId = tile.getAttribute('data-domain-id');
+        if (!domainId) return;
+
+        setDatasetCatalogFocus(domainId);
+        refreshDatasetCatalogContent(shell);
+    });
+
+    shell.addEventListener('keydown', event => {
+        const tile = event.target.closest('.domain-tile[data-domain-id]');
+        if (!tile) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const domainId = tile.getAttribute('data-domain-id');
+        if (!domainId) return;
+        setDatasetCatalogFocus(domainId);
+        refreshDatasetCatalogContent(shell);
+    });
+}
+
+function bindDatasetDetailSearch(root, domain) {
+    const input = root.querySelector('#dsDomainSearch');
+    const tbody = root.querySelector('#dsDomainTableBody');
+    if (!input || !tbody || !domain) return;
+
+    input.addEventListener('input', () => {
+        const term = input.value.trim().toLowerCase();
+        const filtered = !term
+            ? domain.datasets
+            : domain.datasets.filter(ds =>
+                [ds.label, ds.stagingTable].some(value => String(value || '').toLowerCase().includes(term))
+            );
+        tbody.innerHTML = filtered.length
+            ? buildDomainDetailRows(filtered)
+            : '<tr><td colspan="3" class="domain-detail-empty">Eşleşen dataset bulunamadı.</td></tr>';
+    });
+}
+
+function refreshDatasetCatalogContent(shell) {
+    const contentEl = shell.querySelector('.ds-page-content');
+    if (!contentEl) return;
+
+    shell.classList.toggle('is-domain-focused', !!datasetCatalogFocusId);
+
+    const meta = getDatasetPageMeta('katalog');
+    const textEl = shell.querySelector('.ds-page-head-text');
+    if (textEl && datasetCatalogFocusId) {
+        const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
+        if (domain) {
+            textEl.innerHTML = `
+                <h3>${escapeDatasetHtml(domain.name)}</h3>
+                <span class="ds-page-head-subtitle">Domain detayı · ${domain.datasets.length} dataset</span>`;
+        }
+    } else if (textEl) {
+        textEl.innerHTML = `<h3>${meta[0]}</h3><span class="ds-page-head-subtitle">${meta[1]}</span>`;
+    }
+
+    contentEl.innerHTML = buildDatasetCatalogContent();
+
+    if (datasetCatalogFocusId) {
+        const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
+        bindDatasetDetailSearch(shell, domain);
+        shell.querySelector('.domain-detail-back')?.focus();
+    }
+}
+
 function bindDatasetListSearch(root) {
     const input = root.querySelector('#dsListSearch');
     const tbody = root.querySelector('#dsListTable tbody');
@@ -580,6 +802,8 @@ function bindDatasetViewToolbar(root) {
 async function renderDatasetPage(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
+
+    datasetCatalogFocusId = getDatasetCatalogFocusId();
 
     let shell = el.querySelector('.dataset-catalog');
     if (!shell) {
@@ -641,6 +865,13 @@ async function renderDatasetPage(container) {
 
     if (datasetPageView === 'liste') {
         bindDatasetListSearch(shell);
+    } else if (datasetPageView === 'katalog') {
+        shell.classList.toggle('is-domain-focused', !!datasetCatalogFocusId);
+        bindDatasetCatalogInteractions(el);
+        if (datasetCatalogFocusId) {
+            const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
+            bindDatasetDetailSearch(shell, domain);
+        }
     }
 }
 
@@ -878,7 +1109,7 @@ function taskRowSearchKey(row) {
 
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
-        return '<tr><td colspan="8" class="tl-empty">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
+        return '<tr><td colspan="8" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
     }
     return rows.map(row => {
         const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
@@ -910,8 +1141,8 @@ function buildTaskListesiHTML() {
                 </label>
                 <span class="tl-count" id="tlCount">${rows.length} kayıt</span>
             </div>
-            <div class="tl-scroll">
-                <table class="tl-table">
+            <div class="vs-results-wrap is-fill has-data" id="tlResultsWrap">
+                <table class="vs-results-table">
                     <thead>
                         <tr>
                             <th>Katman</th>
