@@ -110,7 +110,7 @@
 
 .cockpit-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     flex: 1;
     min-height: 0;
@@ -265,31 +265,26 @@
 
 .dataset-head {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    align-items: flex-start;
     margin-bottom: 8px;
 }
 
 .dataset-head strong {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--rb-text);
-}
-
-.dataset-head code {
-    font-size: 9px;
-    color: var(--rb-text-muted);
-    background: var(--rb-card);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: Consolas, monospace;
+    line-height: 1.35;
+    word-break: break-word;
 }
 
 .task-flow {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
+}
+
+.task-flow-tdstg {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .flow-step {
@@ -303,6 +298,7 @@
     border-radius: 7px;
     background: var(--rb-card);
     border: 0.5px solid var(--rb-border);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .flow-status-text {
@@ -323,35 +319,118 @@
     line-height: 1.15;
 }
 
-.flow-step.done .flow-status-text { color: #22c55e; }
-.flow-step.done .flow-label { color: #22c55e; }
-.flow-step.done {
-    border-color: rgba(34, 197, 94, 0.35);
-    background: rgba(34, 197, 94, 0.08);
+/* Bekleyen (aktif olmayan) adım kutuları */
+.flow-step.is-idle {
+    background: var(--rb-bg);
+    border: 0.5px dashed var(--rb-border);
+    opacity: 0.72;
 }
 
-.flow-step.running .flow-status-text { color: var(--col-accent); }
-.flow-step.running .flow-label { color: var(--col-accent); }
-.flow-step.running {
-    border-color: color-mix(in srgb, var(--col-accent) 40%, var(--rb-border));
-    background: var(--col-soft);
-}
-
-.flow-step.not-started .flow-status-text,
-.flow-step.pending .flow-status-text {
+.flow-step.is-idle .flow-status-text,
+.flow-step.is-idle .flow-label {
     color: var(--rb-text-muted);
 }
 
-.flow-step.not-started,
-.flow-step.pending {
-    border-style: dashed;
+/* Not Started — gri (aktif) */
+.flow-step.is-active.not-started {
+    border-style: solid;
+    border-color: rgba(148, 163, 184, 0.55);
+    background: rgba(148, 163, 184, 0.16);
 }
 
-.flow-step.failed .flow-status-text { color: #ef4444; }
-.flow-step.failed .flow-label { color: #ef4444; }
-.flow-step.failed {
-    border-color: rgba(239, 68, 68, 0.35);
-    background: rgba(239, 68, 68, 0.08);
+.flow-step.is-active.not-started .flow-status-text,
+.flow-step.is-active.not-started .flow-label {
+    color: #94a3b8;
+}
+
+/* In Progress — turuncuya yakın sarı (aktif) */
+.flow-step.is-active.running {
+    border-style: solid;
+    border-color: rgba(245, 158, 11, 0.6);
+    background: rgba(251, 191, 36, 0.2);
+}
+
+.flow-step.is-active.running .flow-status-text,
+.flow-step.is-active.running .flow-label {
+    color: #d97706;
+}
+
+/* Failed — kırmızı (aktif) */
+.flow-step.is-active.failed {
+    border-style: solid;
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.flow-step.is-active.failed .flow-status-text,
+.flow-step.is-active.failed .flow-label {
+    color: #ef4444;
+}
+
+/* Success — yeşil (aktif) */
+.flow-step.is-active.done {
+    border-style: solid;
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.14);
+}
+
+.flow-step.is-active.done .flow-status-text,
+.flow-step.is-active.done .flow-label {
+    color: #22c55e;
+}
+
+/* LND Failed — koyu kırmızı (aktif) */
+.flow-step.lnd-failed.is-active.failed {
+    border-style: solid;
+    border-color: rgba(127, 29, 29, 0.72);
+    background: rgba(153, 27, 27, 0.24);
+}
+
+.flow-step.lnd-failed.is-active.failed .flow-status-text,
+.flow-step.lnd-failed.is-active.failed .flow-label {
+    color: #991b1b;
+}
+
+.flow-step.lnd-failed.is-active.not-started {
+    border-style: solid;
+    border-color: rgba(127, 29, 29, 0.35);
+    background: rgba(153, 27, 27, 0.08);
+}
+
+.flow-step.lnd-failed.is-active.not-started .flow-status-text {
+    color: #b91c1c;
+}
+
+/* LND Completed — koyu yeşil (aktif) */
+.flow-step.lnd-done.is-active.done {
+    border-style: solid;
+    border-color: rgba(22, 101, 52, 0.72);
+    background: rgba(21, 128, 61, 0.26);
+}
+
+.flow-step.lnd-done.is-active.done .flow-status-text,
+.flow-step.lnd-done.is-active.done .flow-label {
+    color: #15803d;
+}
+
+.flow-step.lnd-done.is-active.running {
+    border-style: solid;
+    border-color: rgba(22, 101, 52, 0.55);
+    background: rgba(21, 128, 61, 0.16);
+}
+
+.flow-step.lnd-done.is-active.running .flow-status-text {
+    color: #166534;
+}
+
+.flow-step.lnd-done.is-active.not-started {
+    border-style: solid;
+    border-color: rgba(22, 101, 52, 0.35);
+    background: rgba(21, 128, 61, 0.08);
+}
+
+.flow-step.lnd-done.is-active.not-started .flow-status-text {
+    color: #166534;
 }
 
 .cockpit-empty {
@@ -851,6 +930,16 @@
     background: var(--domain-accent);
 }
 
+.domain-detail-panel .vs-results-wrap {
+    flex: 1;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--rb-card);
+    scrollbar-width: thin;
+    scrollbar-color: var(--rb-border) var(--rb-bg);
+}
+
 .domain-detail-panel {
     flex: 1;
     min-height: 0;
@@ -909,65 +998,6 @@
 .domain-detail-search input:focus {
     outline: none;
     border-color: var(--domain-accent);
-}
-
-.domain-detail-table-wrap {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-}
-
-.domain-detail-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-.domain-detail-table th,
-.domain-detail-table td {
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 0.5px solid var(--rb-border);
-}
-
-.domain-detail-table th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--rb-text-muted);
-    background: var(--rb-card);
-}
-
-.domain-detail-table tbody tr:hover {
-    background: color-mix(in srgb, var(--domain-soft) 45%, transparent);
-}
-
-.domain-detail-num {
-    width: 48px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--domain-accent);
-}
-
-.domain-detail-name {
-    font-weight: 600;
-    color: var(--rb-text);
-}
-
-.domain-detail-staging code {
-    font-size: 12px;
-    color: var(--rb-text-muted);
-    font-family: Consolas, 'Segoe UI', monospace;
-}
-
-.domain-detail-empty {
-    text-align: center;
-    color: var(--rb-text-muted);
-    padding: 24px !important;
 }
 
 @media (max-width: 1500px) {
@@ -1230,13 +1260,33 @@
 .dataset-view-liste .ds-page-content,
 .dataset-view-statu .ds-page-content {
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
 }
 
-.ds-loading {
-    padding: 24px;
-    text-align: center;
-    color: var(--rb-text-muted);
-    font-size: 13px;
+.dataset-view-liste .ds-table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dataset-view-statu .ds-table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dataset-view-statu .ds-table-card:first-of-type {
+    flex: 0 1 auto;
+    max-height: 42%;
+}
+
+.dataset-view-statu .ds-table-card:last-of-type {
+    flex: 1 1 auto;
 }
 
 .ds-table-card {
@@ -1244,6 +1294,68 @@
     border: 0.5px solid var(--rb-border);
     border-radius: 12px;
     overflow: hidden;
+}
+
+.ds-table-card .vs-results-wrap {
+    flex: 1;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--rb-card);
+    scrollbar-width: thin;
+    scrollbar-color: var(--rb-border) var(--rb-bg);
+}
+
+.ds-table-card .vs-results-wrap::-webkit-scrollbar,
+.domain-detail-panel .vs-results-wrap::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.ds-table-card .vs-results-wrap::-webkit-scrollbar-thumb,
+.domain-detail-panel .vs-results-wrap::-webkit-scrollbar-thumb {
+    background: var(--rb-border);
+    border-radius: 999px;
+}
+
+.ds-table-card .vs-results-wrap::-webkit-scrollbar-track,
+.domain-detail-panel .vs-results-wrap::-webkit-scrollbar-track {
+    background: var(--rb-bg);
+}
+
+.ds-table-card .vs-results-table code {
+    font-size: 11px;
+    color: var(--rb-text-secondary);
+}
+
+.ds-table-card .vs-results-table td.ds-cell-wrap {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 420px;
+}
+
+.ds-empty-cell {
+    padding: 28px !important;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 13px;
+    white-space: normal !important;
+    max-width: none !important;
+}
+
+.ds-table-card .vs-results-table .domain-detail-num {
+    width: 48px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--domain-accent, var(--rb-accent));
+}
+
+.ds-loading {
+    padding: 24px;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 13px;
 }
 
 .ds-table-toolbar {
@@ -1255,6 +1367,7 @@
     border-bottom: 0.5px solid var(--rb-border);
     background: var(--rb-card);
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .ds-table-toolbar h4 {
@@ -1262,6 +1375,17 @@
     font-size: 13px;
     font-weight: 700;
     color: var(--rb-text);
+}
+
+.ds-table-caption {
+    font-size: 10px;
+    color: var(--rb-text-muted);
+    font-weight: 500;
+}
+
+.ds-status-total-row td {
+    border-top: 0.5px solid var(--rb-border);
+    background: var(--rb-filter-bg);
 }
 
 .ds-table-search {
@@ -1298,40 +1422,6 @@
     font-size: 11px;
     font-weight: 600;
     color: var(--rb-text-muted);
-}
-
-.ds-table-scroll {
-    overflow: auto;
-    max-height: calc(100vh - 280px);
-}
-
-.ds-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-}
-
-.ds-table th,
-.ds-table td {
-    padding: 8px 12px;
-    border-bottom: 0.5px solid var(--rb-border);
-    text-align: left;
-    vertical-align: top;
-}
-
-.ds-table th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: var(--rb-card);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--rb-text-muted);
-    white-space: nowrap;
-}
-
-.ds-table tbody tr:hover {
-    background: var(--rb-bg);
 }
 
 .ds-status-badge {

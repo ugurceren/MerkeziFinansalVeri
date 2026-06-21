@@ -30,9 +30,7 @@ public sealed class ParallelRunTaskListItem
     public string DatasetEtiket { get; init; } = string.Empty;
     public string Task { get; init; } = string.Empty;
     public string YuklemePeriyodu { get; init; } = string.Empty;
-    public int? TransferTypeId { get; init; }
     public string TransferTipi { get; init; } = string.Empty;
-    public string Durum { get; init; } = "pending";
     public bool? Aktif { get; init; }
     public DateTime? SonGuncelleme { get; init; }
 }

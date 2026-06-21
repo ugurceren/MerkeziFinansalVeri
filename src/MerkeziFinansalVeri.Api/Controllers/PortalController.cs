@@ -165,29 +165,8 @@ public class PortalController(
 
                 foreach (var dataset in layer.Datasets)
                 {
-                    foreach (var adim in dataset.Adimlar)
-                    {
-                        switch (adim.Durum)
-                        {
-                            case "done":
-                                basarili++;
-                                break;
-                            case "running":
-                                devam++;
-                                layerRunning = true;
-                                layerAllDone = false;
-                                break;
-                            case "failed":
-                                hatali++;
-                                layerFailed = true;
-                                layerAllDone = false;
-                                break;
-                            default:
-                                bekleyen++;
-                                layerAllDone = false;
-                                break;
-                        }
-                    }
+                    CountAdimSteps(dataset.Adimlar, ref basarili, ref devam, ref bekleyen, ref hatali, ref layerFailed, ref layerRunning, ref layerAllDone);
+                    CountAdimSteps(dataset.LndAdimlar, ref basarili, ref devam, ref bekleyen, ref hatali, ref layerFailed, ref layerRunning, ref layerAllDone);
                 }
 
                 if (layer.Datasets.Count == 0)
@@ -243,5 +222,40 @@ public class PortalController(
                 Katmanlar = katmanlar
             }
         };
+    }
+
+    private static void CountAdimSteps(
+        IReadOnlyList<EtlLoadCockpitStep> adimlar,
+        ref int basarili,
+        ref int devam,
+        ref int bekleyen,
+        ref int hatali,
+        ref bool layerFailed,
+        ref bool layerRunning,
+        ref bool layerAllDone)
+    {
+        foreach (var adim in adimlar)
+        {
+            switch (adim.Durum)
+            {
+                case "done":
+                    basarili++;
+                    break;
+                case "running":
+                    devam++;
+                    layerRunning = true;
+                    layerAllDone = false;
+                    break;
+                case "failed":
+                    hatali++;
+                    layerFailed = true;
+                    layerAllDone = false;
+                    break;
+                default:
+                    bekleyen++;
+                    layerAllDone = false;
+                    break;
+            }
+        }
     }
 }

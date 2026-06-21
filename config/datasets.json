@@ -5,6 +5,7 @@
     "SorguDosyasi": "config/queries/td-datasets.sql",
     "ListeSorguDosyasi": "config/queries/td-datasets-list.sql",
     "StatusSorguDosyasi": "config/queries/td-datasets-status.sql",
+    "StatusOzetSorguDosyasi": "config/queries/td-datasets-status-summary.sql",
     "MaxSatir": 100000,
     "SorguTimeoutSaniye": 120
   }

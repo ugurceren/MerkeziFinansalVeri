@@ -20,6 +20,7 @@ public sealed class DatasetCatalogService(
         SorguDosyasi = configuration["DatasetCatalog:SorguDosyasi"] ?? "config/queries/td-datasets.sql",
         ListeSorguDosyasi = configuration["DatasetCatalog:ListeSorguDosyasi"] ?? "config/queries/td-datasets-list.sql",
         StatusSorguDosyasi = configuration["DatasetCatalog:StatusSorguDosyasi"] ?? "config/queries/td-datasets-status.sql",
+        StatusOzetSorguDosyasi = configuration["DatasetCatalog:StatusOzetSorguDosyasi"] ?? "config/queries/td-datasets-status-summary.sql",
         MaxSatir = int.TryParse(configuration["DatasetCatalog:MaxSatir"], out var maxSatir) ? maxSatir : 100000,
         SorguTimeoutSaniye = int.TryParse(configuration["DatasetCatalog:SorguTimeoutSaniye"], out var timeout)
             ? timeout
@@ -153,19 +154,44 @@ public sealed class DatasetCatalogService(
     public async Task<DatasetCatalogStatusResult> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         var ayarlar = GetAyarlar();
-        var query = await LoadQueryAsync(ayarlar.StatusSorguDosyasi, cancellationToken);
-        if (!query.Basarili)
+
+        var ozetQuery = await LoadQueryAsync(ayarlar.StatusOzetSorguDosyasi, cancellationToken);
+        if (!ozetQuery.Basarili)
         {
-            return FailStatus(query.Hata!);
+            return FailStatus(ozetQuery.Hata!);
         }
 
-        var result = await ExecuteQueryAsync(ayarlar, query.Sql!, cancellationToken);
-        if (!result.Basarili)
+        var modelQuery = await LoadQueryAsync(ayarlar.StatusSorguDosyasi, cancellationToken);
+        if (!modelQuery.Basarili)
         {
-            return FailStatus(result.Hata ?? "Dataset statü sorgusu çalıştırılamadı.", result.SureMs);
+            return FailStatus(modelQuery.Hata!);
         }
 
-        var satirlar = result.Satirlar
+        var ozetResult = await ExecuteQueryAsync(ayarlar, ozetQuery.Sql!, cancellationToken);
+        if (!ozetResult.Basarili)
+        {
+            return FailStatus(ozetResult.Hata ?? "Dataset statü özet sorgusu çalıştırılamadı.", ozetResult.SureMs);
+        }
+
+        var modelResult = await ExecuteQueryAsync(ayarlar, modelQuery.Sql!, cancellationToken);
+        if (!modelResult.Basarili)
+        {
+            return FailStatus(modelResult.Hata ?? "Dataset statü model sorgusu çalıştırılamadı.", modelResult.SureMs);
+        }
+
+        var durumOzeti = ozetResult.Satirlar
+            .Select(row => new DatasetCatalogStatusSummaryRow
+            {
+                Status = GetCell(row, "Status")?.Trim() ?? string.Empty,
+                Adet = ParseInt(GetCell(row, "DatasetCount")),
+                SonDurumTarihi = ParseDate(GetCell(row, "LastStatusChangeDate"))
+            })
+            .Where(row => !string.IsNullOrWhiteSpace(row.Status))
+            .OrderByDescending(row => row.Adet)
+            .ThenBy(row => row.Status, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var modelDurumlar = modelResult.Satirlar
             .Select(row => new DatasetCatalogStatusRow
             {
                 DataModel = GetCell(row, "Data_Model")?.Trim() ?? string.Empty,
@@ -173,7 +199,7 @@ public sealed class DatasetCatalogService(
                 Adet = ParseInt(GetCell(row, "DatasetCount")),
                 SonDurumTarihi = ParseDate(GetCell(row, "LastStatusChangeDate"))
             })
-            .Where(row => !string.IsNullOrWhiteSpace(row.DataModel) && !string.IsNullOrWhiteSpace(row.Status))
+            .Where(row => !string.IsNullOrWhiteSpace(row.Status))
             .OrderBy(row => row.DataModel, StringComparer.OrdinalIgnoreCase)
             .ThenBy(row => row.Status, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -181,8 +207,9 @@ public sealed class DatasetCatalogService(
         return new DatasetCatalogStatusResult
         {
             Basarili = true,
-            Satirlar = satirlar,
-            SureMs = result.SureMs
+            DurumOzeti = durumOzeti,
+            ModelDurumlar = modelDurumlar,
+            SureMs = ozetResult.SureMs + modelResult.SureMs
         };
     }
 

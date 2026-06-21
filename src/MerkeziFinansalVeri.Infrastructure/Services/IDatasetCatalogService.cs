@@ -17,6 +17,7 @@ public sealed class DatasetCatalogAyarlar
     public string SorguDosyasi { get; init; } = "config/queries/td-datasets.sql";
     public string ListeSorguDosyasi { get; init; } = "config/queries/td-datasets-list.sql";
     public string StatusSorguDosyasi { get; init; } = "config/queries/td-datasets-status.sql";
+    public string StatusOzetSorguDosyasi { get; init; } = "config/queries/td-datasets-status-summary.sql";
     public int MaxSatir { get; init; } = 100000;
     public int SorguTimeoutSaniye { get; init; } = 120;
 }
@@ -41,8 +42,16 @@ public sealed class DatasetCatalogStatusResult
 {
     public bool Basarili { get; init; }
     public string? Hata { get; init; }
-    public IReadOnlyList<DatasetCatalogStatusRow> Satirlar { get; init; } = [];
+    public IReadOnlyList<DatasetCatalogStatusSummaryRow> DurumOzeti { get; init; } = [];
+    public IReadOnlyList<DatasetCatalogStatusRow> ModelDurumlar { get; init; } = [];
     public int SureMs { get; init; }
+}
+
+public sealed class DatasetCatalogStatusSummaryRow
+{
+    public string Status { get; init; } = string.Empty;
+    public int Adet { get; init; }
+    public DateTime? SonDurumTarihi { get; init; }
 }
 
 public sealed class DatasetCatalogCategory

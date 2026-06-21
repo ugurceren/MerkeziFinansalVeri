@@ -3,12 +3,12 @@ SELECT
     pr.PackageName,
     pr.TargetTableName,
     pr.Description,
-    pr.Status,
     pr.ActiveFlag,
     pr.LastExecutionDate,
     pr.TransferTypeId,
+    pr.LoadPeriodTypeId,
     tt.TransferTypeName,
-    lpt.LoadPeriodTypeName AS LoadPeriodTypeName
+    lpt.LoadPeriodTypeName
 FROM [TDUTIL].[OPR].[ParallelRun] pr
 LEFT JOIN [TDUTIL].[OPR].[TransferTypeDefinition] tt
     ON pr.TransferTypeId = tt.TransferTypeId

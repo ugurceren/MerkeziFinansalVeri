@@ -1,16 +1,8 @@
 const COCKPIT_COLUMNS_FALLBACK = [
     {
-        name: 'TDSTG.STG',
+        name: 'TDSTG',
         role: 'Staging — ham veri katmanı',
         theme: 'cyan',
-        paketSayisi: 0,
-        tamamlanmaYuzdesi: 0,
-        datasets: []
-    },
-    {
-        name: 'TDSTG.LND',
-        role: 'Landing — ham veri yükleme',
-        theme: 'teal',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
@@ -86,7 +78,13 @@ async function loadSurecData(options = {}) {
                 datasets: k.datasets.map(d => ({
                     name: d.kod,
                     label: d.etiket,
+                    targetTableName: d.etiket || d.kod,
                     tasks: d.gorevler.map(g => ({
+                        label: g.etiket,
+                        status: g.durum,
+                        statusText: g.durumMetni || 'Not Started'
+                    })),
+                    lndTasks: (d.lndGorevler || []).map(g => ({
                         label: g.etiket,
                         status: g.durum,
                         statusText: g.durumMetni || 'Not Started'
@@ -109,7 +107,8 @@ async function loadSurecData(options = {}) {
 }
 
 let DATASET_LIST_ROWS = [];
-let DATASET_STATUS_ROWS = [];
+let DATASET_STATUS_OZET = [];
+let DATASET_STATUS_MODEL_ROWS = [];
 let datasetPageView = 'katalog';
 let datasetCatalogFocusId = null;
 
@@ -301,8 +300,8 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
                         <input type="search" id="dsDomainSearch" placeholder="Dataset veya staging tablo ara…" autocomplete="off">
                     </label>
                 </div>
-                <div class="domain-detail-table-wrap">
-                    <table class="domain-detail-table">
+                <div class="vs-results-wrap is-fill has-data">
+                    <table class="vs-results-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -338,7 +337,7 @@ function getDatasetPageMeta(activeView) {
     const meta = {
         katalog: ['Dataset Kataloğu', 'Domain bazında tanımlı dataset envanteri'],
         liste: ['Dataset Listesi', 'DOC.TDDataset tablosunun tam listesi'],
-        statu: ['Dataset Statü Özeti', 'Data Model ve Statü bazında dataset dağılımı']
+        statu: ['Dataset Statü Özeti', 'DOC.TDDataset Status ve Data Model bazında dataset dağılımı']
     };
     return meta[activeView] || meta.katalog;
 }
@@ -469,8 +468,8 @@ function buildDatasetListeContent() {
                 </label>
                 <span class="ds-table-count">${count} kayıt</span>
             </div>
-            <div class="ds-table-scroll">
-                <table class="ds-table" id="dsListTable">
+            <div class="vs-results-wrap is-fill has-data">
+                <table class="vs-results-table" id="dsListTable">
                     <thead>
                         <tr>
                             <th>Dataset</th>
@@ -501,81 +500,27 @@ function buildDatasetListeHTML() {
     );
 }
 
-function buildDatasetStatusSummary(rows) {
-    const byStatus = new Map();
-    rows.forEach(row => {
-        const current = byStatus.get(row.status) || 0;
-        byStatus.set(row.status, current + row.adet);
-    });
-
-    if (!byStatus.size) {
-        return '<div class="ds-status-empty">Statü özeti bulunamadı.</div>';
+function buildDatasetStatusOzetRows(rows) {
+    if (!rows.length) {
+        return '<tr><td colspan="3">Kayıt bulunamadı.</td></tr>';
     }
 
-    return Array.from(byStatus.entries())
-        .sort((a, b) => b[1] - a[1])
-        .map(([status, adet]) => `
-            <div class="ds-status-chip ${statusBadgeClass(status)}">
-                <strong>${adet}</strong>
-                <span>${escapeDatasetHtml(status)}</span>
-            </div>`).join('');
+    const toplam = rows.reduce((sum, row) => sum + (row.adet || 0), 0);
+
+    return rows.map(row => `
+        <tr>
+            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
+            <td><strong>${row.adet}</strong></td>
+            <td>${formatDatasetDate(row.sonDurumTarihi)}</td>
+        </tr>`).join('') + `
+        <tr class="ds-status-total-row">
+            <td><strong>Toplam</strong></td>
+            <td><strong>${toplam}</strong></td>
+            <td>—</td>
+        </tr>`;
 }
 
 function buildDatasetStatusModelRows(rows) {
-    const models = new Map();
-
-    rows.forEach(row => {
-        if (!models.has(row.dataModel)) {
-            models.set(row.dataModel, {
-                dataModel: row.dataModel,
-                toplam: 0,
-                sonTarih: null,
-                durumlar: []
-            });
-        }
-
-        const model = models.get(row.dataModel);
-        model.toplam += row.adet;
-        model.durumlar.push({ status: row.status, adet: row.adet });
-
-        if (row.sonDurumTarihi) {
-            const current = model.sonTarih ? new Date(model.sonTarih) : null;
-            const next = new Date(row.sonDurumTarihi);
-            if (!current || next > current) {
-                model.sonTarih = row.sonDurumTarihi;
-            }
-        }
-    });
-
-    const sorted = Array.from(models.values())
-        .sort((a, b) => a.dataModel.localeCompare(b.dataModel, 'tr'));
-
-    if (!sorted.length) {
-        return '<tr><td colspan="4">Kayıt bulunamadı.</td></tr>';
-    }
-
-    return sorted.map(model => {
-        const breakdown = model.durumlar
-            .sort((a, b) => b.adet - a.adet)
-            .map(item => `<span class="ds-status-mini ${statusBadgeClass(item.status)}">${escapeDatasetHtml(item.status)}: ${item.adet}</span>`)
-            .join('');
-
-        const latestStatus = model.durumlar
-            .slice()
-            .sort((a, b) => b.adet - a.adet)[0]?.status || '—';
-
-        return `
-            <tr>
-                <td>${escapeDatasetHtml(model.dataModel)}</td>
-                <td><strong>${model.toplam}</strong></td>
-                <td><span class="ds-status-badge ${statusBadgeClass(latestStatus)}">${escapeDatasetHtml(latestStatus)}</span></td>
-                <td>${formatDatasetDate(model.sonTarih)}</td>
-                <td><div class="ds-status-breakdown">${breakdown}</div></td>
-            </tr>`;
-    }).join('');
-}
-
-function buildDatasetStatusDetailRows(rows) {
     if (!rows.length) {
         return '<tr><td colspan="4">Kayıt bulunamadı.</td></tr>';
     }
@@ -591,41 +536,40 @@ function buildDatasetStatusDetailRows(rows) {
 
 function buildDatasetStatusContent() {
     return `
-        <div class="ds-status-summary">${buildDatasetStatusSummary(DATASET_STATUS_ROWS)}</div>
         <div class="ds-table-card">
             <div class="ds-table-toolbar">
-                <h4>Data Model Özeti</h4>
+                <h4>Dataset Durumları</h4>
+                <span class="ds-table-caption">DOC.TDDataset · Status kolonuna göre GROUP BY</span>
             </div>
-            <div class="ds-table-scroll">
-                <table class="ds-table">
+            <div class="vs-results-wrap is-fill has-data">
+                <table class="vs-results-table">
                     <thead>
                         <tr>
-                            <th>Data Model</th>
-                            <th>Toplam</th>
-                            <th>Önde Gelen Statü</th>
+                            <th>Statü</th>
+                            <th>Dataset Sayısı</th>
                             <th>Son Durum Tarihi</th>
-                            <th>Statü Dağılımı</th>
                         </tr>
                     </thead>
-                    <tbody>${buildDatasetStatusModelRows(DATASET_STATUS_ROWS)}</tbody>
+                    <tbody>${buildDatasetStatusOzetRows(DATASET_STATUS_OZET)}</tbody>
                 </table>
             </div>
         </div>
         <div class="ds-table-card">
             <div class="ds-table-toolbar">
-                <h4>Data Model × Statü Detayı</h4>
+                <h4>Data Model × Statü</h4>
+                <span class="ds-table-caption">DOC.TDDataset · Data_Model ve Status bazında GROUP BY</span>
             </div>
-            <div class="ds-table-scroll">
-                <table class="ds-table">
+            <div class="vs-results-wrap is-fill has-data">
+                <table class="vs-results-table">
                     <thead>
                         <tr>
                             <th>Data Model</th>
                             <th>Statü</th>
-                            <th>Adet</th>
+                            <th>Dataset Sayısı</th>
                             <th>Son Durum Tarihi</th>
                         </tr>
                     </thead>
-                    <tbody>${buildDatasetStatusDetailRows(DATASET_STATUS_ROWS)}</tbody>
+                    <tbody>${buildDatasetStatusModelRows(DATASET_STATUS_MODEL_ROWS)}</tbody>
                 </table>
             </div>
         </div>`;
@@ -666,16 +610,23 @@ async function loadDatasetListData() {
 async function loadDatasetStatusData() {
     if (typeof ApiClient === 'undefined') return;
     try {
-        const items = await ApiClient.getSurecDatasetStatus();
-        DATASET_STATUS_ROWS = (items || []).map(item => ({
+        const response = await ApiClient.getSurecDatasetStatus();
+        DATASET_STATUS_OZET = (response?.durumOzeti || []).map(item => ({
+            status: item.status || '',
+            adet: item.adet ?? 0,
+            sonDurumTarihi: item.sonDurumTarihi || null
+        }));
+        DATASET_STATUS_MODEL_ROWS = (response?.modelDurumlar || []).map(item => ({
             dataModel: item.dataModel || '',
             status: item.status || '',
-            adet: item.adet || 0,
+            adet: item.adet ?? 0,
             sonDurumTarihi: item.sonDurumTarihi || null
         }));
     } catch (err) {
         console.warn('Dataset statü API\'den yüklenemedi:', err.message);
-        DATASET_STATUS_ROWS = [];
+        DATASET_STATUS_OZET = [];
+        DATASET_STATUS_MODEL_ROWS = [];
+        throw err;
     }
 }
 
@@ -728,7 +679,7 @@ function bindDatasetDetailSearch(root, domain) {
             );
         tbody.innerHTML = filtered.length
             ? buildDomainDetailRows(filtered)
-            : '<tr><td colspan="3" class="domain-detail-empty">Eşleşen dataset bulunamadı.</td></tr>';
+            : '<tr><td colspan="3" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>';
     });
 }
 
@@ -847,7 +798,8 @@ async function renderDatasetPage(container) {
                 loadError = err.message || 'Dataset statü özeti alınamadı.';
             }
             console.warn('Dataset statü yüklenemedi:', err.message);
-            DATASET_STATUS_ROWS = [];
+            DATASET_STATUS_OZET = [];
+            DATASET_STATUS_MODEL_ROWS = [];
         }
     }
 
@@ -882,34 +834,83 @@ function shouldShowFlowStepLabel(layerName, task) {
     return !!(task.label && task.label !== '—');
 }
 
+function resolveActiveFlowLabel(tasks) {
+    const progressed = tasks.find(t => t.status === 'running' || t.status === 'failed' || t.status === 'done');
+    if (progressed) return progressed.statusText;
+    return 'Not Started';
+}
+
+function getFlowStepClasses(task, rowTasks) {
+    const isLndFailed = task.statusText === 'LND Failed';
+    const isLndCompleted = task.statusText === 'LND Completed';
+    const lndTasks = rowTasks.filter(t => t.statusText === 'LND Failed' || t.statusText === 'LND Completed');
+    const stgTasks = rowTasks.filter(t => !lndTasks.includes(t));
+
+    let isActive;
+    if (isLndFailed || isLndCompleted) {
+        const activeLnd = resolveActiveFlowLabel(lndTasks);
+        isActive = task.statusText === activeLnd;
+    } else {
+        isActive = task.statusText === resolveActiveFlowLabel(stgTasks);
+    }
+
+    const classes = ['flow-step', isActive ? 'is-active' : 'is-idle'];
+    if (isLndFailed) {
+        classes.push('lnd-failed');
+        if (isActive && task.status === 'failed') classes.push('failed');
+        else if (isActive) classes.push('not-started');
+    } else if (isLndCompleted) {
+        classes.push('lnd-done');
+        if (isActive && task.status === 'done') classes.push('done');
+        else if (isActive && task.status === 'running') classes.push('running');
+        else if (isActive) classes.push('not-started');
+    } else if (isActive) {
+        classes.push(task.status || 'not-started');
+    }
+
+    return classes.join(' ');
+}
+
+function buildFlowStepHtml(layerName, task, rowTasks) {
+    const showLabel = shouldShowFlowStepLabel(layerName, task);
+    return `
+            <div class="${getFlowStepClasses(task, rowTasks)}">
+                <span class="flow-status-text">${task.statusText || 'Not Started'}</span>
+                ${showLabel ? `<span class="flow-label">${task.label}</span>` : ''}
+            </div>`;
+}
+
 function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
     const pct = tamamlanmaYuzdesi ?? 0;
+    const isTdStg = name === 'TDSTG';
     const allDone = pct >= 100;
-    const hasRunning = datasets.some(ds => ds.tasks.some(t => t.status === 'running'));
-    const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed'));
+    const hasRunning = datasets.some(ds => ds.tasks.some(t => t.status === 'running')
+        || (ds.lndTasks || []).some(t => t.status === 'running'));
+    const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
+        || (ds.lndTasks || []).some(t => t.status === 'failed'));
     const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
 
     const datasetHtml = datasets.length
         ? datasets.map(ds => {
-            const dsDone = ds.tasks.length > 0 && ds.tasks.every(t => t.status === 'done');
-            const dsRunning = ds.tasks.some(t => t.status === 'running');
-            const dsFailed = ds.tasks.some(t => t.status === 'failed');
+            const dsDone = ds.tasks.length > 0 && ds.tasks.every(t => t.status === 'done')
+                && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
+            const dsRunning = ds.tasks.some(t => t.status === 'running')
+                || (ds.lndTasks || []).some(t => t.status === 'running');
+            const dsFailed = ds.tasks.some(t => t.status === 'failed')
+                || (ds.lndTasks || []).some(t => t.status === 'failed');
             const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-            const tasksHtml = ds.tasks.map(t => {
-                const showLabel = shouldShowFlowStepLabel(name, t);
-                return `
-            <div class="flow-step ${t.status}">
-                <span class="flow-status-text">${t.statusText || 'Not Started'}</span>
-                ${showLabel ? `<span class="flow-label">${t.label}</span>` : ''}
-            </div>`;
-            }).join('');
+            const rowTasks = [...ds.tasks, ...(ds.lndTasks || [])];
+            const tasksHtml = ds.tasks.map(t => buildFlowStepHtml(name, t, rowTasks)).join('');
+            const lndTasksHtml = isTdStg && ds.lndTasks?.length
+                ? ds.lndTasks.map(t => buildFlowStepHtml(name, t, rowTasks)).join('')
+                : '';
+            const flowClass = isTdStg ? 'task-flow task-flow-tdstg' : 'task-flow';
             return `
             <article class="dataset-card ${dsStatus}">
                 <div class="dataset-head">
-                    <strong>${ds.label}</strong>
-                    <code>${ds.name}</code>
+                    <strong>${ds.targetTableName || ds.label || ds.name}</strong>
                 </div>
-                <div class="task-flow">${tasksHtml}</div>
+                <div class="${flowClass}">${tasksHtml}${lndTasksHtml}</div>
             </article>`;
         }).join('')
         : '<div class="cockpit-empty">Bu katmanda kayıt bulunamadı.</div>';
@@ -1029,10 +1030,8 @@ function mapTaskListesiRows(items) {
         datasetLabel: item.datasetEtiket || item.datasetKod || '',
         task: item.etiket || '',
         loadPeriodType: item.yuklemePeriyodu || '—',
-        transferTypeId: item.transferTypeId,
         transferType: item.transferTipi || '—',
-        active: item.aktif,
-        status: item.durum || 'pending'
+        active: item.aktif
     }));
 }
 
@@ -1047,13 +1046,10 @@ function formatAktiflikCell(active) {
 }
 
 function formatTransferTypeCell(row) {
-    if (row.transferTypeId != null && row.transferType && row.transferType !== '—') {
-        return `<code>${row.transferTypeId}</code> ${row.transferType}`;
+    if (row.transferType && row.transferType !== '—') {
+        return escapeDatasetHtml(row.transferType);
     }
-    if (row.transferTypeId != null) {
-        return `<code>${row.transferTypeId}</code>`;
-    }
-    return row.transferType || '—';
+    return '—';
 }
 
 function buildTaskListRowsFromCockpit() {
@@ -1100,34 +1096,59 @@ function getTaskListRows() {
 }
 
 function taskRowSearchKey(row) {
-    const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
     const activeLabel = row.active === true ? 'aktif' : row.active === false ? 'pasif' : '';
-    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferTypeId, row.transferType, activeLabel, statusLabel, row.status]
+    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferType, activeLabel]
         .join(' ')
         .toLocaleLowerCase('tr-TR');
 }
 
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
-        return '<tr><td colspan="8" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
+        return '<tr><td colspan="7" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
     }
-    return rows.map(row => {
-        const statusLabel = TASK_STATUS_LABELS[row.status] || row.status;
-        return `<tr>
+    return rows.map(row => `
+        <tr>
             <td>${row.layer}</td>
             <td><code>${row.datasetCode}</code></td>
             <td>${row.datasetLabel}</td>
             <td>${row.task}</td>
-            <td>${row.loadPeriodType}</td>
+            <td>${escapeDatasetHtml(row.loadPeriodType)}</td>
             <td>${formatTransferTypeCell(row)}</td>
             <td>${formatAktiflikCell(row.active)}</td>
-            <td><span class="tl-badge ${row.status}">${statusLabel}</span></td>
-        </tr>`;
-    }).join('');
+        </tr>`).join('');
+}
+
+function formatTaskListCountInner(filtered, total) {
+    const isFiltered = filtered !== total;
+    return `
+            <span class="tl-count${isFiltered ? ' is-filtered' : ''}" role="status" aria-live="polite">
+                <span class="tl-count-block">
+                    <span class="tl-count-label">Gösterilen</span>
+                    <strong class="tl-count-value">${filtered}</strong>
+                </span>
+                <span class="tl-count-divider" aria-hidden="true">/</span>
+                <span class="tl-count-block">
+                    <span class="tl-count-label">Toplam</span>
+                    <strong class="tl-count-value">${total}</strong>
+                </span>
+                <span class="tl-count-unit">paket</span>
+            </span>`;
+}
+
+function formatTaskListCountHtml(filtered, total) {
+    return `<div class="tl-count-wrap" id="tlCountWrap">${formatTaskListCountInner(filtered, total)}</div>`;
+}
+
+function updateTaskListCount(root, filtered, total) {
+    const wrap = root.querySelector('#tlCountWrap');
+    if (wrap) {
+        wrap.innerHTML = formatTaskListCountInner(filtered, total);
+    }
 }
 
 function buildTaskListesiHTML() {
     const rows = getTaskListRows();
+    const total = rows.length;
     return `<div class="tl-layout">
         <div class="tl-head">
             <h3>Paket Listesi</h3>
@@ -1139,7 +1160,7 @@ function buildTaskListesiHTML() {
                     <i class="ti ti-search" aria-hidden="true"></i>
                     <input type="search" id="tlSearch" placeholder="Paket, dataset, katman, aktiflik, transfer tipi veya yükleme periyodu ara…" autocomplete="off">
                 </label>
-                <span class="tl-count" id="tlCount">${rows.length} kayıt</span>
+                ${formatTaskListCountHtml(total, total)}
             </div>
             <div class="vs-results-wrap is-fill has-data" id="tlResultsWrap">
                 <table class="vs-results-table">
@@ -1152,7 +1173,6 @@ function buildTaskListesiHTML() {
                             <th>Yükleme Periyodu</th>
                             <th>Transfer Tipi</th>
                             <th>Aktiflik</th>
-                            <th>Durum</th>
                         </tr>
                     </thead>
                     <tbody id="tlBody">${renderTaskListesiRows(rows)}</tbody>
@@ -1167,8 +1187,7 @@ function bindTaskListesiSearch(container) {
     if (!root) return;
     const input = root.querySelector('#tlSearch');
     const body = root.querySelector('#tlBody');
-    const count = root.querySelector('#tlCount');
-    if (!input || !body || !count) return;
+    if (!input || !body) return;
 
     const allRows = getTaskListRows();
 
@@ -1178,7 +1197,7 @@ function bindTaskListesiSearch(container) {
             ? allRows.filter(row => taskRowSearchKey(row).includes(q))
             : allRows;
         body.innerHTML = renderTaskListesiRows(filtered);
-        count.textContent = `${filtered.length} / ${allRows.length} kayıt`;
+        updateTaskListCount(root, filtered.length, allRows.length);
     }
 
     input.addEventListener('input', applyFilter);
@@ -1239,9 +1258,13 @@ function buildPortalDatasetCardHTML(surecOzet) {
         }))
         : COCKPIT_COLUMNS.map(col => {
             const { pct } = getLayerProgress(col);
-            const running = col.datasets.some(ds => ds.tasks.some(t => t.status === 'running'));
-            const failed = col.datasets.some(ds => ds.tasks.some(t => t.status === 'failed'));
-            const allDone = col.datasets.length > 0 && col.datasets.every(ds => ds.tasks.every(t => t.status === 'done'));
+            const running = col.datasets.some(ds => ds.tasks.some(t => t.status === 'running')
+                || (ds.lndTasks || []).some(t => t.status === 'running'));
+            const failed = col.datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
+                || (ds.lndTasks || []).some(t => t.status === 'failed'));
+            const allDone = col.datasets.length > 0 && col.datasets.every(ds =>
+                ds.tasks.every(t => t.status === 'done')
+                && !(ds.lndTasks || []).some(t => t.status === 'failed' || t.status === 'running'));
             return {
                 name: col.name,
                 theme: col.theme,

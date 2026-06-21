@@ -25,6 +25,7 @@ public sealed class SurecKokpitDatasetDto
     public string Kod { get; set; } = string.Empty;
     public string Etiket { get; set; } = string.Empty;
     public IReadOnlyList<SurecKokpitGorevDto> Gorevler { get; set; } = [];
+    public IReadOnlyList<SurecKokpitGorevDto> LndGorevler { get; set; } = [];
 }
 
 public sealed class SurecKokpitGorevDto
@@ -72,9 +73,7 @@ public sealed class TaskListesiDto
     public string DatasetEtiket { get; set; } = string.Empty;
     public string Etiket { get; set; } = string.Empty;
     public string YuklemePeriyodu { get; set; } = string.Empty;
-    public int? TransferTypeId { get; set; }
     public string TransferTipi { get; set; } = string.Empty;
-    public string Durum { get; set; } = string.Empty;
     public bool? Aktif { get; set; }
     public DateTime? SonGuncelleme { get; set; }
 }
@@ -120,4 +119,17 @@ public sealed class TdDatasetStatusSatirDto
     public string Status { get; set; } = string.Empty;
     public int Adet { get; set; }
     public DateTime? SonDurumTarihi { get; set; }
+}
+
+public sealed class TdDatasetStatusOzetDto
+{
+    public string Status { get; set; } = string.Empty;
+    public int Adet { get; set; }
+    public DateTime? SonDurumTarihi { get; set; }
+}
+
+public sealed class TdDatasetStatusResponseDto
+{
+    public IReadOnlyList<TdDatasetStatusOzetDto> DurumOzeti { get; set; } = [];
+    public IReadOnlyList<TdDatasetStatusSatirDto> ModelDurumlar { get; set; } = [];
 }

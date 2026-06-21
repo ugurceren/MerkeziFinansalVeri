@@ -70,6 +70,12 @@ public class SurecController(
                     Etiket = step.Etiket,
                     Durum = step.Durum,
                     DurumMetni = step.DurumMetni
+                }).ToList(),
+                LndGorevler = dataset.LndAdimlar.Select(step => new SurecKokpitGorevDto
+                {
+                    Etiket = step.Etiket,
+                    Durum = step.Durum,
+                    DurumMetni = step.DurumMetni
                 }).ToList()
             }).ToList()
         }).ToList();
@@ -138,7 +144,7 @@ public class SurecController(
     }
 
     [HttpGet("dataset-status")]
-    public async Task<ActionResult<IReadOnlyList<TdDatasetStatusSatirDto>>> GetDatasetStatus(CancellationToken cancellationToken)
+    public async Task<ActionResult<TdDatasetStatusResponseDto>> GetDatasetStatus(CancellationToken cancellationToken)
     {
         var result = await datasetCatalogService.GetStatusAsync(cancellationToken);
         if (!result.Basarili)
@@ -146,15 +152,22 @@ public class SurecController(
             return StatusCode(502, new { error = result.Hata ?? "Dataset statü sorgusu başarısız." });
         }
 
-        var items = result.Satirlar.Select(row => new TdDatasetStatusSatirDto
+        return Ok(new TdDatasetStatusResponseDto
         {
-            DataModel = row.DataModel,
-            Status = row.Status,
-            Adet = row.Adet,
-            SonDurumTarihi = row.SonDurumTarihi
-        }).ToList();
-
-        return Ok(items);
+            DurumOzeti = result.DurumOzeti.Select(row => new TdDatasetStatusOzetDto
+            {
+                Status = row.Status,
+                Adet = row.Adet,
+                SonDurumTarihi = row.SonDurumTarihi
+            }).ToList(),
+            ModelDurumlar = result.ModelDurumlar.Select(row => new TdDatasetStatusSatirDto
+            {
+                DataModel = row.DataModel,
+                Status = row.Status,
+                Adet = row.Adet,
+                SonDurumTarihi = row.SonDurumTarihi
+            }).ToList()
+        });
     }
 
     [HttpGet("datasets")]
@@ -212,9 +225,7 @@ public class SurecController(
             DatasetEtiket = item.DatasetEtiket,
             Etiket = item.Task,
             YuklemePeriyodu = item.YuklemePeriyodu,
-            TransferTypeId = item.TransferTypeId,
             TransferTipi = item.TransferTipi,
-            Durum = item.Durum,
             Aktif = item.Aktif,
             SonGuncelleme = item.SonGuncelleme
         }).ToList();

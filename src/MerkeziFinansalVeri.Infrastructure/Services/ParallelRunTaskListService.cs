@@ -22,36 +22,13 @@ public sealed class ParallelRunTaskListService(
     public async Task<ParallelRunTaskListResult> GetTaskListAsync(CancellationToken cancellationToken = default)
     {
         var ayarlar = GetAyarlar();
-        var sqlPath = Path.Combine(repoRoot, ayarlar.SorguDosyasi.Replace('/', Path.DirectorySeparatorChar));
-
-        if (!File.Exists(sqlPath))
+        var query = await LoadQueryAsync(ayarlar.SorguDosyasi, cancellationToken);
+        if (!query.Basarili)
         {
-            return Fail($"Sorgu dosyası bulunamadı: {ayarlar.SorguDosyasi}");
+            return Fail(query.Hata!);
         }
 
-        string sql;
-        try
-        {
-            sql = (await File.ReadAllTextAsync(sqlPath, cancellationToken)).Trim().TrimEnd(';');
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Paket listesi sorgu dosyası okunamadı: {Path}", sqlPath);
-            return Fail("Sorgu dosyası okunamadı.");
-        }
-
-        if (string.IsNullOrWhiteSpace(sql))
-        {
-            return Fail("Sorgu dosyası boş.");
-        }
-
-        var result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
-            ayarlar.KatmanKodu,
-            sql,
-            ayarlar.SorguTimeoutSaniye,
-            ayarlar.MaxSatir,
-            cancellationToken);
-
+        var result = await ExecuteQueryAsync(ayarlar, query.Sql!, cancellationToken);
         if (!result.Basarili)
         {
             return Fail(result.Hata ?? "Paket listesi sorgusu çalıştırılamadı.", result.SureMs);
@@ -79,11 +56,7 @@ public sealed class ParallelRunTaskListService(
         var packageName = GetCell(row, "PackageName")?.Trim() ?? string.Empty;
         var targetTable = GetCell(row, "TargetTableName")?.Trim() ?? string.Empty;
         var description = GetCell(row, "Description")?.Trim();
-        var statusRaw = GetCell(row, "Status");
         var lastExecution = GetCellDate(row, "LastExecutionDate");
-        var loadPeriodTypeName = GetCell(row, "LoadPeriodTypeName")?.Trim();
-        var transferTypeId = GetCellByte(row, "TransferTypeId");
-        var transferTypeName = GetCell(row, "TransferTypeName")?.Trim();
         var activeFlag = GetCellBool(row, "ActiveFlag");
 
         return new ParallelRunTaskListItem
@@ -92,62 +65,75 @@ public sealed class ParallelRunTaskListService(
             DatasetKod = targetTable,
             DatasetEtiket = string.IsNullOrWhiteSpace(description) ? targetTable : description,
             Task = packageName,
-            YuklemePeriyodu = string.IsNullOrWhiteSpace(loadPeriodTypeName) ? "—" : loadPeriodTypeName,
-            TransferTypeId = transferTypeId,
-            TransferTipi = string.IsNullOrWhiteSpace(transferTypeName) ? "—" : transferTypeName,
-            Durum = NormalizeStatus(statusRaw),
+            YuklemePeriyodu = ResolveName(GetCell(row, "LoadPeriodTypeName")),
+            TransferTipi = ResolveName(GetCell(row, "TransferTypeName")),
             Aktif = activeFlag,
             SonGuncelleme = lastExecution
         };
     }
 
-    internal static string NormalizeStatus(string? statusRaw)
+    private static string ResolveName(string? value)
     {
-        if (string.IsNullOrWhiteSpace(statusRaw))
-        {
-            return "pending";
-        }
-
-        var normalized = statusRaw.Trim().ToLowerInvariant();
-
-        return normalized switch
-        {
-            "done" or "completed" or "complete" or "success" or "successful" or "ok" or "tamam" or "tamamlandi" or "tamamlandı" => "done",
-            "running" or "active" or "inprogress" or "in_progress" or "processing" or "calisiyor" or "çalışıyor" => "running",
-            "failed" or "error" or "fail" or "hata" or "basarisiz" or "başarısız" => "failed",
-            "pending" or "waiting" or "wait" or "bekliyor" or "beklemede" => "pending",
-            _ when normalized.Contains("fail") || normalized.Contains("error") || normalized.Contains("hata") => "failed",
-            _ when normalized.Contains("run") || normalized.Contains("calis") || normalized.Contains("çalış") || normalized.Contains("active") => "running",
-            _ when normalized.Contains("done") || normalized.Contains("success") || normalized.Contains("tamam") || normalized.Contains("complete") => "done",
-            _ => "pending"
-        };
+        var trimmed = value?.Trim();
+        return string.IsNullOrWhiteSpace(trimmed) ? "—" : trimmed;
     }
 
-    private static string? GetCell(IReadOnlyDictionary<string, object?> row, string columnName)
+    private async Task<(bool Basarili, string? Sql, string? Hata)> LoadQueryAsync(
+        string relativePath,
+        CancellationToken cancellationToken)
     {
-        if (row.TryGetValue(columnName, out var direct) && direct is not null)
+        var sqlPath = Path.Combine(repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+
+        if (!File.Exists(sqlPath))
         {
-            return Convert.ToString(direct);
+            return (false, null, $"Sorgu dosyası bulunamadı: {relativePath}");
         }
 
-        var key = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
-        if (key is null || !row.TryGetValue(key, out var value) || value is null)
+        try
         {
-            return null;
-        }
+            var sql = (await File.ReadAllTextAsync(sqlPath, cancellationToken)).Trim().TrimEnd(';');
+            if (string.IsNullOrWhiteSpace(sql))
+            {
+                return (false, null, "Sorgu dosyası boş.");
+            }
 
-        return Convert.ToString(value);
+            return (true, sql, null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Paket listesi sorgu dosyası okunamadı: {Path}", sqlPath);
+            return (false, null, "Sorgu dosyası okunamadı.");
+        }
     }
 
-    private static byte? GetCellByte(IReadOnlyDictionary<string, object?> row, string columnName)
+    private Task<TdQueryResult> ExecuteQueryAsync(
+        ParallelRunTaskListAyarlar ayarlar,
+        string sql,
+        CancellationToken cancellationToken) =>
+        tdConnectionService.ExecuteReadOnlyQueryAsync(
+            ayarlar.KatmanKodu,
+            sql,
+            ayarlar.SorguTimeoutSaniye,
+            ayarlar.MaxSatir,
+            cancellationToken);
+
+    private static string? GetCell(IReadOnlyDictionary<string, object?> row, params string[] columnNames)
     {
-        var text = GetCell(row, columnName);
-        if (string.IsNullOrWhiteSpace(text))
+        foreach (var columnName in columnNames)
         {
-            return null;
+            if (row.TryGetValue(columnName, out var direct) && direct is not null)
+            {
+                return Convert.ToString(direct);
+            }
+
+            var key = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
+            if (key is not null && row.TryGetValue(key, out var value) && value is not null)
+            {
+                return Convert.ToString(value);
+            }
         }
 
-        return byte.TryParse(text, out var parsed) ? parsed : null;
+        return null;
     }
 
     private static bool? GetCellBool(IReadOnlyDictionary<string, object?> row, string columnName)

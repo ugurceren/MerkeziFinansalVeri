@@ -40,6 +40,7 @@ public sealed class EtlLoadCockpitDataset
     public string Kod { get; init; } = string.Empty;
     public string Etiket { get; init; } = string.Empty;
     public IReadOnlyList<EtlLoadCockpitStep> Adimlar { get; init; } = [];
+    public IReadOnlyList<EtlLoadCockpitStep> LndAdimlar { get; init; } = [];
 }
 
 public sealed class EtlLoadCockpitStep
