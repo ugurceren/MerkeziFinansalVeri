@@ -365,6 +365,7 @@ public sealed class EtlLoadCockpitService(
 
     private static readonly HashSet<string> HideSuccessStepLabelLayers = new(StringComparer.OrdinalIgnoreCase)
     {
+        "TDSTG",
         "TDMAIN",
         "TDREPORT"
     };

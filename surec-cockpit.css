@@ -233,6 +233,80 @@
     font-size: 12px;
 }
 
+.col-status-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 14px 10px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+    flex-shrink: 0;
+}
+
+.col-status-summary {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    line-height: 1.35;
+}
+
+.col-status-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cockpit-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 0.5px solid var(--rb-border);
+    background: var(--rb-bg);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+}
+
+.cockpit-status-chip:has(input:not(:checked)) {
+    opacity: 0.55;
+}
+
+.cockpit-status-chip:has(input:checked) {
+    border-color: color-mix(in srgb, var(--chip-color, var(--rb-accent)) 35%, var(--rb-border));
+    background: color-mix(in srgb, var(--chip-color, var(--rb-accent)) 8%, var(--rb-bg));
+}
+
+.cockpit-status-chip input {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    accent-color: var(--chip-color, var(--rb-accent));
+    cursor: pointer;
+}
+
+.cockpit-status-chip strong {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--rb-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.cockpit-status-chip.is-done { --chip-color: #22c55e; }
+.cockpit-status-chip.is-running { --chip-color: #f59e0b; }
+.cockpit-status-chip.is-failed { --chip-color: #ef4444; }
+.cockpit-status-chip.is-pending { --chip-color: var(--rb-text-muted); }
+
+.cockpit-filter-empty {
+    font-size: 11px;
+    padding: 16px 10px;
+}
+
 .dataset-list {
     flex: 1;
     overflow-y: auto;
@@ -1280,13 +1354,20 @@
     flex-direction: column;
 }
 
-.dataset-view-statu .ds-table-card:first-of-type {
-    flex: 0 1 auto;
-    max-height: 42%;
+.dataset-view-statu .ds-status-ozet-card {
+    flex: 0 0 auto;
+    max-height: none;
+}
+
+.dataset-view-statu .ds-status-ozet-card .vs-results-wrap {
+    flex: 0 0 auto;
+    overflow: visible;
+    max-height: none;
 }
 
 .dataset-view-statu .ds-table-card:last-of-type {
     flex: 1 1 auto;
+    min-height: 0;
 }
 
 .ds-table-card {

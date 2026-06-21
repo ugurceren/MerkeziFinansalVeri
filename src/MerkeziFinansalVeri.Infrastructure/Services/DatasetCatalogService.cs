@@ -191,7 +191,7 @@ public sealed class DatasetCatalogService(
             .ThenBy(row => row.Status, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var modelDurumlar = modelResult.Satirlar
+        var modelRows = modelResult.Satirlar
             .Select(row => new DatasetCatalogStatusRow
             {
                 DataModel = GetCell(row, "Data_Model")?.Trim() ?? string.Empty,
@@ -200,7 +200,18 @@ public sealed class DatasetCatalogService(
                 SonDurumTarihi = ParseDate(GetCell(row, "LastStatusChangeDate"))
             })
             .Where(row => !string.IsNullOrWhiteSpace(row.Status))
-            .OrderBy(row => row.DataModel, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var modelTotals = modelRows
+            .GroupBy(row => row.DataModel, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(row => row.Adet),
+                StringComparer.OrdinalIgnoreCase);
+
+        var modelDurumlar = modelRows
+            .OrderByDescending(row => modelTotals.GetValueOrDefault(row.DataModel))
+            .ThenBy(row => row.DataModel, StringComparer.OrdinalIgnoreCase)
             .ThenBy(row => row.Status, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
