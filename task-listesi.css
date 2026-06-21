@@ -142,13 +142,6 @@
     padding-bottom: 2px;
 }
 
-.tl-count-unit {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--rb-text-secondary);
-    padding-left: 2px;
-}
-
 .page-ribbon .tl-count-value { font-size: 22px; }
 .page-ribbon .tl-count-label { font-size: 11px; }
 

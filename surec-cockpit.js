@@ -30,61 +30,84 @@ let DATASET_DOMAINS = [];
 let gunlukAkisDataDate = null;
 let COCKPIT_STATUS_FILTERS = {};
 
-const COCKPIT_FILTER_STATUSES = [
-    { key: 'done', label: 'Success', className: 'is-done' },
-    { key: 'running', label: 'In Progress', className: 'is-running' },
-    { key: 'failed', label: 'Failed', className: 'is-failed' },
-    { key: 'not-started', label: 'Not Started', className: 'is-pending' }
+const COCKPIT_FILTER_STG = [
+    { key: 'Not Started', label: 'Not Started', className: 'is-not-started' },
+    { key: 'In Progress', label: 'In Progress', className: 'is-running' },
+    { key: 'Failed', label: 'Failed', className: 'is-failed' },
+    { key: 'Success', label: 'Success', className: 'is-done' }
 ];
+
+const COCKPIT_FILTER_LND = [
+    { key: 'LND Failed', label: 'LND Failed', className: 'is-lnd-failed' },
+    { key: 'LND Completed', label: 'LND Completed', className: 'is-lnd-done' }
+];
+
+function getFilterStatusesForColumn(columnName) {
+    if (columnName === 'TDSTG') {
+        return [...COCKPIT_FILTER_STG, ...COCKPIT_FILTER_LND];
+    }
+    return COCKPIT_FILTER_STG;
+}
 
 function resetCockpitStatusFilters() {
     COCKPIT_STATUS_FILTERS = {};
 }
 
 function getCockpitStatusFilters(columnName) {
+    const statuses = getFilterStatusesForColumn(columnName);
     if (!COCKPIT_STATUS_FILTERS[columnName]) {
-        COCKPIT_STATUS_FILTERS[columnName] = new Set(COCKPIT_FILTER_STATUSES.map(item => item.key));
+        COCKPIT_STATUS_FILTERS[columnName] = new Set(statuses.map(item => item.key));
     }
     return COCKPIT_STATUS_FILTERS[columnName];
 }
 
-function resolveDatasetCardStatus(ds) {
-    const dsDone = ds.tasks.length > 0 && ds.tasks.every(t => t.status === 'done')
-        && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
-    const dsRunning = ds.tasks.some(t => t.status === 'running')
-        || (ds.lndTasks || []).some(t => t.status === 'running');
-    const dsFailed = ds.tasks.some(t => t.status === 'failed')
-        || (ds.lndTasks || []).some(t => t.status === 'failed');
-    if (dsFailed) return 'failed';
-    if (dsDone) return 'done';
-    if (dsRunning) return 'running';
-    return 'not-started';
+function isStgPhaseComplete(tasks) {
+    return (tasks || []).length > 0 && tasks.every(task => task.status === 'done');
 }
 
-function countDatasetStatuses(datasets) {
-    const counts = { done: 0, running: 0, failed: 0, 'not-started': 0 };
+function resolveDatasetFilterStatus(ds, layerName) {
+    const tasks = ds.tasks || [];
+    const stgActive = resolveActiveFlowLabel(tasks);
+
+    if (layerName !== 'TDSTG' || !ds.lndTasks?.length) {
+        return stgActive;
+    }
+
+    if (!isStgPhaseComplete(tasks)) {
+        return stgActive;
+    }
+
+    const lndActive = resolveActiveFlowLabel(ds.lndTasks);
+    if (lndActive === 'Not Started') {
+        return 'Success';
+    }
+
+    return lndActive;
+}
+
+function countDatasetStatuses(datasets, layerName) {
+    const statuses = getFilterStatusesForColumn(layerName);
+    const counts = Object.fromEntries(statuses.map(item => [item.key, 0]));
     (datasets || []).forEach(ds => {
-        const status = resolveDatasetCardStatus(ds);
-        counts[status] = (counts[status] || 0) + 1;
+        const status = resolveDatasetFilterStatus(ds, layerName);
+        if (Object.prototype.hasOwnProperty.call(counts, status)) {
+            counts[status] += 1;
+        }
     });
     return counts;
 }
 
-function buildColumnStatusSummaryText(datasetsOrCounts) {
-    const counts = Array.isArray(datasetsOrCounts)
-        ? countDatasetStatuses(datasetsOrCounts)
-        : datasetsOrCounts;
-    const parts = COCKPIT_FILTER_STATUSES
-        .map(({ key, label }) => ({ label, count: counts[key] || 0 }))
+function buildColumnStatusSummaryText(counts, columnName) {
+    const parts = getFilterStatusesForColumn(columnName)
+        .map(({ key }) => ({ label: key, count: counts[key] || 0 }))
         .filter(part => part.count > 0)
         .map(part => `${part.count} ${part.label}`);
     return parts.length ? parts.join(', ') : 'Kayıt yok';
 }
 
-function buildColumnStatusFilterHtml(columnName, datasets) {
-    const counts = countDatasetStatuses(datasets);
+function buildColumnStatusCheckboxesHtml(columnName, counts) {
     const filters = getCockpitStatusFilters(columnName);
-    const chips = COCKPIT_FILTER_STATUSES.map(({ key, label, className }) => {
+    const chips = getFilterStatusesForColumn(columnName).map(({ key, label, className }) => {
         const count = counts[key] || 0;
         const checked = filters.has(key);
         return `
@@ -95,17 +118,13 @@ function buildColumnStatusFilterHtml(columnName, datasets) {
             </label>`;
     }).join('');
 
-    return `
-        <div class="col-status-filter">
-            <p class="col-status-summary">${buildColumnStatusSummaryText(counts)}</p>
-            <div class="col-status-checkboxes" role="group" aria-label="Statü filtresi">${chips}</div>
-        </div>`;
+    return `<div class="col-status-checkboxes" role="group" aria-label="Statü filtresi">${chips}</div>`;
 }
 
 function renderCockpitDatasetsHtml(layerName, datasets) {
     const isTdStg = layerName === 'TDSTG';
     const filters = getCockpitStatusFilters(layerName);
-    const visible = (datasets || []).filter(ds => filters.has(resolveDatasetCardStatus(ds)));
+    const visible = (datasets || []).filter(ds => filters.has(resolveDatasetFilterStatus(ds, layerName)));
 
     if (!visible.length) {
         if (!datasets?.length) {
@@ -1015,8 +1034,9 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
     const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
         || (ds.lndTasks || []).some(t => t.status === 'failed'));
     const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
+    const statusCounts = countDatasetStatuses(datasets, name);
     const datasetHtml = renderCockpitDatasetsHtml(name, datasets);
-    const filterHtml = buildColumnStatusFilterHtml(name, datasets);
+    const checkboxHtml = buildColumnStatusCheckboxesHtml(name, statusCounts);
 
     return `
         <div class="cockpit-col theme-${theme} status-${colStatus}" data-column="${name}">
@@ -1035,9 +1055,12 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
                 </div>
             </header>
             <div class="col-stats">
-                <span><strong>${paketSayisi ?? 0}</strong> paket</span>
+                <div class="col-stats-lead">
+                    <span class="col-stats-paket"><strong>${paketSayisi ?? 0}</strong> paket</span>
+                    <span class="col-stats-summary">${buildColumnStatusSummaryText(statusCounts, name)}</span>
+                </div>
+                ${checkboxHtml}
             </div>
-            ${filterHtml}
             <div class="dataset-list">${datasetHtml}</div>
         </div>`;
 }
@@ -1153,7 +1176,8 @@ function mapTaskListesiRows(items) {
         task: item.etiket || '',
         loadPeriodType: item.yuklemePeriyodu || '—',
         transferType: item.transferTipi || '—',
-        active: item.aktif
+        active: item.aktif,
+        lastExecution: item.sonGuncelleme || null
     }));
 }
 
@@ -1185,6 +1209,7 @@ function buildTaskListRowsFromCockpit() {
                     datasetLabel: ds.label,
                     task: task.label,
                     loadPeriodType: '—',
+                    lastExecution: null,
                     taskOrder: idx + 1,
                     active: null,
                     status: task.status
@@ -1219,24 +1244,25 @@ function getTaskListRows() {
 
 function taskRowSearchKey(row) {
     const activeLabel = row.active === true ? 'aktif' : row.active === false ? 'pasif' : '';
-    return [row.layer, row.datasetCode, row.datasetLabel, row.task, row.loadPeriodType, row.transferType, activeLabel]
+    return [row.layer, row.task, row.datasetCode, row.active, row.lastExecution, row.transferType, row.loadPeriodType, row.datasetLabel, activeLabel]
         .join(' ')
         .toLocaleLowerCase('tr-TR');
 }
 
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
-        return '<tr><td colspan="7" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
+        return '<tr><td colspan="8" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
     }
     return rows.map(row => `
         <tr>
             <td>${row.layer}</td>
+            <td>${escapeDatasetHtml(row.task)}</td>
             <td><code>${row.datasetCode}</code></td>
-            <td>${row.datasetLabel}</td>
-            <td>${row.task}</td>
-            <td>${escapeDatasetHtml(row.loadPeriodType)}</td>
-            <td>${formatTransferTypeCell(row)}</td>
             <td>${formatAktiflikCell(row.active)}</td>
+            <td>${formatDatasetDate(row.lastExecution)}</td>
+            <td>${formatTransferTypeCell(row)}</td>
+            <td>${escapeDatasetHtml(row.loadPeriodType)}</td>
+            <td>${row.datasetLabel}</td>
         </tr>`).join('');
 }
 
@@ -1253,7 +1279,6 @@ function formatTaskListCountInner(filtered, total) {
                     <span class="tl-count-label">Toplam</span>
                     <strong class="tl-count-value">${total}</strong>
                 </span>
-                <span class="tl-count-unit">paket</span>
             </span>`;
 }
 
@@ -1289,12 +1314,13 @@ function buildTaskListesiHTML() {
                     <thead>
                         <tr>
                             <th>Katman</th>
-                            <th>Dataset Kodu</th>
-                            <th>Dataset</th>
-                            <th>Task</th>
-                            <th>Yükleme Periyodu</th>
-                            <th>Transfer Tipi</th>
+                            <th>Paket Adı</th>
+                            <th>Hedef Tablo</th>
                             <th>Aktiflik</th>
+                            <th>Son Çalıştırma Tarihi</th>
+                            <th>Transfer Tipi</th>
+                            <th>Yükleme Periyodu</th>
+                            <th>Dataset</th>
                         </tr>
                     </thead>
                     <tbody id="tlBody">${renderTaskListesiRows(rows)}</tbody>

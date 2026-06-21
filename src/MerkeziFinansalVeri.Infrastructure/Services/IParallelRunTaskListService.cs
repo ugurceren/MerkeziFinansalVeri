@@ -11,6 +11,8 @@ public sealed class ParallelRunTaskListAyarlar
 {
     public string KatmanKodu { get; init; } = "TDUTIL";
     public string SorguDosyasi { get; init; } = "config/queries/td-parallel-run.sql";
+    public string LoadPeriodLookupSorguDosyasi { get; init; } = "config/queries/td-load-period-type-lookup.sql";
+    public string TransferTypeLookupSorguDosyasi { get; init; } = "config/queries/td-transfer-type-lookup.sql";
     public int MaxSatir { get; init; } = 100000;
     public int SorguTimeoutSaniye { get; init; } = 120;
 }

@@ -2,6 +2,8 @@
   "TaskListesi": {
     "KatmanKodu": "TDUTIL",
     "SorguDosyasi": "config/queries/td-parallel-run.sql",
+    "LoadPeriodLookupSorguDosyasi": "config/queries/td-load-period-type-lookup.sql",
+    "TransferTypeLookupSorguDosyasi": "config/queries/td-transfer-type-lookup.sql",
     "MaxSatir": 100000,
     "SorguTimeoutSaniye": 120
   }

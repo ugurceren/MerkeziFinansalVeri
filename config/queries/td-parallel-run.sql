@@ -1,17 +1,17 @@
 SELECT
     pr.MainPackageName,
-    pr.PackageName,
-    pr.TargetTableName,
-    pr.Description,
+    pr.PackageName AS [Paket Adı],
+    pr.TargetTableName AS [Hedef Tablo],
     pr.ActiveFlag,
     pr.LastExecutionDate,
     pr.TransferTypeId,
     pr.LoadPeriodTypeId,
-    tt.TransferTypeName,
-    lpt.LoadPeriodTypeName
-FROM [TDUTIL].[OPR].[ParallelRun] pr
-LEFT JOIN [TDUTIL].[OPR].[TransferTypeDefinition] tt
+    tt.TransferTypeName AS TransferTypeName,
+    lpt.LoadPeriodTypeName AS LoadPeriodTypeName,
+    pr.Description
+FROM [OPR].[ParallelRun] pr
+LEFT JOIN [OPR].[TransferTypeDefinition] tt
     ON pr.TransferTypeId = tt.TransferTypeId
-LEFT JOIN [TDUTIL].[OPR].[LoadPeriodTypeDefinition] lpt
+LEFT JOIN [OPR].[LoadPeriodTypeDefinition] lpt
     ON pr.LoadPeriodTypeId = lpt.LoadPeriodTypeId
 ORDER BY pr.MainPackageName, pr.TargetTableName, pr.PackageName
