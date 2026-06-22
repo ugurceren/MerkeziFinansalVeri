@@ -4,13 +4,9 @@
     let activePeriodYilAy = '2026-06';
     let matrixMapData = null;
     let matrixMapFilters = {};
-    let matrixMapFilterPanelOpen = false;
-    let matrixMapFilterDebounceTimer = null;
 
     const MATRIXMAP_COLUMNS = [
         { key: 'systemDateTime', label: 'SystemDateTime' },
-        { key: 'validFrom', label: 'ValidFrom' },
-        { key: 'validUntil', label: 'ValidUntil' },
         { key: 'scdActiveFlag', label: 'SCDActiveFlag' },
         { key: 'trustedDataMatrixMapId', label: 'TrustedDataMatrixMapId' },
         { key: 'sourceName', label: 'SourceName' },
@@ -23,7 +19,9 @@
         { key: 'tdInscopeFlag', label: 'TDInscopeFlag' },
         { key: 'balanceTypeName', label: 'BalanceTypeName' },
         { key: 'insertUserCode', label: 'InsertUserCode' },
-        { key: 'updateUserCode', label: 'UpdateUserCode' }
+        { key: 'updateUserCode', label: 'UpdateUserCode' },
+        { key: 'validFrom', label: 'ValidFrom' },
+        { key: 'validUntil', label: 'ValidUntil' }
     ];
 
     const MATRIXMAP_FILTER_FIELDS = [
@@ -63,6 +61,48 @@
         inceleniyor: { cls: 'inceleniyor', label: 'İnceleniyor' },
         kapatildi: { cls: 'kapatildi', label: 'Kapatıldı' }
     };
+
+    const MONTHS_TR = [
+        'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+    ];
+
+    function formatYilAy(yilAy) {
+        if (!yilAy || !/^\d{4}-\d{2}$/.test(yilAy)) return yilAy || '—';
+        const [yil, ay] = yilAy.split('-');
+        const monthIdx = parseInt(ay, 10) - 1;
+        return `${MONTHS_TR[monthIdx] || ay} ${yil}`;
+    }
+
+    function formatDonemEtiket(period) {
+        if (!period) return '—';
+        return period.etiket || formatYilAy(period.yilAy);
+    }
+
+    function formatKapanisTarihi(value) {
+        if (!value) return '—';
+        const text = String(value).trim();
+        const iso = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (iso) {
+            const date = new Date(`${iso[1]}T12:00:00`);
+            if (!Number.isNaN(date.getTime())) {
+                return date.toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+        }
+        const parsed = new Date(text);
+        if (!Number.isNaN(parsed.getTime())) {
+            return parsed.toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+        return text;
+    }
 
     function formatMoney(n) {
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
@@ -121,11 +161,11 @@
             const badge = STATUS_LABEL[p.durum] || { cls: '', label: p.durum };
             const isActive = p.yilAy === activeId;
             return `<tr class="${isActive ? 'mt-row-active' : ''}" data-period="${p.yilAy}" data-donem-id="${p.donemId}">
-                <td><strong>${p.etiket}</strong></td>
+                <td><strong>${escapeHtml(formatDonemEtiket(p))}</strong></td>
                 <td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>
                 <td class="mt-num">${p.hesapSayisi}</td>
                 <td class="mt-num">${p.farkVerenSayisi}</td>
-                <td>${p.kapanisTarihi || '—'}</td>
+                <td>${formatKapanisTarihi(p.kapanisTarihi)}</td>
             </tr>`;
         }).join('');
     }
@@ -150,7 +190,7 @@
     function buildDonemHTML() {
         const activeId = getActivePeriod();
         const activePeriod = periods.find(p => p.yilAy === activeId);
-        const activeLabel = activePeriod?.etiket || activeId;
+        const activeLabel = formatDonemEtiket(activePeriod || { yilAy: activeId, etiket: '' });
 
         return `<section class="mt-layout">
             <div class="mt-head">
@@ -160,12 +200,15 @@
             <div class="mt-card mt-donem-picker" id="mt-donem-picker">
                 <div class="mt-card-head">
                     <h4><i class="ti ti-calendar" aria-hidden="true"></i> Aktif Dönem</h4>
-                    <span class="mt-active-label">Seçili: <strong>${activeLabel}</strong></span>
+                    <span class="mt-active-label">Seçili: <strong>${escapeHtml(activeLabel)}</strong></span>
                 </div>
                 <div class="mt-donem-picker-body">
                     <div class="mt-period-active">
                         <label for="mtActivePeriod">Dönem (Ay / Yıl)</label>
-                        <input type="month" id="mtActivePeriod" value="${activeId}">
+                        <div class="mt-period-picker-row">
+                            <input type="month" id="mtActivePeriod" value="${activeId}" lang="tr">
+                            <span class="mt-period-tr-label">${escapeHtml(formatYilAy(activeId))}</span>
+                        </div>
                     </div>
                     <p class="mt-hint">Kebir hesapları, mizan ve fark veren ekranlarında varsayılan filtre dönemi olarak kullanılır. Ay/yıl alanından veya alttaki tablodan satır seçerek değiştirebilirsiniz.</p>
                 </div>
@@ -194,18 +237,20 @@
 
     function buildFarkVerenHTML() {
         const activeId = getActivePeriod();
+        const activePeriod = periods.find(p => p.yilAy === activeId);
+        const activeLabel = formatDonemEtiket(activePeriod || { yilAy: activeId, etiket: '' });
         const openDiffs = diffAccounts.filter(r => r.durum === 'acik' || r.durum === 'inceleniyor');
         const totalDiff = openDiffs.reduce((s, r) => s + Math.abs(r.mizanBakiye - r.kartonBakiye), 0);
 
         return `<section class="mt-layout">
             <div class="mt-head">
                 <h3>Fark Veren Hesaplar</h3>
-                <p>Mizan ve karton tablo bakiye farkları — ${activeId} dönemi</p>
+                <p>Mizan ve karton tablo bakiye farkları — ${escapeHtml(activeLabel)} dönemi</p>
             </div>
             <div class="mt-card" id="mt-fark">
                 <div class="mt-card-head">
                     <h4><i class="ti ti-arrows-diff" aria-hidden="true"></i> Fark Listesi</h4>
-                    <span>${activeId} dönemi</span>
+                    <span>${escapeHtml(activeLabel)} dönemi</span>
                 </div>
                 <div class="mt-summary">
                     <div class="mt-stat">
@@ -284,86 +329,89 @@
         }).join('');
     }
 
-    function buildMatrixMapFilterPanel() {
+    function formatMatrixMapRecordCount(data) {
+        if (!data?.basarili) return '— kayıt';
+        const rows = data.satirlar || [];
+        const shown = rows.length;
+        const total = data.satirSayisi ?? shown;
+        return `${shown.toLocaleString('tr-TR')}/${total.toLocaleString('tr-TR')} kayıt`;
+    }
+
+    function updateMatrixMapRecordCount(root, data) {
+        const el = root.querySelector('#mtMatrixRecordCount');
+        if (el) el.textContent = formatMatrixMapRecordCount(data);
+    }
+
+    function buildMatrixMapHead(recordText = '— kayıt') {
+        return `<div class="mt-head mt-mm-head">
+            <h3>Matrix Map</h3>
+            <span class="mt-mm-record-count" id="mtMatrixRecordCount">${escapeHtml(recordText)}</span>
+        </div>`;
+    }
+
+    function buildMatrixMapFilterBar() {
         const fields = MATRIXMAP_FILTER_FIELDS.map(field => {
             const value = escapeHtml(matrixMapFilters[field.apiKey] ?? '');
             if (field.type === 'tinyint') {
                 const selected = value === '' ? '' : value;
                 return `<div class="fg">
-                    <select id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}" aria-label="${field.label}">
-                        <option value=""${selected === '' ? ' selected' : ''}>TDInscopeFlag</option>
+                    <label for="mmf-${field.apiKey}">${field.label}</label>
+                    <select id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}">
+                        <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
                         <option value="1"${selected === '1' ? ' selected' : ''}>1</option>
                         <option value="0"${selected === '0' ? ' selected' : ''}>0</option>
                     </select>
                 </div>`;
             }
             return `<div class="fg">
+                <label for="mmf-${field.apiKey}">${field.label}</label>
                 <input type="text" id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}"
-                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label}" aria-label="${field.label}">
+                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">
             </div>`;
         }).join('');
 
-        return `<div class="mt-mm-filter-panel${matrixMapFilterPanelOpen ? '' : ' is-hidden'}" id="mtMatrixFilterPanel">
+        return `<div class="filter-bar mt-mm-filter-bar" id="mtMatrixFilterPanel">
             ${fields}
+            <button type="button" class="filter-btn" id="mtMatrixFilterBtn">Filtrele</button>
+        </div>`;
+    }
+
+    function buildMatrixMapTableSection(data) {
+        if (!data) {
+            return `<div class="mt-card mt-mm-card">
+                ${buildMatrixMapFilterBar()}
+                <div class="mt-mm-loading">Veri getiriliyor…</div>
+            </div>`;
+        }
+
+        if (!data.basarili) {
+            return `<div class="mt-card mt-mm-card">
+                ${buildMatrixMapFilterBar()}
+                <div class="mt-error" role="alert">${escapeHtml(data.hata || 'Veri yüklenemedi.')}</div>
+            </div>`;
+        }
+
+        const rows = data.satirlar || [];
+        return `<div class="mt-card mt-mm-card" id="mt-matrixmap">
+            ${buildMatrixMapFilterBar()}
+            <div class="mt-mm-scroll">
+                <table class="mt-table" id="mtMatrixTable">
+                    <thead>
+                        <tr>${MATRIXMAP_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>${buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`}</tbody>
+                </table>
+            </div>
         </div>`;
     }
 
     function buildMatrixMapHTML() {
         const data = matrixMapData;
-
-        if (!data) {
-            return `<section class="mt-layout mt-matrixmap-layout">
-                <div class="mt-head mt-mm-head">
-                    <div class="mt-mm-head-main">
-                        <h3>Matrix Map</h3>
-                        <div class="mt-mm-head-actions">
-                            <button type="button" class="filter-btn" id="mtMatrixFilterBtn">Filtrele</button>
-                            <button type="button" class="filter-btn filter-btn-secondary" id="mtMatrixClearBtn">Temizle</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-card mt-loading">Veri getiriliyor…</div>
-            </section>`;
-        }
-
-        if (!data.basarili) {
-            return `<section class="mt-layout mt-matrixmap-layout">
-                <div class="mt-head mt-mm-head">
-                    <div class="mt-mm-head-main">
-                        <h3>Matrix Map</h3>
-                        <div class="mt-mm-head-actions">
-                            <button type="button" class="filter-btn" id="mtMatrixFilterBtn">Filtrele</button>
-                            <button type="button" class="filter-btn filter-btn-secondary" id="mtMatrixClearBtn">Temizle</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-error" role="alert">${escapeHtml(data.hata || 'Veri yüklenemedi.')}</div>
-            </section>`;
-        }
-
-        const rows = data.satirlar || [];
+        const recordText = data?.basarili ? formatMatrixMapRecordCount(data) : '— kayıt';
 
         return `<section class="mt-layout mt-matrixmap-layout">
-            <div class="mt-head mt-mm-head">
-                <div class="mt-mm-head-main">
-                    <h3>Matrix Map</h3>
-                    <div class="mt-mm-head-actions">
-                        <button type="button" class="filter-btn" id="mtMatrixFilterBtn">Filtrele</button>
-                        <button type="button" class="filter-btn filter-btn-secondary" id="mtMatrixClearBtn">Temizle</button>
-                    </div>
-                </div>
-            </div>
-            ${buildMatrixMapFilterPanel()}
-            <div class="mt-card mt-mm-card" id="mt-matrixmap">
-                <div class="mt-mm-scroll">
-                    <table class="mt-table" id="mtMatrixTable">
-                        <thead>
-                            <tr>${MATRIXMAP_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr>
-                        </thead>
-                        <tbody>${buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`}</tbody>
-                    </table>
-                </div>
-            </div>
+            ${buildMatrixMapHead(recordText)}
+            ${buildMatrixMapTableSection(data)}
         </section>`;
     }
 
@@ -384,8 +432,8 @@
     }
 
     async function applyMatrixMapFilter(root) {
-        const filters = collectMatrixMapFilters(root);
-        await loadMatrixMapData(filters);
+        matrixMapFilters = collectMatrixMapFilters(root);
+        await loadMatrixMapData(matrixMapFilters);
         if (!matrixMapData?.basarili) {
             await initMutabakatPage(root);
             return;
@@ -395,50 +443,19 @@
             const rows = matrixMapData.satirlar || [];
             tbody.innerHTML = buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`;
         }
-    }
-
-    function scheduleMatrixMapFilter(root) {
-        clearTimeout(matrixMapFilterDebounceTimer);
-        matrixMapFilterDebounceTimer = setTimeout(() => {
-            applyMatrixMapFilter(root);
-        }, 300);
+        updateMatrixMapRecordCount(root, matrixMapData);
     }
 
     function bindMatrixMapPage(root) {
         const pageBody = document.getElementById('pageBody');
         pageBody?.classList.add('page-body-matrixmap');
 
-        root.querySelector('#mtMatrixFilterBtn')?.addEventListener('click', () => {
-            const panel = root.querySelector('#mtMatrixFilterPanel');
-            if (!panel) return;
-            matrixMapFilterPanelOpen = !matrixMapFilterPanelOpen;
-            panel.classList.toggle('is-hidden', !matrixMapFilterPanelOpen);
-        });
-
-        root.querySelector('#mtMatrixClearBtn')?.addEventListener('click', async () => {
-            clearTimeout(matrixMapFilterDebounceTimer);
-            matrixMapFilters = {};
-            root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
-                input.value = '';
-            });
-            await loadMatrixMapData({});
-            if (!matrixMapData?.basarili) {
-                await initMutabakatPage(root);
-                return;
-            }
-            const tbody = root.querySelector('#mtMatrixTable tbody');
-            if (tbody) {
-                const rows = matrixMapData.satirlar || [];
-                tbody.innerHTML = buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`;
-            }
-        });
+        root.querySelector('#mtMatrixFilterBtn')?.addEventListener('click', () => applyMatrixMapFilter(root));
 
         root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
-            if (input.tagName === 'SELECT') {
-                input.addEventListener('change', () => applyMatrixMapFilter(root));
-                return;
-            }
-            input.addEventListener('input', () => scheduleMatrixMapFilter(root));
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') applyMatrixMapFilter(root);
+            });
         });
     }
 

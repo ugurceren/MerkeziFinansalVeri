@@ -32,6 +32,8 @@ let gunlukAkisDataDate = null;
 let cockpitRenderMode = 'default';
 /** Boş = tüm paketler görünür; dolu = yalnızca seçili statüler */
 let COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
+/** Yalnızca TDSTG kolonu — LND Failed / LND Completed */
+let COCKPIT_TDSTG_LND_FILTERS = new Set();
 
 const COCKPIT_FILTER_STG = [
     { key: 'Not Started', label: 'Not Started', className: 'is-not-started' },
@@ -46,14 +48,10 @@ const COCKPIT_FILTER_LND = [
 ];
 
 function getGlobalFilterOptions() {
-    const hasTdStg = COCKPIT_COLUMNS.some(col => col.name === 'TDSTG');
-    return hasTdStg ? [...COCKPIT_FILTER_STG, ...COCKPIT_FILTER_LND] : COCKPIT_FILTER_STG;
+    return COCKPIT_FILTER_STG;
 }
 
 function getFilterStatusesForColumn(columnName) {
-    if (columnName === 'TDSTG') {
-        return [...COCKPIT_FILTER_STG, ...COCKPIT_FILTER_LND];
-    }
     return COCKPIT_FILTER_STG;
 }
 
@@ -96,10 +94,57 @@ function formatFlowRecordCount(value) {
 
 function resetCockpitStatusFilters() {
     COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
+    COCKPIT_TDSTG_LND_FILTERS = new Set();
 }
 
 function isGlobalFilterActive() {
     return COCKPIT_GLOBAL_STATUS_FILTERS.size > 0;
+}
+
+function isTdStgLndFilterActive() {
+    return COCKPIT_TDSTG_LND_FILTERS.size > 0;
+}
+
+function isColumnFilterActive(layerName) {
+    if (layerName === 'TDSTG') {
+        return isGlobalFilterActive() || isTdStgLndFilterActive();
+    }
+    return isGlobalFilterActive();
+}
+
+function resolveTdStgStgFilterStatus(ds) {
+    const tasks = ds.tasks || [];
+    if (!tasks.length) return 'Not Started';
+    if (tasks.some(t => t.status === 'failed')) return 'Failed';
+    if (tasks.every(t => t.status === 'done')) return 'Success';
+    if (tasks.some(t => t.status === 'running')) return 'In Progress';
+    return 'Not Started';
+}
+
+function resolveTdStgLndFilterStatus(ds) {
+    const tasks = ds.tasks || [];
+    if (!isStgPhaseComplete(tasks) || !ds.lndTasks?.length) return null;
+    const lndActive = resolveActiveFlowLabel(ds.lndTasks);
+    if (lndActive === 'LND Failed' || lndActive === 'LND Completed') {
+        return lndActive;
+    }
+    return null;
+}
+
+function isTdStgDatasetVisible(ds) {
+    const stgFilterOn = isGlobalFilterActive();
+    const lndFilterOn = isTdStgLndFilterActive();
+    if (!stgFilterOn && !lndFilterOn) return true;
+
+    let visible = true;
+    if (stgFilterOn) {
+        visible = COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveTdStgStgFilterStatus(ds));
+    }
+    if (lndFilterOn) {
+        const lndStatus = resolveTdStgLndFilterStatus(ds);
+        visible = visible && lndStatus !== null && COCKPIT_TDSTG_LND_FILTERS.has(lndStatus);
+    }
+    return visible;
 }
 
 function resolveTaskFilterStatus(task) {
@@ -118,12 +163,27 @@ function isTaskVisible(task) {
 }
 
 function isDatasetVisible(ds, layerName) {
+    if (layerName === 'TDSTG') {
+        return isTdStgDatasetVisible(ds);
+    }
     if (!isGlobalFilterActive()) return true;
     return COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveDatasetFilterStatus(ds, layerName));
 }
 
 function isStgPhaseComplete(tasks) {
     return (tasks || []).length > 0 && tasks.every(task => task.status === 'done');
+}
+
+function isProcessFlowLayer(layerName) {
+    return layerName === 'TDSTG' || layerName === 'TDMAIN' || layerName === 'TDREPORT';
+}
+
+function resolveDatasetCardStatus(ds, layerName) {
+    const status = resolveDatasetFilterStatus(ds, layerName);
+    if (status === 'Failed' || status === 'LND Failed') return 'failed';
+    if (status === 'Success' || status === 'LND Completed') return 'done';
+    if (status === 'In Progress') return 'running';
+    return 'waiting';
 }
 
 function resolveDatasetFilterStatus(ds, layerName) {
@@ -162,6 +222,14 @@ function countGlobalDatasetStatuses() {
     COCKPIT_COLUMNS.forEach(col => {
         (col.datasets || []).forEach(ds => {
             if (col.name === 'TDSTG') {
+                const status = resolveTdStgStgFilterStatus(ds);
+                if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                    counts[status] += 1;
+                }
+                return;
+            }
+
+            if (isProcessFlowLayer(col.name)) {
                 const status = resolveDatasetFilterStatus(ds, col.name);
                 if (Object.prototype.hasOwnProperty.call(counts, status)) {
                     counts[status] += 1;
@@ -178,6 +246,18 @@ function countGlobalDatasetStatuses() {
         });
     });
 
+    return counts;
+}
+
+function countTdStgLndStatuses() {
+    const counts = Object.fromEntries(COCKPIT_FILTER_LND.map(item => [item.key, 0]));
+    const tdStg = COCKPIT_COLUMNS.find(col => col.name === 'TDSTG');
+    (tdStg?.datasets || []).forEach(ds => {
+        const status = resolveTdStgLndFilterStatus(ds);
+        if (status && Object.prototype.hasOwnProperty.call(counts, status)) {
+            counts[status] += 1;
+        }
+    });
     return counts;
 }
 
@@ -199,7 +279,9 @@ function countVisibleDatasetStatuses(datasets, layerName) {
 
         if (!isDatasetVisible(ds, layerName)) return;
 
-        const status = resolveDatasetFilterStatus(ds, layerName);
+        const status = layerName === 'TDSTG'
+            ? resolveTdStgStgFilterStatus(ds)
+            : resolveDatasetFilterStatus(ds, layerName);
         if (Object.prototype.hasOwnProperty.call(counts, status)) {
             counts[status] += 1;
         }
@@ -222,6 +304,22 @@ function buildGlobalStatusFiltersHtml() {
     }).join('');
 
     return `<div class="cockpit-global-filters" role="group" aria-label="Statü filtresi">${chips}</div>`;
+}
+
+function buildTdStgLndFiltersHtml() {
+    const counts = countTdStgLndStatuses();
+    const chips = COCKPIT_FILTER_LND.map(({ key, label, className }) => {
+        const count = counts[key] || 0;
+        const checked = COCKPIT_TDSTG_LND_FILTERS.has(key);
+        return `
+            <label class="cockpit-status-chip ${className}">
+                <input type="checkbox" data-lnd-status="${key}" ${checked ? 'checked' : ''} aria-label="${label} filtre">
+                <span>${label}</span>
+                <strong>${count}</strong>
+            </label>`;
+    }).join('');
+
+    return `<div class="col-status-checkboxes cockpit-tdstg-lnd-filters" role="group" aria-label="LND statü filtresi">${chips}</div>`;
 }
 
 function getVisiblePaketCount(datasets, layerName) {
@@ -280,23 +378,19 @@ function renderCockpitDatasetsHtml(layerName, datasets) {
 
     return visible.map(ds => {
         const visibleTasks = isLedgerLayer ? (ds.tasks || []).filter(isTaskVisible) : (ds.tasks || []);
-        const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done')
-            && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
-        const dsRunning = visibleTasks.some(t => t.status === 'running')
-            || (ds.lndTasks || []).some(t => t.status === 'running');
-        const dsFailed = visibleTasks.some(t => t.status === 'failed')
-            || (ds.lndTasks || []).some(t => t.status === 'failed');
-        const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-        const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
 
         let flowHtml;
         if (isLedgerLayer) {
+            const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
             const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
             const flowClass = cockpitRenderMode === 'mizan'
                 ? 'task-flow task-flow-mizan'
                 : 'task-flow task-flow-ledger';
             flowHtml = `<div class="${flowClass}">${tasksHtml}</div>`;
+        } else if (isProcessFlowLayer(layerName)) {
+            flowHtml = buildSingleStatusFlowHtml(layerName, ds);
         } else {
+            const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
             const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
             const lndTasksHtml = isTdStg && ds.lndTasks?.length
                 ? ds.lndTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('')
@@ -304,6 +398,18 @@ function renderCockpitDatasetsHtml(layerName, datasets) {
             const flowClass = isTdStg ? 'task-flow task-flow-tdstg' : 'task-flow';
             flowHtml = `<div class="${flowClass}">${tasksHtml}${lndTasksHtml}</div>`;
         }
+
+        const dsStatus = isProcessFlowLayer(layerName)
+            ? resolveDatasetCardStatus(ds, layerName)
+            : (() => {
+                const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done')
+                    && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
+                const dsRunning = visibleTasks.some(t => t.status === 'running')
+                    || (ds.lndTasks || []).some(t => t.status === 'running');
+                const dsFailed = visibleTasks.some(t => t.status === 'failed')
+                    || (ds.lndTasks || []).some(t => t.status === 'failed');
+                return dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
+            })();
 
         return `
             <article class="dataset-card ${dsStatus}">
@@ -331,7 +437,10 @@ function refreshCockpitColumnDatasets(columnName) {
     const paketEl = colEl.querySelector('.col-stats-paket strong');
     if (paketEl) {
         const visibleCount = getVisiblePaketCount(col.datasets, columnName);
-        paketEl.textContent = isGlobalFilterActive() ? visibleCount : (col.paketSayisi ?? visibleCount);
+        paketEl.textContent = isColumnFilterActive(columnName) ? visibleCount : (col.paketSayisi ?? visibleCount);
+    }
+    if (columnName === 'TDSTG') {
+        updateTdStgLndFilterCounts();
     }
 }
 
@@ -345,9 +454,20 @@ function updateGlobalFilterCounts() {
     });
 }
 
+function updateTdStgLndFilterCounts() {
+    const counts = countTdStgLndStatuses();
+    document.querySelectorAll('.cockpit-tdstg-lnd-filters .cockpit-status-chip input[data-lnd-status]').forEach(input => {
+        const strong = input.parentElement?.querySelector('strong');
+        if (strong) {
+            strong.textContent = counts[input.dataset.lndStatus] || 0;
+        }
+    });
+}
+
 function refreshAllCockpitColumns() {
     COCKPIT_COLUMNS.forEach(col => refreshCockpitColumnDatasets(col.name));
     updateGlobalFilterCounts();
+    updateTdStgLndFilterCounts();
 }
 
 function getDefaultGunlukAkisDate() {
@@ -1274,7 +1394,7 @@ function buildFlowStepHtml(layerName, task, rowTasks) {
 }
 
 function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
-    const pct = tamamlanmaYuzdesi ?? 0;
+    const pct = Math.min(100, tamamlanmaYuzdesi ?? 0);
     const allDone = pct >= 100;
     const hasRunning = datasets.some(ds => ds.tasks.some(t => t.status === 'running')
         || (ds.lndTasks || []).some(t => t.status === 'running'));
@@ -1283,6 +1403,9 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
     const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
     const statusCounts = countVisibleDatasetStatuses(datasets, name);
     const datasetHtml = renderCockpitDatasetsHtml(name, datasets);
+    const visiblePaket = getVisiblePaketCount(datasets, name);
+    const paketDisplay = isColumnFilterActive(name) ? visiblePaket : (paketSayisi ?? visiblePaket);
+    const lndFiltersHtml = name === 'TDSTG' ? buildTdStgLndFiltersHtml() : '';
 
     return `
         <div class="cockpit-col theme-${theme} status-${colStatus}" data-column="${name}">
@@ -1302,7 +1425,10 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
             </header>
             <div class="col-stats">
                 <div class="col-stats-lead">
-                    <span class="col-stats-paket"><strong>${paketSayisi ?? 0}</strong> paket</span>
+                    <div class="col-stats-paket-row">
+                        <span class="col-stats-paket"><strong>${paketDisplay}</strong> paket</span>
+                        ${lndFiltersHtml}
+                    </div>
                     <span class="col-stats-summary">${buildColumnStatusSummaryText(statusCounts, name)}</span>
                 </div>
             </div>
@@ -1363,8 +1489,24 @@ function bindGlobalCockpitStatusFilters() {
 
     cockpit.addEventListener('change', event => {
         const input = event.target;
-        if (!(input instanceof HTMLInputElement)) return;
-        if (input.type !== 'checkbox' || !input.closest('.cockpit-global-filters')) return;
+        if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox') return;
+
+        if (input.closest('.cockpit-tdstg-lnd-filters')) {
+            const status = input.dataset.lndStatus;
+            if (!status) return;
+
+            if (input.checked) {
+                COCKPIT_TDSTG_LND_FILTERS.add(status);
+            } else {
+                COCKPIT_TDSTG_LND_FILTERS.delete(status);
+            }
+            refreshCockpitColumnDatasets('TDSTG');
+            updateGlobalFilterCounts();
+            updateTdStgLndFilterCounts();
+            return;
+        }
+
+        if (!input.closest('.cockpit-global-filters')) return;
 
         const status = input.dataset.status;
         if (!status) return;

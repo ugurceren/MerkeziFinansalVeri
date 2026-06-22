@@ -77,6 +77,20 @@
     border-color: var(--rb-accent);
 }
 
+.mt-period-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mt-period-tr-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rb-text);
+    letter-spacing: 0.01em;
+}
+
 .mt-donem-picker-body {
     padding: 12px 14px 14px;
     display: flex;
@@ -286,67 +300,77 @@
 .mt-mm-head {
     margin: 0;
     flex-shrink: 0;
-}
-
-.mt-mm-head-main {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
-    flex-wrap: wrap;
 }
 
-.mt-mm-head-main h3 {
+.mt-mm-head h3 {
     margin: 0;
 }
 
-.mt-mm-head-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+.mt-mm-record-count {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rb-text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.mt-mm-filter-panel {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    padding: 10px 12px;
-    border: 0.5px solid var(--rb-border);
-    border-radius: 10px;
-    background: var(--rb-filter-bg);
+.mt-mm-filter-bar {
+    background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
+    border-bottom-color: color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));
+    padding: 10px 14px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
-.mt-mm-filter-panel.is-hidden {
-    display: none;
+.mt-mm-filter-bar .fg {
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
-.mt-mm-filter-panel .fg {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    min-width: 180px;
-}
-
-.mt-mm-filter-panel label {
-    display: none;
-}
-
-.mt-mm-filter-input {
-    height: 32px;
-    padding: 0 10px;
+.mt-mm-filter-bar .fg label {
+    display: block;
     font-size: 12px;
+    font-weight: 700;
+    color: var(--rb-text);
+    text-align: center;
+    width: 100%;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.mt-mm-filter-bar .mt-mm-filter-input {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
     border: 0.5px solid var(--rb-border);
     border-radius: 6px;
     background: var(--rb-input-bg);
     color: var(--rb-text);
     font-family: inherit;
-    min-width: 180px;
+    width: 200px;
+    max-width: 100%;
 }
 
-.mt-mm-filter-input:focus {
+.mt-mm-filter-bar .mt-mm-filter-input:focus {
     outline: none;
     border-color: var(--rb-accent);
+}
+
+.mt-mm-filter-bar .filter-btn {
+    height: 30px;
+    align-self: flex-end;
+}
+
+.mt-mm-loading {
+    padding: 16px 14px;
+    font-size: 12px;
+    color: var(--rb-text-muted);
 }
 
 .mt-mm-card {

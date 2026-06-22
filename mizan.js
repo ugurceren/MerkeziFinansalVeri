@@ -1,6 +1,5 @@
 (function () {
     const LAYER_ORDER = ['STG', 'LND', 'TDMAIN'];
-    const LAYER_ICONS = { STG: 'ti-database-import', LND: 'ti-transform', TDMAIN: 'ti-database-export' };
     const TARGET_TABLES = {
         STG: 'TDSTG.STG.LedgerBalance',
         LND: 'TDSTG.LND.LedgerBalance',
@@ -9,7 +8,6 @@
 
     let mizanLayers = [];
     let mizanDataDate = null;
-    let mizanRoot = null;
 
     function getMizanDataDate() {
         if (mizanDataDate) return mizanDataDate;
@@ -71,6 +69,13 @@
         return 'waiting';
     }
 
+    function statusBadgeText(status) {
+        if (status === 'done') return 'Tamam';
+        if (status === 'failed') return 'Hata';
+        if (status === 'running') return 'Aktif';
+        return 'Bekliyor';
+    }
+
     function canStartLayer(layer, prevLayer) {
         const pkg = layer.package;
         if (!pkg) return false;
@@ -81,85 +86,67 @@
             || pkg.status === 'not-started';
     }
 
-    function buildPackageNode(pkg) {
-        const count = formatRecordCount(pkg.recordCount);
-        const countHtml = count !== null
-            ? `<span class="mizan-pkg-count">${count}</span><span class="mizan-pkg-count-label">kayıt</span>`
-            : `<span class="mizan-pkg-count mizan-pkg-count-empty">—</span>`;
-
-        const errorHtml = pkg.errorMessage
-            ? `<p class="mizan-pkg-error" title="${escapeHtml(pkg.errorMessage)}">${escapeHtml(pkg.errorMessage)}</p>`
-            : '';
-
+    function buildSeqArrow() {
         return `
-            <div class="mizan-pkg-node status-${escapeHtml(pkg.status)}">
-                ${countHtml}
-                <span class="mizan-pkg-name" title="${escapeHtml(pkg.name)}">${escapeHtml(pkg.name)}</span>
-                <span class="mizan-pkg-status">${escapeHtml(pkg.statusText)}</span>
-                ${errorHtml}
-            </div>`;
-    }
-
-    function buildStageConnector() {
-        return `
-            <div class="mizan-stage-connector" aria-hidden="true">
-                <span class="mizan-stage-connector-line"></span>
+            <div class="mizan-seq-arrow" aria-hidden="true">
+                <span class="mizan-seq-arrow-line"></span>
                 <i class="ti ti-chevron-right"></i>
             </div>`;
     }
 
-    function buildStageHtml(layer, prevLayer) {
+    function buildSeqStepHtml(layer, prevLayer) {
         const status = resolveLayerStatus(layer);
-        const icon = LAYER_ICONS[layer.code] || 'ti-layers-intersect';
         const pkg = layer.package;
-        const pct = layer.tamamlanmaYuzdesi ?? 0;
         const showStart = canStartLayer(layer, prevLayer);
         const startDisabled = pkg?.status === 'running'
             || (prevLayer && resolveLayerStatus(prevLayer) !== 'done');
 
-        const packageHtml = pkg
-            ? buildPackageNode(pkg)
-            : '<div class="mizan-stage-empty">Paket bilgisi bulunamadı.</div>';
+        const count = formatRecordCount(pkg?.recordCount);
+        const countHtml = count !== null
+            ? `<span class="mizan-seq-count">${count} <em>kayıt</em></span>`
+            : '<span class="mizan-seq-count is-empty">—</span>';
+
+        const errorHtml = pkg?.errorMessage
+            ? `<p class="mizan-seq-error" title="${escapeHtml(pkg.errorMessage)}">${escapeHtml(pkg.errorMessage)}</p>`
+            : '';
+
+        const messageHtml = pkg
+            ? `<div class="mizan-seq-message status-${escapeHtml(pkg.status)}">
+                <span class="mizan-seq-status">${escapeHtml(pkg.statusText)}</span>
+                <span class="mizan-seq-target" title="${escapeHtml(pkg.name)}">${escapeHtml(layer.targetTable)}</span>
+                ${countHtml}
+                ${errorHtml}
+            </div>`
+            : '<div class="mizan-seq-message is-empty">Paket bilgisi yok</div>';
 
         const startHtml = showStart
-            ? `<div class="mizan-stage-actions">
-                <button type="button"
-                    class="mizan-start-btn"
-                    data-layer="${escapeHtml(layer.code)}"
-                    ${startDisabled ? 'disabled' : ''}
-                    title="${startDisabled ? 'Önceki katman tamamlanmalı' : `${layer.targetTable} paketini başlat`}">
-                    <i class="ti ti-player-play" aria-hidden="true"></i>
-                    Paket Başlat
-                </button>
-            </div>`
+            ? `<button type="button"
+                class="mizan-seq-start"
+                data-layer="${escapeHtml(layer.code)}"
+                ${startDisabled ? 'disabled' : ''}
+                title="${startDisabled ? 'Önceki adım tamamlanmalı' : `${layer.targetTable} paketini başlat`}">
+                <i class="ti ti-player-play" aria-hidden="true"></i>
+                Başlat
+            </button>`
             : '';
 
         return `
-            <article class="mizan-stage theme-${escapeHtml(layer.theme)} status-${status}" data-layer="${escapeHtml(layer.code)}">
-                <header class="mizan-stage-head">
-                    <div class="mizan-stage-icon" aria-hidden="true"><i class="ti ${icon}"></i></div>
-                    <div class="mizan-stage-titles">
-                        <h4>${escapeHtml(layer.code)}</h4>
-                        <p>${escapeHtml(layer.role)}</p>
-                    </div>
-                    <div class="mizan-stage-meta">
-                        <span class="mizan-stage-pct">${pct}%</span>
-                        <span class="mizan-stage-pct-label">tamamlandı</span>
-                        <span class="mizan-stage-badge">${status === 'done' ? 'Tamam' : status === 'failed' ? 'Hata' : status === 'running' ? 'Aktif' : 'Bekliyor'}</span>
-                    </div>
-                </header>
-                <div class="mizan-stage-body">
-                    ${packageHtml}
+            <div class="mizan-seq-step theme-${escapeHtml(layer.theme)} status-${status}" data-layer="${escapeHtml(layer.code)}">
+                <div class="mizan-seq-participant">
+                    <span class="mizan-seq-code">${escapeHtml(layer.code)}</span>
+                    <span class="mizan-seq-badge">${statusBadgeText(status)}</span>
                 </div>
+                <div class="mizan-seq-lifeline" aria-hidden="true"></div>
+                ${messageHtml}
                 ${startHtml}
-            </article>`;
+            </div>`;
     }
 
-    function buildPipelineHtml(layers) {
+    function buildSequenceHtml(layers) {
         return layers.map((layer, index) => {
             const prev = index > 0 ? layers[index - 1] : null;
-            const connector = index > 0 ? buildStageConnector() : '';
-            return `${connector}${buildStageHtml(layer, prev)}`;
+            const arrow = index > 0 ? buildSeqArrow() : '';
+            return `${arrow}${buildSeqStepHtml(layer, prev)}`;
         }).join('');
     }
 
@@ -170,15 +157,17 @@
                 <header class="mizan-header">
                     <div class="mizan-header-main">
                         <h2>Mizan Akışı</h2>
-                        <p>TDSTG.STG → TDSTG.LND → TDMAIN.COR · LedgerBalance</p>
+                        <p>LedgerBalance · STG → LND → TDMAIN</p>
                     </div>
                     <label class="mizan-date-filter">
                         <span>Veri Tarihi</span>
                         <input type="date" id="mizanDataDate" value="${dataDate}" aria-label="Veri tarihi">
                     </label>
                 </header>
-                <div class="mizan-pipeline" role="list" aria-label="Mizan katman akışı">
-                    ${buildPipelineHtml(layers)}
+                <div class="mizan-seq" role="list" aria-label="Mizan katman akışı">
+                    <div class="mizan-seq-track">
+                        ${buildSequenceHtml(layers)}
+                    </div>
                 </div>
                 <p class="mizan-footnote" id="mizanFootnote" hidden></p>
             </section>`;
@@ -200,7 +189,7 @@
     }
 
     async function handlePaketBaslat(root, layerCode) {
-        const btn = root.querySelector(`.mizan-start-btn[data-layer="${layerCode}"]`);
+        const btn = root.querySelector(`.mizan-seq-start[data-layer="${layerCode}"]`);
         if (btn) {
             btn.disabled = true;
             btn.classList.add('is-loading');
@@ -222,8 +211,6 @@
     }
 
     function bindMizanEvents(root) {
-        mizanRoot = root;
-
         const dateInput = root.querySelector('#mizanDataDate');
         if (dateInput && dateInput.dataset.bound !== '1') {
             dateInput.dataset.bound = '1';
@@ -242,7 +229,7 @@
             });
         }
 
-        root.querySelectorAll('.mizan-start-btn').forEach(btn => {
+        root.querySelectorAll('.mizan-seq-start').forEach(btn => {
             if (btn.dataset.bound === '1') return;
             btn.dataset.bound = '1';
             btn.addEventListener('click', () => {

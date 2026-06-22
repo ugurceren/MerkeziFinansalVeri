@@ -44,8 +44,11 @@
 }
 
 .vk-card-head span {
-    font-size: 11px;
-    color: var(--rb-text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rb-text-secondary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .vk-scroll {
@@ -131,6 +134,53 @@
     border-radius: 4px;
     background: var(--rb-filter-bg);
     color: var(--rb-text-secondary);
+}
+
+.vk-kurallar-filter-bar {
+    background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
+    border-bottom: 0.5px solid color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));
+    padding: 10px 14px;
+    gap: 12px;
+}
+
+.vk-kurallar-filter-bar .fg {
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.vk-kurallar-filter-bar .fg label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rb-text);
+    text-align: center;
+    width: 100%;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.vk-kurallar-filter-bar .vk-filter-input {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    font-family: inherit;
+    width: 200px;
+    max-width: 100%;
+}
+
+.vk-kurallar-filter-bar .vk-filter-input:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.vk-kurallar-filter-bar .filter-btn {
+    height: 30px;
+    align-self: flex-end;
 }
 
 .vk-error {

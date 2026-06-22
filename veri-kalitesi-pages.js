@@ -2,6 +2,14 @@
     let vkKurallarAyarlar = null;
     let vkKurallarSorgu = null;
     let vkGunlukSorgu = null;
+    let vkKurallarFilters = {};
+
+    const VK_KURALLAR_FILTER_FIELDS = [
+        { key: 'qualityLevel', label: 'Seviye', column: 'QualityLevel', type: 'text', maxLength: 20 },
+        { key: 'ruleDesc', label: 'Açıklama', column: 'RuleDesc', type: 'text', maxLength: 250 },
+        { key: 'status', label: 'Durum', column: 'Status', type: 'text', maxLength: 50 },
+        { key: 'activeFlag', label: 'Aktif', column: 'ActiveFlag', type: 'active' }
+    ];
 
     const VK_COLUMN_LABELS = {
         RuleId: 'Kural ID',
@@ -45,6 +53,114 @@
             return `API'ye ulaşılamıyor. start-api.bat çalıştırın. Varsayılan: ${ApiClient.baseUrl}`;
         }
         return msg;
+    }
+
+    function isVkRowActive(flag) {
+        if (flag === 1 || flag === true) return true;
+        const text = String(flag ?? '').trim().toLowerCase();
+        return text === '1' || text === 'true' || text === 'y' || text === 'evet';
+    }
+
+    function filterVkKurallarRows(rows, filters) {
+        return (rows || []).filter(row => {
+            if (filters.qualityLevel) {
+                const level = String(row.QualityLevel ?? '').toLowerCase();
+                if (!level.includes(filters.qualityLevel.toLowerCase())) return false;
+            }
+            if (filters.ruleDesc) {
+                const desc = String(row.RuleDesc ?? '').toLowerCase();
+                if (!desc.includes(filters.ruleDesc.toLowerCase())) return false;
+            }
+            if (filters.status) {
+                const status = String(row.Status ?? '').toLowerCase();
+                if (!status.includes(filters.status.toLowerCase())) return false;
+            }
+            if (filters.activeFlag === '1' && !isVkRowActive(row.ActiveFlag)) return false;
+            if (filters.activeFlag === '0' && isVkRowActive(row.ActiveFlag)) return false;
+            return true;
+        });
+    }
+
+    function collectVkKurallarFilters(root) {
+        const filters = {};
+        VK_KURALLAR_FILTER_FIELDS.forEach(field => {
+            const input = root.querySelector(`#vkf-${field.key}`);
+            if (!input) return;
+            const val = (input.value || '').trim();
+            if (!val) return;
+            if (field.type === 'active') {
+                if (val === '0' || val === '1') filters[field.key] = val;
+                return;
+            }
+            filters[field.key] = field.maxLength ? val.slice(0, field.maxLength) : val;
+        });
+        return filters;
+    }
+
+    function buildVkKurallarFilterBar() {
+        const fields = VK_KURALLAR_FILTER_FIELDS.map(field => {
+            const value = escapeHtml(vkKurallarFilters[field.key] ?? '');
+            if (field.type === 'active') {
+                const selected = value === '' ? '' : value;
+                return `<div class="fg">
+                    <label for="vkf-${field.key}">${field.label}</label>
+                    <select id="vkf-${field.key}" class="vk-filter-input" data-filter="${field.key}">
+                        <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
+                        <option value="1"${selected === '1' ? ' selected' : ''}>Evet</option>
+                        <option value="0"${selected === '0' ? ' selected' : ''}>Hayır</option>
+                    </select>
+                </div>`;
+            }
+            return `<div class="fg">
+                <label for="vkf-${field.key}">${field.label}</label>
+                <input type="text" id="vkf-${field.key}" class="vk-filter-input" data-filter="${field.key}"
+                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">
+            </div>`;
+        }).join('');
+
+        return `<div class="filter-bar vk-kurallar-filter-bar" id="vkKurallarFilterPanel">
+            ${fields}
+            <button type="button" class="filter-btn" id="vkKurallarFilterBtn">Filtrele</button>
+        </div>`;
+    }
+
+    function buildVkKurallarMeta(data, rows) {
+        const activeCount = rows.filter(r => isVkRowActive(r.ActiveFlag)).length;
+        const total = data.satirSayisi ?? (data.satirlar || []).length;
+        const shown = rows.length;
+        let meta = Object.keys(vkKurallarFilters).length
+            ? `${shown.toLocaleString('tr-TR')}/${total.toLocaleString('tr-TR')} kural`
+            : `${total.toLocaleString('tr-TR')} kural`;
+        if (data.kisitlandi) meta += ` · ilk ${data.maxSatir} satır`;
+        meta += ` · ${activeCount} aktif`;
+        return meta;
+    }
+
+    function applyVkKurallarFilter(root) {
+        vkKurallarFilters = collectVkKurallarFilters(root);
+        const data = vkKurallarSorgu;
+        if (!data?.basarili) return;
+
+        const cols = data.kolonlar || [];
+        const allRows = data.satirlar || [];
+        const filtered = filterVkKurallarRows(allRows, vkKurallarFilters);
+
+        const scroll = root.querySelector('.vk-kurallar-scroll');
+        if (scroll) {
+            scroll.innerHTML = buildResultTable(cols, filtered, formatKurallarCell, VK_COLUMN_LABELS);
+        }
+
+        const metaEl = root.querySelector('#vkKurallarMeta');
+        if (metaEl) metaEl.textContent = buildVkKurallarMeta(data, filtered);
+    }
+
+    function bindVkKurallarPage(root) {
+        root.querySelector('#vkKurallarFilterBtn')?.addEventListener('click', () => applyVkKurallarFilter(root));
+        root.querySelectorAll('.vk-filter-input').forEach(input => {
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') applyVkKurallarFilter(root);
+            });
+        });
     }
 
     function formatKurallarCell(col, val) {
@@ -158,15 +274,9 @@
         }
 
         const cols = data.kolonlar || [];
-        const rows = data.satirlar || [];
-        const activeCount = rows.filter(r => {
-            const flag = r.ActiveFlag;
-            return flag === 1 || flag === true || String(flag).toLowerCase() === 'true';
-        }).length;
-
-        let meta = `${data.satirSayisi ?? rows.length} kural`;
-        if (data.sureMs != null) meta += ` · ${data.sureMs} ms`;
-        if (data.kisitlandi) meta += ` · ilk ${data.maxSatir} satır`;
+        const allRows = data.satirlar || [];
+        const rows = filterVkKurallarRows(allRows, vkKurallarFilters);
+        const meta = buildVkKurallarMeta(data, rows);
 
         return `<section class="vk-layout">
             <div class="vk-head">
@@ -176,10 +286,11 @@
             <div class="vk-card">
                 <div class="vk-card-head">
                     <h4>Kural Listesi</h4>
-                    <span>${meta} · ${activeCount} aktif</span>
+                    <span id="vkKurallarMeta">${escapeHtml(meta)}</span>
                 </div>
                 <p class="vk-hint">Sorgu dosyası: <code>${escapeHtml(sqlDosya)}</code> · Bağlantı: <code>config/td-connections.json</code> (${escapeHtml(katman)})</p>
-                <div class="vk-scroll">
+                ${buildVkKurallarFilterBar()}
+                <div class="vk-scroll vk-kurallar-scroll">
                     ${buildResultTable(cols, rows, formatKurallarCell, VK_COLUMN_LABELS)}
                 </div>
             </div>
@@ -214,7 +325,6 @@
         const rows = data.satirlar || [];
 
         let meta = `${data.satirSayisi ?? rows.length} kayıt`;
-        if (data.sureMs != null) meta += ` · ${data.sureMs} ms`;
         if (data.kisitlandi) meta += ` · ilk ${data.maxSatir} satır gösterildi`;
 
         const today = new Date().toLocaleDateString('tr-TR');
@@ -250,6 +360,8 @@
         el.innerHTML = buildKurallarHTML();
         await loadVkKurallarSorgu();
         el.innerHTML = buildKurallarHTML();
+        bindVkKurallarPage(el);
+        return;
     }
 
     window.buildVeriKalitesiKurallariHTML = buildKurallarHTML;

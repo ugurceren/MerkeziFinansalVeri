@@ -295,13 +295,31 @@
     line-height: 1.35;
 }
 
+.col-stats-paket-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.col-stats-paket {
+    flex-shrink: 0;
+}
+
 .col-status-checkboxes {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
     justify-content: flex-end;
-    flex: 0 1 auto;
-    max-width: 62%;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cockpit-tdstg-lnd-filters .cockpit-status-chip {
+    gap: 5px;
+    padding: 3px 7px;
+    font-size: 9px;
 }
 
 .cockpit-status-chip {
