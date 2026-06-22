@@ -216,6 +216,50 @@
         </div>
     </div>
 
+    <div class="kh-modal" id="addAccountModal" hidden aria-hidden="true">
+        <div class="kh-modal-backdrop" data-kh-modal-close></div>
+        <div class="kh-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="khModalTitle">
+            <header class="kh-modal-header">
+                <h3 id="khModalTitle">Yeni Kurumsal Hesap</h3>
+                <button type="button" class="kh-modal-close" data-kh-modal-close aria-label="Kapat">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+            </header>
+            <form id="addAccountForm" class="kh-modal-body">
+                <div class="kh-form-grid">
+                    <label class="kh-field">
+                        <span>Hesap ID</span>
+                        <input type="number" id="addHesapId" name="hesapId" required min="1" step="1">
+                    </label>
+                    <label class="kh-field kh-field-wide">
+                        <span>Hesap Adı</span>
+                        <input type="text" id="addHesapAdi" name="hesapAdi" required maxlength="200" autocomplete="off">
+                    </label>
+                    <label class="kh-field">
+                        <span>Sorumlu Ekip</span>
+                        <select id="addEkipId" name="ekipId" required></select>
+                    </label>
+                    <label class="kh-field">
+                        <span>Kayıt Tarihi</span>
+                        <input type="date" id="addKayitTarihi" name="kayitTarihi" required>
+                    </label>
+                    <label class="kh-field kh-field-wide">
+                        <span>Alınması Beklenen Aksiyon</span>
+                        <input type="text" id="addBeklenenAksiyon" name="beklenenAksiyon" maxlength="100" autocomplete="off">
+                    </label>
+                    <label class="kh-field">
+                        <span>Kaynak</span>
+                        <input type="text" id="addKaynak" name="kaynak" maxlength="50" autocomplete="off">
+                    </label>
+                </div>
+            </form>
+            <footer class="kh-modal-footer">
+                <button type="button" class="kh-btn kh-btn-secondary" data-kh-modal-close>İptal</button>
+                <button type="submit" form="addAccountForm" class="kh-btn kh-btn-primary" id="addAccountOkBtn">Tamam</button>
+            </footer>
+        </div>
+    </div>
+
 </div>
 
 <script src="dev-admin-mode.js"></script>

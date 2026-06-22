@@ -69,6 +69,7 @@
             const qs = q.toString();
             return request(`/kurumsal-hesaplar${qs ? `?${qs}` : ''}`);
         },
+        getSonrakiKurumsalHesapId() { return request('/kurumsal-hesaplar/sonraki-hesap-id'); },
         createKurumsalHesap(data) { return request('/kurumsal-hesaplar', { method: 'POST', body: data }); },
         updateKurumsalHesap(hesapNo, data) { return request(`/kurumsal-hesaplar/${hesapNo}`, { method: 'PUT', body: data }); },
         deleteKurumsalHesap(hesapNo) { return request(`/kurumsal-hesaplar/${hesapNo}`, { method: 'DELETE' }); },
@@ -136,6 +137,12 @@
             if (params.dataDate) q.set('dataDate', params.dataDate);
             const suffix = q.toString() ? `?${q}` : '';
             return request(`/mizan/akis${suffix}`);
+        },
+        postMizanKatmanPaketBaslat(katmanKodu, body = {}) {
+            return request(`/mizan/katmanlar/${encodeURIComponent(katmanKodu)}/paket-baslat`, {
+                method: 'POST',
+                body
+            });
         },
         getMizanGorevler() { return request('/mizan/gorevler'); },
         yenidenBaslatMizanGorev(gorevTanimId) {

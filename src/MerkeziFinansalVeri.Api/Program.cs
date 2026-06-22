@@ -70,6 +70,12 @@ if (File.Exists(gunlukAkisConfigPath))
     builder.Configuration.AddJsonFile(gunlukAkisConfigPath, optional: true, reloadOnChange: true);
 }
 
+var mizanAkisConfigPath = Path.Combine(repoRoot, "config", "mizan-akis.json");
+if (File.Exists(mizanAkisConfigPath))
+{
+    builder.Configuration.AddJsonFile(mizanAkisConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -126,6 +132,11 @@ builder.Services.AddScoped<IEtlLoadCockpitService>(sp => new EtlLoadCockpitServi
     sp.GetRequiredService<ITdConnectionService>(),
     sp.GetRequiredService<IConfiguration>(),
     sp.GetRequiredService<ILogger<EtlLoadCockpitService>>(),
+    repoRoot));
+builder.Services.AddScoped<ILedgerBalanceCockpitService>(sp => new LedgerBalanceCockpitService(
+    sp.GetRequiredService<ITdConnectionService>(),
+    sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<ILogger<LedgerBalanceCockpitService>>(),
     repoRoot));
 
 builder.Services.AddCors(options =>

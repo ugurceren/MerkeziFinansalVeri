@@ -1,24 +1,24 @@
 const COCKPIT_COLUMNS_FALLBACK = [
     {
-        name: 'STG',
-        role: 'TDSTG · STG — LedgerBalance',
+        name: 'TDSTG',
+        role: 'Staging — ham veri katmanı',
         theme: 'cyan',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
     },
     {
-        name: 'LND',
-        role: 'TDSTG · LND — LedgerBalance',
-        theme: 'teal',
+        name: 'TDMAIN',
+        role: 'Ana veri — kurumsal çekirdek',
+        theme: 'blue',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
     },
     {
-        name: 'COR',
-        role: 'TDMAIN · COR — LedgerBalance',
-        theme: 'blue',
+        name: 'TDREPORT',
+        role: 'Raporlama — analitik katman',
+        theme: 'purple',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
@@ -28,6 +28,8 @@ const COCKPIT_COLUMNS_FALLBACK = [
 let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
 let DATASET_DOMAINS = [];
 let gunlukAkisDataDate = null;
+/** 'default' | 'mizan' — Mizan sayfası akış render modu */
+let cockpitRenderMode = 'default';
 /** Boş = tüm paketler görünür; dolu = yalnızca seçili statüler */
 let COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
 
@@ -278,18 +280,22 @@ function renderCockpitDatasetsHtml(layerName, datasets) {
 
     return visible.map(ds => {
         const visibleTasks = isLedgerLayer ? (ds.tasks || []).filter(isTaskVisible) : (ds.tasks || []);
-        const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done');
-        const dsRunning = visibleTasks.some(t => t.status === 'running');
-        const dsFailed = visibleTasks.some(t => t.status === 'failed');
+        const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done')
+            && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
+        const dsRunning = visibleTasks.some(t => t.status === 'running')
+            || (ds.lndTasks || []).some(t => t.status === 'running');
+        const dsFailed = visibleTasks.some(t => t.status === 'failed')
+            || (ds.lndTasks || []).some(t => t.status === 'failed');
         const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-        const rowTasks = isTdStg ? [] : [...visibleTasks, ...(ds.lndTasks || [])];
+        const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
 
         let flowHtml;
-        if (isTdStg) {
-            flowHtml = buildSingleStatusFlowHtml(layerName, ds);
-        } else if (isLedgerLayer) {
+        if (isLedgerLayer) {
             const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
-            flowHtml = `<div class="task-flow task-flow-ledger">${tasksHtml}</div>`;
+            const flowClass = cockpitRenderMode === 'mizan'
+                ? 'task-flow task-flow-mizan'
+                : 'task-flow task-flow-ledger';
+            flowHtml = `<div class="${flowClass}">${tasksHtml}</div>`;
         } else {
             const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
             const lndTasksHtml = isTdStg && ds.lndTasks?.length
@@ -1234,18 +1240,34 @@ function getFlowStepClasses(task, rowTasks, layerName) {
 }
 
 function buildFlowStepHtml(layerName, task, rowTasks) {
+    const isMizanLedger = cockpitRenderMode === 'mizan' && ['STG', 'LND', 'COR'].includes(layerName);
     const showLabel = shouldShowFlowStepLabel(layerName, task);
     const recordText = formatFlowRecordCount(task.recordCount);
     const recordHtml = recordText
-        ? `<span class="flow-record-count">${recordText}</span>`
+        ? `<span class="flow-record-count${isMizanLedger ? ' flow-record-count-prominent' : ''}">${recordText}</span>`
         : '';
     const errorHtml = task.errorMessage
         ? `<span class="flow-error" title="${escapeDatasetHtml(task.errorMessage)}">${escapeDatasetHtml(task.errorMessage)}</span>`
         : '';
+    const labelHtml = showLabel
+        ? `<span class="flow-label">${escapeDatasetHtml(task.label)}</span>`
+        : '';
+    const statusHtml = `<span class="flow-status-text">${task.statusText || 'Not Started'}</span>`;
+
+    if (isMizanLedger) {
+        return `
+            <div class="${getFlowStepClasses(task, rowTasks, layerName)}">
+                ${recordHtml}
+                ${labelHtml}
+                ${statusHtml}
+                ${errorHtml}
+            </div>`;
+    }
+
     return `
             <div class="${getFlowStepClasses(task, rowTasks, layerName)}">
-                <span class="flow-status-text">${task.statusText || 'Not Started'}</span>
-                ${showLabel ? `<span class="flow-label">${escapeDatasetHtml(task.label)}</span>` : ''}
+                ${statusHtml}
+                ${labelHtml}
                 ${recordHtml}
                 ${errorHtml}
             </div>`;
@@ -1295,11 +1317,10 @@ function buildSurecHTML() {
     return `<section class="cockpit">
         <div class="cockpit-head">
             <div class="cockpit-head-main">
-                <div>
+                <div class="cockpit-head-title-row">
                     <h3>Günlük Akış</h3>
-                    <p>LedgerBalance · ETLLoad (STG → LND → COR)</p>
+                    ${buildGlobalStatusFiltersHtml()}
                 </div>
-                ${buildGlobalStatusFiltersHtml()}
             </div>
             <div class="cockpit-head-actions">
                 <label class="cockpit-date-filter">
@@ -1725,6 +1746,7 @@ window.getTaskListRows = getTaskListRows;
 window.mapKokpitKatmanlar = mapKokpitKatmanlar;
 window.buildCockpitColumn = buildCockpitColumn;
 window.buildCockpitGridHtml = columns => columns.map(buildCockpitColumn).join('');
+window.setCockpitRenderMode = mode => { cockpitRenderMode = mode || 'default'; };
 window.bindCockpitColumnFilters = bindSurecCockpit;
 window.bindGlobalCockpitStatusFilters = bindGlobalCockpitStatusFilters;
 window.buildGlobalStatusFiltersHtml = buildGlobalStatusFiltersHtml;

@@ -60,6 +60,15 @@ public class KurumsalHesaplarController(
         return Ok(items);
     }
 
+    [HttpGet("sonraki-hesap-id")]
+    public async Task<ActionResult<object>> GetNextHesapId(CancellationToken cancellationToken)
+    {
+        var maxId = await dbContext.KurumsalHesaplar
+            .MaxAsync(k => (int?)k.HesapId, cancellationToken) ?? 0;
+
+        return Ok(new { hesapId = maxId + 1 });
+    }
+
     [HttpGet("{hesapNo:int}")]
     public async Task<ActionResult<KurumsalHesapDto>> GetById(int hesapNo, CancellationToken cancellationToken)
     {
@@ -81,6 +90,14 @@ public class KurumsalHesaplarController(
         [FromBody] KurumsalHesapCreateDto dto,
         CancellationToken cancellationToken)
     {
+        if (await HesapIdExistsAsync(dto.HesapId, cancellationToken))
+        {
+            return Conflict(new
+            {
+                message = $"Hesap ID {dto.HesapId} zaten kullanılıyor. Farklı bir ID seçin veya sonraki boş ID'yi kullanın."
+            });
+        }
+
         var entity = new KurumsalHesap
         {
             HesapId = dto.HesapId,
@@ -95,7 +112,18 @@ public class KurumsalHesaplarController(
         };
 
         dbContext.KurumsalHesaplar.Add(entity);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicateHesapIdException(ex))
+        {
+            return Conflict(new
+            {
+                message = $"Hesap ID {dto.HesapId} zaten kullanılıyor. Farklı bir ID seçin veya sonraki boş ID'yi kullanın."
+            });
+        }
 
         await dbContext.Entry(entity).Reference(e => e.Ekip).LoadAsync(cancellationToken);
         await activityLogService.LogAsync("kurumsal_hesap", "Kurumsal hesap oluşturuldu", dto.HesapAdi, HttpContext.GetCurrentUserId(), cancellationToken);
@@ -151,6 +179,13 @@ public class KurumsalHesaplarController(
 
         return NoContent();
     }
+
+    private Task<bool> HesapIdExistsAsync(int hesapId, CancellationToken cancellationToken) =>
+        dbContext.KurumsalHesaplar.AnyAsync(k => k.HesapId == hesapId, cancellationToken);
+
+    private static bool IsDuplicateHesapIdException(DbUpdateException ex) =>
+        ex.InnerException?.Message.Contains("UQ_ops_CorporateAccount_AccountId", StringComparison.OrdinalIgnoreCase) == true
+        || ex.InnerException?.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) == true;
 
     private static KurumsalHesapDto ToDto(KurumsalHesap k) => new()
     {

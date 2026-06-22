@@ -7,7 +7,7 @@ namespace MerkeziFinansalVeri.Api.Controllers;
 [ApiController]
 [Route("api/mizan")]
 public class MizanController(
-    IEtlLoadCockpitService etlLoadCockpitService,
+    ILedgerBalanceCockpitService ledgerBalanceCockpitService,
     IActivityLogService activityLogService) : ControllerBase
 {
     [HttpGet("akis")]
@@ -21,7 +21,7 @@ public class MizanController(
             parsedDate = date;
         }
 
-        var result = await etlLoadCockpitService.GetCockpitAsync(parsedDate, cancellationToken);
+        var result = await ledgerBalanceCockpitService.GetCockpitAsync(parsedDate, cancellationToken);
         if (!result.Basarili)
         {
             return StatusCode(502, new { error = result.Hata ?? "Mizan akış sorgusu başarısız." });
@@ -43,6 +43,33 @@ public class MizanController(
         {
             error = "Mizan görev durumu ETLLoad akış ekranından izlenir."
         });
+
+    [HttpPost("katmanlar/{katmanKodu}/paket-baslat")]
+    public async Task<IActionResult> KatmanPaketBaslat(
+        string katmanKodu,
+        [FromBody] MizanKatmanPaketBaslatDto dto,
+        CancellationToken cancellationToken)
+    {
+        var normalized = katmanKodu.Trim().ToUpperInvariant();
+        if (normalized is not ("STG" or "LND" or "TDMAIN"))
+        {
+            return BadRequest(new { error = "Geçersiz katman kodu. STG, LND veya TDMAIN olmalı." });
+        }
+
+        await activityLogService.LogAsync(
+            "mizan",
+            $"Mizan katman paket başlatma isteği — {normalized}",
+            $"Katman={normalized}; DataDate={dto.DataDate ?? "(varsayılan)"}",
+            HttpContext.GetCurrentUserId(),
+            cancellationToken);
+
+        return Accepted(new
+        {
+            mesaj = $"{normalized} katmanı için paket başlatma isteği alındı.",
+            katmanKodu = normalized,
+            dataDate = dto.DataDate
+        });
+    }
 
     [HttpPost("gorevler/yeniden-baslat")]
     public async Task<IActionResult> YenidenBaslat(

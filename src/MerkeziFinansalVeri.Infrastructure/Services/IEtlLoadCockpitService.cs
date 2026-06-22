@@ -10,7 +10,8 @@ public interface IEtlLoadCockpitService
 public sealed class EtlLoadCockpitAyarlar
 {
     public string KatmanKodu { get; init; } = "TDUTIL";
-    public string SorguDosyasi { get; init; } = "config/queries/td-etl-load-ledger-balance.sql";
+    public string SorguDosyasi { get; init; } = "config/queries/td-etl-load.sql";
+    public string ParallelRunSorguDosyasi { get; init; } = "config/queries/td-parallel-run-packages.sql";
     public int MaxSatir { get; init; } = 100000;
     public int SorguTimeoutSaniye { get; init; } = 120;
 }

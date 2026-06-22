@@ -98,6 +98,11 @@ public sealed class MizanYenidenBaslatDto
     public int GorevTanimId { get; set; }
 }
 
+public sealed class MizanKatmanPaketBaslatDto
+{
+    public string? DataDate { get; set; }
+}
+
 public sealed class TdDatasetListeDto
 {
     public string DatasetName { get; set; } = string.Empty;
