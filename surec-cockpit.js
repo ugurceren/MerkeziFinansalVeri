@@ -1,10 +1,22 @@
 const COCKPIT_COLUMNS_FALLBACK = [
     {
-        name: 'TDSTG',
-        role: 'Staging — ham veri katmanı',
+        name: 'TDSTG.STG',
+        role: 'Staging — STG',
         theme: 'cyan',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
+        ozetSatirlar: [],
+        kayitlar: [],
+        datasets: []
+    },
+    {
+        name: 'TDSTG.LND',
+        role: 'Staging — LND',
+        theme: 'teal',
+        paketSayisi: 0,
+        tamamlanmaYuzdesi: 0,
+        ozetSatirlar: [],
+        kayitlar: [],
         datasets: []
     },
     {
@@ -13,6 +25,8 @@ const COCKPIT_COLUMNS_FALLBACK = [
         theme: 'blue',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
+        ozetSatirlar: [],
+        kayitlar: [],
         datasets: []
     },
     {
@@ -21,6 +35,8 @@ const COCKPIT_COLUMNS_FALLBACK = [
         theme: 'purple',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
+        ozetSatirlar: [],
+        kayitlar: [],
         datasets: []
     }
 ];
@@ -28,12 +44,11 @@ const COCKPIT_COLUMNS_FALLBACK = [
 let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
 let DATASET_DOMAINS = [];
 let gunlukAkisDataDate = null;
+let cockpitFocusLayer = null;
 /** 'default' | 'mizan' — Mizan sayfası akış render modu */
 let cockpitRenderMode = 'default';
 /** Boş = tüm paketler görünür; dolu = yalnızca seçili statüler */
 let COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
-/** Yalnızca TDSTG kolonu — LND Failed / LND Completed */
-let COCKPIT_TDSTG_LND_FILTERS = new Set();
 
 const COCKPIT_FILTER_STG = [
     { key: 'Not Started', label: 'Not Started', className: 'is-not-started' },
@@ -42,10 +57,7 @@ const COCKPIT_FILTER_STG = [
     { key: 'Success', label: 'Success', className: 'is-done' }
 ];
 
-const COCKPIT_FILTER_LND = [
-    { key: 'LND Failed', label: 'LND Failed', className: 'is-lnd-failed' },
-    { key: 'LND Completed', label: 'LND Completed', className: 'is-lnd-done' }
-];
+const GUNLUK_AKIS_LAYER_ORDER = ['TDSTG.STG', 'TDSTG.LND', 'TDMAIN', 'TDREPORT'];
 
 function getGlobalFilterOptions() {
     return COCKPIT_FILTER_STG;
@@ -56,33 +68,57 @@ function getFilterStatusesForColumn(columnName) {
 }
 
 function mapKokpitKatmanlar(kokpit) {
-    return (kokpit || []).map(k => ({
-        name: k.katmanKodu,
-        role: k.rol,
-        theme: k.tema,
-        paketSayisi: k.paketSayisi ?? 0,
-        basariliAdimSayisi: k.basariliAdimSayisi ?? 0,
-        tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
-        datasets: (k.datasets || []).map(d => ({
-            name: d.kod,
-            label: d.etiket,
-            targetTableName: d.etiket || d.kod,
-            tasks: (d.gorevler || []).map(g => ({
-                label: g.etiket,
-                status: g.durum,
-                statusText: g.durumMetni || 'Not Started',
-                recordCount: g.kayitSayisi ?? null,
-                errorMessage: g.hataMesaji || null
-            })),
-            lndTasks: (d.lndGorevler || []).map(g => ({
-                label: g.etiket,
-                status: g.durum,
-                statusText: g.durumMetni || 'Not Started',
-                recordCount: g.kayitSayisi ?? null,
-                errorMessage: g.hataMesaji || null
+    const byCode = Object.fromEntries(
+        (kokpit || []).map(k => [String(k.katmanKodu || ''), k])
+    );
+
+    return GUNLUK_AKIS_LAYER_ORDER.map(code => {
+        const k = byCode[code] || {};
+        const ozetSatirlar = (k.ozetSatirlar || []).map(row => ({
+            hedefTablo: row.hedefTablo || row.HedefTablo || '',
+            durum: row.durum || 'not-started',
+            durumMetni: row.durumMetni || 'Not Started'
+        }));
+        const kayitlar = (k.kayitlar || []).map(row => ({
+            targetTableName: row.targetTableName || '',
+            dataDate: row.dataDate || null,
+            executionStartTime: row.executionStartTime || null,
+            executionEndTime: row.executionEndTime || null,
+            sureDakika: row.sureDakika ?? null,
+            executionRecordCount: row.executionRecordCount ?? null,
+            errorMessageText: row.errorMessageText || null
+        }));
+
+        return {
+            name: code,
+            role: k.rol || code,
+            theme: k.tema || 'blue',
+            paketSayisi: k.paketSayisi ?? 0,
+            basariliAdimSayisi: k.basariliAdimSayisi ?? 0,
+            tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
+            ozetSatirlar,
+            kayitlar,
+            datasets: (k.datasets || []).map(d => ({
+                name: d.kod,
+                label: d.etiket,
+                targetTableName: d.etiket || d.kod,
+                tasks: (d.gorevler || []).map(g => ({
+                    label: g.etiket,
+                    status: g.durum,
+                    statusText: g.durumMetni || 'Not Started',
+                    recordCount: g.kayitSayisi ?? null,
+                    errorMessage: g.hataMesaji || null
+                })),
+                lndTasks: (d.lndGorevler || []).map(g => ({
+                    label: g.etiket,
+                    status: g.durum,
+                    statusText: g.durumMetni || 'Not Started',
+                    recordCount: g.kayitSayisi ?? null,
+                    errorMessage: g.hataMesaji || null
+                }))
             }))
-        }))
-    }));
+        };
+    });
 }
 
 function formatFlowRecordCount(value) {
@@ -94,57 +130,27 @@ function formatFlowRecordCount(value) {
 
 function resetCockpitStatusFilters() {
     COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
-    COCKPIT_TDSTG_LND_FILTERS = new Set();
 }
 
 function isGlobalFilterActive() {
     return COCKPIT_GLOBAL_STATUS_FILTERS.size > 0;
 }
 
-function isTdStgLndFilterActive() {
-    return COCKPIT_TDSTG_LND_FILTERS.size > 0;
+function isOzetRowVisible(row) {
+    if (!isGlobalFilterActive()) return true;
+    return COCKPIT_GLOBAL_STATUS_FILTERS.has(row.durumMetni);
 }
 
-function isColumnFilterActive(layerName) {
-    if (layerName === 'TDSTG') {
-        return isGlobalFilterActive() || isTdStgLndFilterActive();
-    }
-    return isGlobalFilterActive();
+function getVisibleOzetRows(col) {
+    return (col?.ozetSatirlar || []).filter(isOzetRowVisible);
 }
 
-function resolveTdStgStgFilterStatus(ds) {
-    const tasks = ds.tasks || [];
-    if (!tasks.length) return 'Not Started';
-    if (tasks.some(t => t.status === 'failed')) return 'Failed';
-    if (tasks.every(t => t.status === 'done')) return 'Success';
-    if (tasks.some(t => t.status === 'running')) return 'In Progress';
-    return 'Not Started';
-}
-
-function resolveTdStgLndFilterStatus(ds) {
-    const tasks = ds.tasks || [];
-    if (!isStgPhaseComplete(tasks) || !ds.lndTasks?.length) return null;
-    const lndActive = resolveActiveFlowLabel(ds.lndTasks);
-    if (lndActive === 'LND Failed' || lndActive === 'LND Completed') {
-        return lndActive;
-    }
-    return null;
-}
-
-function isTdStgDatasetVisible(ds) {
-    const stgFilterOn = isGlobalFilterActive();
-    const lndFilterOn = isTdStgLndFilterActive();
-    if (!stgFilterOn && !lndFilterOn) return true;
-
-    let visible = true;
-    if (stgFilterOn) {
-        visible = COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveTdStgStgFilterStatus(ds));
-    }
-    if (lndFilterOn) {
-        const lndStatus = resolveTdStgLndFilterStatus(ds);
-        visible = visible && lndStatus !== null && COCKPIT_TDSTG_LND_FILTERS.has(lndStatus);
-    }
-    return visible;
+function gunlukAkisStatusChipClass(durumMetni, durum) {
+    const key = String(durumMetni || durum || '').toLowerCase();
+    if (key.includes('success') || durum === 'done') return 'is-done';
+    if (key.includes('fail') || durum === 'failed') return 'is-failed';
+    if (key.includes('progress') || durum === 'running') return 'is-running';
+    return 'is-not-started';
 }
 
 function resolveTaskFilterStatus(task) {
@@ -163,11 +169,9 @@ function isTaskVisible(task) {
 }
 
 function isDatasetVisible(ds, layerName) {
-    if (layerName === 'TDSTG') {
-        return isTdStgDatasetVisible(ds);
-    }
     if (!isGlobalFilterActive()) return true;
-    return COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveDatasetFilterStatus(ds, layerName));
+    const status = resolveDatasetFilterStatus(ds, layerName);
+    return COCKPIT_GLOBAL_STATUS_FILTERS.has(status);
 }
 
 function isStgPhaseComplete(tasks) {
@@ -175,7 +179,7 @@ function isStgPhaseComplete(tasks) {
 }
 
 function isProcessFlowLayer(layerName) {
-    return layerName === 'TDSTG' || layerName === 'TDMAIN' || layerName === 'TDREPORT';
+    return GUNLUK_AKIS_LAYER_ORDER.includes(layerName) || layerName === 'TDSTG';
 }
 
 function resolveDatasetCardStatus(ds, layerName) {
@@ -220,44 +224,13 @@ function countGlobalDatasetStatuses() {
     const counts = Object.fromEntries(options.map(item => [item.key, 0]));
 
     COCKPIT_COLUMNS.forEach(col => {
-        (col.datasets || []).forEach(ds => {
-            if (col.name === 'TDSTG') {
-                const status = resolveTdStgStgFilterStatus(ds);
-                if (Object.prototype.hasOwnProperty.call(counts, status)) {
-                    counts[status] += 1;
-                }
-                return;
+        (col.ozetSatirlar || []).forEach(row => {
+            if (Object.prototype.hasOwnProperty.call(counts, row.durumMetni)) {
+                counts[row.durumMetni] += 1;
             }
-
-            if (isProcessFlowLayer(col.name)) {
-                const status = resolveDatasetFilterStatus(ds, col.name);
-                if (Object.prototype.hasOwnProperty.call(counts, status)) {
-                    counts[status] += 1;
-                }
-                return;
-            }
-
-            (ds.tasks || []).forEach(task => {
-                const status = resolveTaskFilterStatus(task);
-                if (Object.prototype.hasOwnProperty.call(counts, status)) {
-                    counts[status] += 1;
-                }
-            });
         });
     });
 
-    return counts;
-}
-
-function countTdStgLndStatuses() {
-    const counts = Object.fromEntries(COCKPIT_FILTER_LND.map(item => [item.key, 0]));
-    const tdStg = COCKPIT_COLUMNS.find(col => col.name === 'TDSTG');
-    (tdStg?.datasets || []).forEach(ds => {
-        const status = resolveTdStgLndFilterStatus(ds);
-        if (status && Object.prototype.hasOwnProperty.call(counts, status)) {
-            counts[status] += 1;
-        }
-    });
     return counts;
 }
 
@@ -306,20 +279,138 @@ function buildGlobalStatusFiltersHtml() {
     return `<div class="cockpit-global-filters" role="group" aria-label="Statü filtresi">${chips}</div>`;
 }
 
-function buildTdStgLndFiltersHtml() {
-    const counts = countTdStgLndStatuses();
-    const chips = COCKPIT_FILTER_LND.map(({ key, label, className }) => {
-        const count = counts[key] || 0;
-        const checked = COCKPIT_TDSTG_LND_FILTERS.has(key);
-        return `
-            <label class="cockpit-status-chip ${className}">
-                <input type="checkbox" data-lnd-status="${key}" ${checked ? 'checked' : ''} aria-label="${label} filtre">
-                <span>${label}</span>
-                <strong>${count}</strong>
-            </label>`;
-    }).join('');
+function formatGunlukAkisDateTime(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('tr-TR');
+}
 
-    return `<div class="col-status-checkboxes cockpit-tdstg-lnd-filters" role="group" aria-label="LND statü filtresi">${chips}</div>`;
+function formatGunlukAkisMinutes(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '—';
+    return `${num.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} dk`;
+}
+
+function resolveFlowLayerStatus(col) {
+    const rows = col?.ozetSatirlar || [];
+    if (!rows.length) return 'waiting';
+    if (rows.some(row => row.durum === 'failed')) return 'failed';
+    if (rows.every(row => row.durum === 'done')) return 'done';
+    if (rows.some(row => row.durum === 'running')) return 'running';
+    return 'waiting';
+}
+
+function buildFlowLayerOzetTable(col) {
+    const rows = getVisibleOzetRows(col);
+    if (!rows.length) {
+        const hasData = (col.ozetSatirlar || []).length > 0;
+        return `<div class="flow-layer-empty">${hasData ? 'Seçili statülere uygun kayıt yok.' : 'Bu katmanda kayıt bulunamadı.'}</div>`;
+    }
+
+    const body = rows.map(row => `
+        <tr>
+            <td class="flow-layer-hedef" title="${escapeDatasetHtml(row.hedefTablo)}">${escapeDatasetHtml(row.hedefTablo)}</td>
+            <td class="flow-layer-statu">
+                <span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni)}</span>
+            </td>
+        </tr>`).join('');
+
+    return `
+        <table class="flow-layer-mini-table">
+            <thead>
+                <tr>
+                    <th>Hedef Tablo</th>
+                    <th>Statü</th>
+                </tr>
+            </thead>
+            <tbody>${body}</tbody>
+        </table>`;
+}
+
+function buildFlowLayerTile(col) {
+    const pct = Math.min(100, col.tamamlanmaYuzdesi ?? 0);
+    const visibleCount = getVisibleOzetRows(col).length;
+    const paketDisplay = isGlobalFilterActive() ? visibleCount : (col.paketSayisi ?? visibleCount);
+    const status = resolveFlowLayerStatus(col);
+    const statusLabel = status === 'failed' ? 'Hata' : status === 'done' ? 'Tamam' : status === 'running' ? 'Aktif' : 'Bekliyor';
+
+    return `
+        <article class="flow-layer-tile theme-${col.theme} status-${status}"
+            data-flow-layer="${escapeDatasetHtml(col.name)}"
+            role="button"
+            tabindex="0"
+            aria-label="${escapeDatasetHtml(col.name)} katman detayı">
+            <div class="flow-layer-tile-accent" aria-hidden="true"></div>
+            <header class="flow-layer-tile-head">
+                <div class="flow-layer-tile-title">
+                    <i class="ti ti-database" aria-hidden="true"></i>
+                    <div>
+                        <h4>${escapeDatasetHtml(col.name)}</h4>
+                        <span>${escapeDatasetHtml(col.role)}</span>
+                    </div>
+                </div>
+                <div class="flow-layer-tile-meta">
+                    <strong>${pct}%</strong>
+                    <span class="flow-layer-tile-badge">${statusLabel}</span>
+                </div>
+            </header>
+            <div class="flow-layer-tile-stats">
+                <span><strong>${paketDisplay}</strong> paket</span>
+            </div>
+            <div class="flow-layer-tile-body">${buildFlowLayerOzetTable(col)}</div>
+            <span class="flow-layer-tile-cta">Detay <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+        </article>`;
+}
+
+function buildFlowLayerDetail(col) {
+    const kayitlar = col.kayitlar || [];
+    const rows = kayitlar.map(row => `
+        <tr>
+            <td title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
+            <td>${escapeDatasetHtml(row.dataDate ? formatDatasetDate(row.dataDate) : '—')}</td>
+            <td>${formatGunlukAkisDateTime(row.executionStartTime)}</td>
+            <td>${formatGunlukAkisDateTime(row.executionEndTime)}</td>
+            <td>${formatGunlukAkisMinutes(row.sureDakika)}</td>
+            <td>${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
+            <td class="flow-detail-error" title="${escapeDatasetHtml(row.errorMessageText || '')}">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
+        </tr>`).join('');
+
+    return `
+        <div class="flow-layer-detail theme-${col.theme}" data-flow-detail="${escapeDatasetHtml(col.name)}">
+            <div class="flow-layer-detail-toolbar">
+                <button type="button" class="flow-layer-detail-back" data-flow-back>
+                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                    Tüm katmanlar
+                </button>
+                <span class="flow-layer-detail-meta">${escapeDatasetHtml(col.name)} · ${kayitlar.length} kayıt</span>
+            </div>
+            <header class="flow-layer-detail-hero">
+                <h2>${escapeDatasetHtml(col.name)}</h2>
+                <p>${escapeDatasetHtml(col.role)}</p>
+            </header>
+            <div class="vs-results-wrap is-fill has-data flow-layer-detail-table-wrap">
+                <table class="vs-results-table flow-layer-detail-table">
+                    <thead>
+                        <tr>
+                            <th>Hedef Tablo</th>
+                            <th>Veri Tarihi</th>
+                            <th>Başlangıç</th>
+                            <th>Bitiş</th>
+                            <th>Süre (dk)</th>
+                            <th>Kayıt</th>
+                            <th>Hata</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows || '<tr><td colspan="7" class="flow-layer-empty">Kayıt bulunamadı.</td></tr>'}</tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+function buildFlowLayerGridHtml() {
+    return COCKPIT_COLUMNS.map(buildFlowLayerTile).join('');
 }
 
 function getVisiblePaketCount(datasets, layerName) {
@@ -421,27 +512,8 @@ function renderCockpitDatasetsHtml(layerName, datasets) {
     }).join('');
 }
 
-function refreshCockpitColumnDatasets(columnName) {
-    const col = COCKPIT_COLUMNS.find(item => item.name === columnName);
-    const colEl = document.querySelector(`.cockpit-col[data-column="${columnName}"]`);
-    if (!col || !colEl) return;
-    const listEl = colEl.querySelector('.dataset-list');
-    if (listEl) {
-        listEl.innerHTML = renderCockpitDatasetsHtml(columnName, col.datasets);
-    }
-    const statusCounts = countVisibleDatasetStatuses(col.datasets, columnName);
-    const summaryEl = colEl.querySelector('.col-stats-summary');
-    if (summaryEl) {
-        summaryEl.textContent = buildColumnStatusSummaryText(statusCounts, columnName);
-    }
-    const paketEl = colEl.querySelector('.col-stats-paket strong');
-    if (paketEl) {
-        const visibleCount = getVisiblePaketCount(col.datasets, columnName);
-        paketEl.textContent = isColumnFilterActive(columnName) ? visibleCount : (col.paketSayisi ?? visibleCount);
-    }
-    if (columnName === 'TDSTG') {
-        updateTdStgLndFilterCounts();
-    }
+function refreshCockpitColumnDatasets() {
+    rerenderSurecCockpit();
 }
 
 function updateGlobalFilterCounts() {
@@ -454,20 +526,14 @@ function updateGlobalFilterCounts() {
     });
 }
 
-function updateTdStgLndFilterCounts() {
-    const counts = countTdStgLndStatuses();
-    document.querySelectorAll('.cockpit-tdstg-lnd-filters .cockpit-status-chip input[data-lnd-status]').forEach(input => {
-        const strong = input.parentElement?.querySelector('strong');
-        if (strong) {
-            strong.textContent = counts[input.dataset.lndStatus] || 0;
-        }
-    });
-}
-
 function refreshAllCockpitColumns() {
-    COCKPIT_COLUMNS.forEach(col => refreshCockpitColumnDatasets(col.name));
+    if (!cockpitFocusLayer) {
+        const grid = document.getElementById('cockpitFlowGrid');
+        if (grid) {
+            grid.innerHTML = buildFlowLayerGridHtml();
+        }
+    }
     updateGlobalFilterCounts();
-    updateTdStgLndFilterCounts();
 }
 
 function getDefaultGunlukAkisDate() {
@@ -1002,7 +1068,7 @@ function buildDatasetStatusModelRows(rows) {
 
     return rows.map(row => `
         <tr>
-            <td>${escapeDatasetHtml(row.dataModel)}</td>
+            <td class="ds-cell-wrap ds-model-name-col">${escapeDatasetHtml(row.dataModel)}</td>
             <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
             <td class="ds-num-col"><strong>${row.adet}</strong></td>
         </tr>`).join('');
@@ -1151,7 +1217,7 @@ function bindDatasetDetailSearch(root, domain) {
     const tbody = root.querySelector('#dsDomainTableBody');
     if (!input || !tbody || !domain) return;
 
-    input.addEventListener('input', () => {
+    const applySearch = () => {
         const term = input.value.trim().toLowerCase();
         const filtered = !term
             ? domain.datasets
@@ -1161,7 +1227,9 @@ function bindDatasetDetailSearch(root, domain) {
         tbody.innerHTML = filtered.length
             ? buildDomainDetailRows(filtered)
             : '<tr><td colspan="3" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>';
-    });
+    };
+
+    window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
 }
 
 function refreshDatasetCatalogContent(shell) {
@@ -1198,7 +1266,7 @@ function bindDatasetListSearch(root) {
     const countEl = root.querySelector('.ds-table-count');
     if (!input || !tbody) return;
 
-    input.addEventListener('input', () => {
+    const applySearch = () => {
         const term = input.value.trim().toLowerCase();
         const filtered = !term
             ? DATASET_LIST_ROWS
@@ -1211,7 +1279,9 @@ function bindDatasetListSearch(root) {
         if (countEl) {
             countEl.textContent = `${filtered.length} kayıt`;
         }
-    });
+    };
+
+    window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
 }
 
 function bindDatasetViewToolbar(root) {
@@ -1393,54 +1463,21 @@ function buildFlowStepHtml(layerName, task, rowTasks) {
             </div>`;
 }
 
-function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlanmaYuzdesi }) {
-    const pct = Math.min(100, tamamlanmaYuzdesi ?? 0);
-    const allDone = pct >= 100;
-    const hasRunning = datasets.some(ds => ds.tasks.some(t => t.status === 'running')
-        || (ds.lndTasks || []).some(t => t.status === 'running'));
-    const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
-        || (ds.lndTasks || []).some(t => t.status === 'failed'));
-    const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
-    const statusCounts = countVisibleDatasetStatuses(datasets, name);
-    const datasetHtml = renderCockpitDatasetsHtml(name, datasets);
-    const visiblePaket = getVisiblePaketCount(datasets, name);
-    const paketDisplay = isColumnFilterActive(name) ? visiblePaket : (paketSayisi ?? visiblePaket);
-    const lndFiltersHtml = name === 'TDSTG' ? buildTdStgLndFiltersHtml() : '';
-
-    return `
-        <div class="cockpit-col theme-${theme} status-${colStatus}" data-column="${name}">
-            <header class="col-header">
-                <div class="col-title">
-                    <i class="ti ti-database"></i>
-                    <div>
-                        <h4>${name}</h4>
-                        <span>${role}</span>
-                    </div>
-                </div>
-                <div class="col-meta">
-                    <span class="col-pct">${pct}%</span>
-                    <span class="col-pct-caption">Tamamlanma</span>
-                    <span class="col-status-badge">${hasFailed ? 'Hata' : allDone ? 'Tamam' : hasRunning ? 'Aktif' : 'Bekliyor'}</span>
-                </div>
-            </header>
-            <div class="col-stats">
-                <div class="col-stats-lead">
-                    <div class="col-stats-paket-row">
-                        <span class="col-stats-paket"><strong>${paketDisplay}</strong> paket</span>
-                        ${lndFiltersHtml}
-                    </div>
-                    <span class="col-stats-summary">${buildColumnStatusSummaryText(statusCounts, name)}</span>
-                </div>
-            </div>
-            <div class="dataset-list">${datasetHtml}</div>
-        </div>`;
+function buildCockpitColumn(col) {
+    return buildFlowLayerTile(col);
 }
 
 function buildSurecHTML() {
     const now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const dataDate = getGunlukAkisDate();
-    const columns = COCKPIT_COLUMNS.map(buildCockpitColumn).join('');
-    return `<section class="cockpit">
+    const focusCol = cockpitFocusLayer
+        ? COCKPIT_COLUMNS.find(col => col.name === cockpitFocusLayer)
+        : null;
+    const bodyHtml = focusCol
+        ? buildFlowLayerDetail(focusCol)
+        : `<div class="cockpit-grid cockpit-grid-flow" id="cockpitFlowGrid">${buildFlowLayerGridHtml()}</div>`;
+
+    return `<section class="cockpit${focusCol ? ' is-layer-focused' : ''}">
         <div class="cockpit-head">
             <div class="cockpit-head-main">
                 <div class="cockpit-head-title-row">
@@ -1460,8 +1497,16 @@ function buildSurecHTML() {
                 </div>
             </div>
         </div>
-        <div class="cockpit-grid">${columns}</div>
+        <div class="cockpit-body">${bodyHtml}</div>
     </section>`;
+}
+
+function rerenderSurecCockpit(container) {
+    const root = container || document.getElementById('pageBody');
+    if (!root) return;
+    root.innerHTML = buildSurecHTML();
+    bindSurecCockpit();
+    bindSurecCockpitDateFilter(root);
 }
 
 function bindSurecCockpitDateFilter(container) {
@@ -1474,11 +1519,10 @@ function bindSurecCockpitDateFilter(container) {
     input.addEventListener('change', async () => {
         if (!input.value) return;
         gunlukAkisDataDate = input.value;
+        cockpitFocusLayer = null;
         root.innerHTML = '<div class="cockpit-loading">Yükleniyor…</div>';
         await loadSurecData({ dataDate: input.value, kokpitOnly: true });
-        root.innerHTML = buildSurecHTML();
-        bindSurecCockpit();
-        bindSurecCockpitDateFilter(root);
+        rerenderSurecCockpit(root);
     });
 }
 
@@ -1490,22 +1534,6 @@ function bindGlobalCockpitStatusFilters() {
     cockpit.addEventListener('change', event => {
         const input = event.target;
         if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox') return;
-
-        if (input.closest('.cockpit-tdstg-lnd-filters')) {
-            const status = input.dataset.lndStatus;
-            if (!status) return;
-
-            if (input.checked) {
-                COCKPIT_TDSTG_LND_FILTERS.add(status);
-            } else {
-                COCKPIT_TDSTG_LND_FILTERS.delete(status);
-            }
-            refreshCockpitColumnDatasets('TDSTG');
-            updateGlobalFilterCounts();
-            updateTdStgLndFilterCounts();
-            return;
-        }
-
         if (!input.closest('.cockpit-global-filters')) return;
 
         const status = input.dataset.status;
@@ -1516,11 +1544,52 @@ function bindGlobalCockpitStatusFilters() {
         } else {
             COCKPIT_GLOBAL_STATUS_FILTERS.delete(status);
         }
-        refreshAllCockpitColumns();
+        if (cockpitFocusLayer) {
+            rerenderSurecCockpit();
+        } else {
+            refreshAllCockpitColumns();
+        }
+    });
+}
+
+function bindFlowLayerTiles() {
+    const cockpit = document.querySelector('.cockpit');
+    if (!cockpit || cockpit.dataset.flowLayerBound === '1') return;
+    cockpit.dataset.flowLayerBound = '1';
+
+    cockpit.addEventListener('click', event => {
+        const backBtn = event.target.closest('[data-flow-back]');
+        if (backBtn) {
+            cockpitFocusLayer = null;
+            rerenderSurecCockpit();
+            return;
+        }
+
+        const tile = event.target.closest('.flow-layer-tile[data-flow-layer]');
+        if (!tile) return;
+        cockpitFocusLayer = tile.getAttribute('data-flow-layer');
+        rerenderSurecCockpit();
+        cockpit.querySelector('.flow-layer-detail-back')?.focus();
+    });
+
+    cockpit.addEventListener('keydown', event => {
+        const tile = event.target.closest('.flow-layer-tile[data-flow-layer]');
+        if (!tile) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        cockpitFocusLayer = tile.getAttribute('data-flow-layer');
+        rerenderSurecCockpit();
+        cockpit.querySelector('.flow-layer-detail-back')?.focus();
     });
 }
 
 function bindSurecCockpit() {
+    const cockpit = document.querySelector('.cockpit');
+    if (cockpit) {
+        delete cockpit.dataset.globalFilterBound;
+        delete cockpit.dataset.flowLayerBound;
+    }
+
     const clock = document.getElementById('cockpitClock');
     if (clock) {
         if (window._cockpitTimer) clearInterval(window._cockpitTimer);
@@ -1530,6 +1599,7 @@ function bindSurecCockpit() {
     }
 
     bindGlobalCockpitStatusFilters();
+    bindFlowLayerTiles();
 }
 
 async function initSurecCockpit(container) {
@@ -1538,10 +1608,9 @@ async function initSurecCockpit(container) {
     if (!gunlukAkisDataDate) {
         gunlukAkisDataDate = getDefaultGunlukAkisDate();
     }
+    cockpitFocusLayer = null;
     await loadSurecData({ dataDate: gunlukAkisDataDate, kokpitOnly: true });
-    el.innerHTML = buildSurecHTML();
-    bindSurecCockpit();
-    bindSurecCockpitDateFilter(el);
+    rerenderSurecCockpit(el);
 }
 
 async function initDatasetCatalog(container) {
@@ -1564,16 +1633,26 @@ const TASK_STATUS_LABELS = {
 
 let TASK_LIST_ROWS = [];
 
+function pickTaskListField(item, ...keys) {
+    for (const key of keys) {
+        const value = item?.[key];
+        if (value != null && String(value).trim() !== '') {
+            return String(value).trim();
+        }
+    }
+    return '—';
+}
+
 function mapTaskListesiRows(items) {
     return items.map(item => ({
-        layer: item.katman || '—',
-        datasetCode: item.datasetKod || '',
-        datasetLabel: item.datasetEtiket || item.datasetKod || '',
-        task: item.etiket || '',
-        loadPeriodType: item.yuklemePeriyodu || '—',
-        transferType: item.transferTipi || '—',
-        active: item.aktif,
-        lastExecution: item.sonGuncelleme || null
+        layer: item.katman || item.Katman || '—',
+        datasetCode: item.datasetKod || item.DatasetKod || '',
+        datasetLabel: item.datasetEtiket || item.DatasetEtiket || item.datasetKod || item.DatasetKod || '',
+        task: item.etiket || item.Etiket || '',
+        loadPeriodType: pickTaskListField(item, 'yuklemePeriyodu', 'YuklemePeriyodu'),
+        transferType: pickTaskListField(item, 'transferTipi', 'TransferTipi'),
+        active: item.aktif ?? item.Aktif ?? null,
+        lastExecution: item.sonGuncelleme || item.SonGuncelleme || null
     }));
 }
 
@@ -1620,22 +1699,19 @@ async function loadTaskListesiData() {
     if (typeof ApiClient === 'undefined') return;
     try {
         const items = await ApiClient.getTaskListesi();
-        if (items?.length) {
+        if (Array.isArray(items)) {
             TASK_LIST_ROWS = mapTaskListesiRows(items);
-        } else {
-            TASK_LIST_ROWS = [];
+            return;
         }
+        TASK_LIST_ROWS = [];
     } catch (err) {
-        console.warn('Paket listesi API\'den yüklenemedi, yerel veri kullanılıyor:', err.message);
-        if (!COCKPIT_COLUMNS.length) {
-            COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
-        }
-        TASK_LIST_ROWS = buildTaskListRowsFromCockpit();
+        console.warn('Paket listesi API\'den yüklenemedi:', err.message);
+        TASK_LIST_ROWS = [];
     }
 }
 
 function getTaskListRows() {
-    return TASK_LIST_ROWS.length ? TASK_LIST_ROWS : buildTaskListRowsFromCockpit();
+    return TASK_LIST_ROWS;
 }
 
 function taskRowSearchKey(row) {
@@ -1653,7 +1729,7 @@ function renderTaskListesiRows(rows) {
         <tr>
             <td>${row.layer}</td>
             <td>${escapeDatasetHtml(row.task)}</td>
-            <td><code>${row.datasetCode}</code></td>
+            <td>${escapeDatasetHtml(row.datasetCode)}</td>
             <td>${formatAktiflikCell(row.active)}</td>
             <td>${formatDatasetDate(row.lastExecution)}</td>
             <td>${formatTransferTypeCell(row)}</td>
@@ -1801,19 +1877,15 @@ function buildPortalDatasetCardHTML(surecOzet) {
             durum: k.durum
         }))
         : COCKPIT_COLUMNS.map(col => {
-            const { pct } = getLayerProgress(col);
-            const running = col.datasets.some(ds => ds.tasks.some(t => t.status === 'running')
-                || (ds.lndTasks || []).some(t => t.status === 'running'));
-            const failed = col.datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
-                || (ds.lndTasks || []).some(t => t.status === 'failed'));
-            const allDone = col.datasets.length > 0 && col.datasets.every(ds =>
-                ds.tasks.every(t => t.status === 'done')
-                && !(ds.lndTasks || []).some(t => t.status === 'failed' || t.status === 'running'));
+            const rows = col.ozetSatirlar || [];
+            const running = rows.some(row => row.durum === 'running');
+            const failed = rows.some(row => row.durum === 'failed');
+            const allDone = rows.length > 0 && rows.every(row => row.durum === 'done');
             return {
                 name: col.name,
                 theme: col.theme,
                 paketSayisi: col.paketSayisi ?? 0,
-                tamamlanmaYuzdesi: pct,
+                tamamlanmaYuzdesi: col.tamamlanmaYuzdesi ?? 0,
                 durum: failed ? 'failed' : allDone ? 'done' : running ? 'running' : 'pending'
             };
         });

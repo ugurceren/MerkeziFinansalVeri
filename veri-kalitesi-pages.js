@@ -1,5 +1,4 @@
 (function () {
-    let vkKurallarAyarlar = null;
     let vkKurallarSorgu = null;
     let vkGunlukSorgu = null;
     let vkKurallarFilters = {};
@@ -98,29 +97,33 @@
     }
 
     function buildVkKurallarFilterBar() {
+        const wrap = html => (window.FilterBar?.wrapControlHtml(html)) || html;
+        const clearBtn = window.FilterBar?.clearAllButtonHtml('vkKurallarClearAllBtn')
+            || '<button type="button" class="filter-btn filter-btn-clear filter-clear-all-btn" id="vkKurallarClearAllBtn"><span>Temizle</span></button>';
+
         const fields = VK_KURALLAR_FILTER_FIELDS.map(field => {
             const value = escapeHtml(vkKurallarFilters[field.key] ?? '');
             if (field.type === 'active') {
                 const selected = value === '' ? '' : value;
                 return `<div class="fg">
                     <label for="vkf-${field.key}">${field.label}</label>
-                    <select id="vkf-${field.key}" class="vk-filter-input" data-filter="${field.key}">
+                    ${wrap(`<select id="vkf-${field.key}" class="vk-filter-input filter-input-with-clear" data-filter="${field.key}">
                         <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
                         <option value="1"${selected === '1' ? ' selected' : ''}>Evet</option>
                         <option value="0"${selected === '0' ? ' selected' : ''}>Hayır</option>
-                    </select>
+                    </select>`)}
                 </div>`;
             }
             return `<div class="fg">
                 <label for="vkf-${field.key}">${field.label}</label>
-                <input type="text" id="vkf-${field.key}" class="vk-filter-input" data-filter="${field.key}"
-                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">
+                ${wrap(`<input type="text" id="vkf-${field.key}" class="vk-filter-input filter-input-with-clear" data-filter="${field.key}"
+                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">`)}
             </div>`;
         }).join('');
 
         return `<div class="filter-bar vk-kurallar-filter-bar" id="vkKurallarFilterPanel">
             ${fields}
-            <button type="button" class="filter-btn" id="vkKurallarFilterBtn">Filtrele</button>
+            ${clearBtn}
         </div>`;
     }
 
@@ -154,12 +157,23 @@
         if (metaEl) metaEl.textContent = buildVkKurallarMeta(data, filtered);
     }
 
-    function bindVkKurallarPage(root) {
-        root.querySelector('#vkKurallarFilterBtn')?.addEventListener('click', () => applyVkKurallarFilter(root));
+    function clearVkKurallarFilters(root) {
+        vkKurallarFilters = {};
         root.querySelectorAll('.vk-filter-input').forEach(input => {
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') applyVkKurallarFilter(root);
-            });
+            input.value = '';
+        });
+        window.FilterBar?.syncFieldsInBar(root.querySelector('#vkKurallarFilterPanel'), '.vk-filter-input');
+        applyVkKurallarFilter(root);
+    }
+
+    function bindVkKurallarPage(root) {
+        window.FilterBar?.bind(root.querySelector('#vkKurallarFilterPanel'), {
+            bindKey: 'vk-kurallar',
+            fieldSelector: '.vk-filter-input',
+            debounceMs: 300,
+            clearAllId: 'vkKurallarClearAllBtn',
+            onFilter: () => applyVkKurallarFilter(root),
+            onClearAll: () => clearVkKurallarFilters(root)
         });
     }
 
@@ -220,13 +234,6 @@
 
     async function loadVkKurallarSorgu() {
         vkKurallarSorgu = null;
-        vkKurallarAyarlar = null;
-
-        try {
-            vkKurallarAyarlar = await ApiClient.getVkKurallarAyarlar();
-        } catch (err) {
-            console.warn('VK kurallar ayarları yüklenemedi:', err);
-        }
 
         try {
             vkKurallarSorgu = await ApiClient.getVkKurallarSorgu();
@@ -247,10 +254,7 @@
     }
 
     function buildKurallarHTML() {
-        const ayar = vkKurallarAyarlar;
         const data = vkKurallarSorgu;
-        const sqlDosya = ayar?.sorguDosyasi || 'config/queries/vk-kurallar.sql';
-        const katman = ayar?.katmanKodu || 'TDUTIL';
 
         if (!data) {
             return `<section class="vk-layout">
@@ -266,7 +270,6 @@
             return `<section class="vk-layout">
                 <div class="vk-head">
                     <h3>Veri Kalitesi Kuralları</h3>
-                    <p>Kaynak: <code>${escapeHtml(sqlDosya)}</code> · Katman: ${escapeHtml(katman)}</p>
                 </div>
                 <div class="vk-error" role="alert">${escapeHtml(data.hata || 'Sorgu başarısız.')}</div>
                 <div class="vk-card vk-empty">Kurallar listelenemedi. Sorgu dosyasını ve bağlantı ayarlarını kontrol edin.</div>
@@ -288,7 +291,6 @@
                     <h4>Kural Listesi</h4>
                     <span id="vkKurallarMeta">${escapeHtml(meta)}</span>
                 </div>
-                <p class="vk-hint">Sorgu dosyası: <code>${escapeHtml(sqlDosya)}</code> · Bağlantı: <code>config/td-connections.json</code> (${escapeHtml(katman)})</p>
                 ${buildVkKurallarFilterBar()}
                 <div class="vk-scroll vk-kurallar-scroll">
                     ${buildResultTable(cols, rows, formatKurallarCell, VK_COLUMN_LABELS)}

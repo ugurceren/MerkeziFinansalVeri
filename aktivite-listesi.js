@@ -99,8 +99,7 @@
     async function loadActivities() {
         const listEl = document.getElementById('alActivityList');
         const countEl = document.getElementById('alRecordCount');
-        const filterBtn = document.getElementById('alFilterBtn');
-        const clearBtn = document.getElementById('alClearBtn');
+        const clearAllBtn = document.getElementById('alClearAllBtn');
         if (!listEl) return;
 
         let filters;
@@ -112,8 +111,7 @@
         }
 
         setStatus('');
-        if (filterBtn) filterBtn.disabled = true;
-        if (clearBtn) clearBtn.disabled = true;
+        if (clearAllBtn) clearAllBtn.disabled = true;
         if (countEl) countEl.textContent = 'Yükleniyor…';
 
         try {
@@ -128,8 +126,7 @@
             listEl.innerHTML = '<li class="activity-item"><div class="activity-body"><span>Aktiviteler yüklenemedi.</span></div></li>';
             if (countEl) countEl.textContent = '—';
         } finally {
-            if (filterBtn) filterBtn.disabled = false;
-            if (clearBtn) clearBtn.disabled = false;
+            if (clearAllBtn) clearAllBtn.disabled = false;
         }
     }
 
@@ -138,10 +135,17 @@
             e.preventDefault();
             loadActivities();
         });
-        document.getElementById('alClearBtn')?.addEventListener('click', () => {
-            resetFilters();
-            setStatus('');
-            loadActivities();
+
+        window.FilterBar?.bind(document.getElementById('alFilterForm'), {
+            bindKey: 'aktivite',
+            clearAllId: 'alClearAllBtn',
+            onFilter: loadActivities,
+            onClearAll: () => {
+                resetFilters();
+                setStatus('');
+                window.FilterBar?.syncFieldsInBar(document.getElementById('alFilterForm'));
+                loadActivities();
+            }
         });
     }
 

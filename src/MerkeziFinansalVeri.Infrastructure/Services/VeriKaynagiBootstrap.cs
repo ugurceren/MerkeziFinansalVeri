@@ -57,15 +57,23 @@ public class VeriKaynagiBootstrap(
                 });
                 logger.LogInformation("Veri kaynağı oluşturuldu: {KatmanKodu}", katmanKodu);
             }
-            else if (string.IsNullOrWhiteSpace(entity.Sunucu) || entity.Sunucu.Contains("sirket.local", StringComparison.OrdinalIgnoreCase))
+            else if (entity is not null)
             {
-                entity.Sunucu = entry.Server;
-                entity.Veritabani = entry.Database;
-                entity.Port = entry.Port;
-                entity.KimlikDogrulama = entry.KimlikDogrulama;
-                entity.KullaniciAdi = entry.Username ?? entity.KullaniciAdi;
-                entity.GuncellemeZamani = DateTime.UtcNow;
-                logger.LogInformation("Veri kaynağı appsettings ile güncellendi: {KatmanKodu}", katmanKodu);
+                var needsSync = string.IsNullOrWhiteSpace(entity.Sunucu)
+                    || entity.Sunucu.Contains("sirket.local", StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(entity.Sunucu, entry.Server, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(entity.Veritabani, entry.Database, StringComparison.OrdinalIgnoreCase);
+
+                if (needsSync)
+                {
+                    entity.Sunucu = entry.Server;
+                    entity.Veritabani = entry.Database;
+                    entity.Port = entry.Port;
+                    entity.KimlikDogrulama = entry.KimlikDogrulama;
+                    entity.KullaniciAdi = entry.Username ?? entity.KullaniciAdi;
+                    entity.GuncellemeZamani = DateTime.UtcNow;
+                    logger.LogInformation("Veri kaynağı config ile senkronize edildi: {KatmanKodu}", katmanKodu);
+                }
             }
         }
 

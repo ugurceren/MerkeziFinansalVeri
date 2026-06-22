@@ -13,7 +13,6 @@
     const filterTeamInput = document.getElementById('filterTeamInput');
     const filterIdMin = document.getElementById('filterIdMin');
     const filterIdMax = document.getElementById('filterIdMax');
-    const filterBtn = document.getElementById('filterBtn');
     const accountsTable = document.getElementById('accountsTable');
     const tbody = accountsTable?.querySelector('tbody');
     const addBtn = document.getElementById('addBtn');
@@ -274,12 +273,26 @@
         });
     }
 
+    async function clearAllFilters() {
+        if (filterNameInput) filterNameInput.value = '';
+        if (filterTeamInput) filterTeamInput.value = '';
+        if (filterIdMin) filterIdMin.value = '';
+        if (filterIdMax) filterIdMax.value = '';
+        const bar = document.querySelector('#view-kebir .filter-bar');
+        window.FilterBar?.syncFieldsInBar(bar);
+        await loadAccounts();
+    }
+
     function init() {
         if (!accountsTable || !tbody) return;
+        accountsTable.dataset.inlineInit = 'true';
 
-        filterBtn?.addEventListener('click', filterTable);
-        [filterNameInput, filterTeamInput, filterIdMin, filterIdMax].forEach(input => {
-            input?.addEventListener('keydown', e => { if (e.key === 'Enter') filterTable(); });
+        window.FilterBar?.bind(document.querySelector('#view-kebir .filter-bar'), {
+            bindKey: 'kebir',
+            debounceMs: 300,
+            clearAllId: 'kebirClearAllBtn',
+            onFilter: filterTable,
+            onClearAll: clearAllFilters
         });
 
         accountsTable.addEventListener('click', e => {

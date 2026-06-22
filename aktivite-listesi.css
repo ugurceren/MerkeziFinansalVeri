@@ -34,6 +34,10 @@
     color: var(--rb-text-muted);
 }
 
+.al-field .filter-input-wrap {
+    width: 100%;
+}
+
 .al-field input[type="date"] {
     height: 32px;
     padding: 0 10px;

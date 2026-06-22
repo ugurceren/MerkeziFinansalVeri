@@ -153,10 +153,8 @@
     background: var(--rb-card);
 }
 
-.tl-card .vs-results-table code {
-    font-size: 11px;
-    color: var(--rb-text-secondary);
-}
+.page-ribbon .tl-head h3 { font-size: 16px; }
+.page-ribbon .tl-card .vs-results-table { font-size: 13px; }
 
 .tl-empty-cell {
     padding: 28px !important;
@@ -204,6 +202,3 @@
     background: rgba(132, 145, 168, 0.18);
     color: var(--rb-text-muted);
 }
-
-.page-ribbon .tl-head h3 { font-size: 16px; }
-.page-ribbon .tl-card .vs-results-table { font-size: 13px; }

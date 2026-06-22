@@ -6,8 +6,8 @@ SELECT
     pr.LastExecutionDate,
     pr.TransferTypeId,
     pr.LoadPeriodTypeId,
-    tt.TransferTypeName AS TransferTypeName,
-    lpt.LoadPeriodTypeName AS LoadPeriodTypeName,
+    tt.TransferTypeName AS [Transfer Tipi],
+    lpt.LoadPeriodTypeName AS [Yükleme Periyodu],
     pr.Description
 FROM [TDUTIL].[OPR].[ParallelRun] pr
 LEFT JOIN [TDUTIL].[OPR].[TransferTypeDefinition] tt

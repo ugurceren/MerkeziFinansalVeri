@@ -122,14 +122,21 @@ public class VeriKaynagiController(
             GuncellemeZamani = v.GuncellemeZamani
         };
 
-        if (tdOptions.Value.Connections.TryGetValue(v.KatmanKodu, out var entry)
-            && (string.IsNullOrWhiteSpace(dto.Sunucu) || dto.Sunucu.Contains("sirket.local", StringComparison.OrdinalIgnoreCase)))
+        if (tdOptions.Value.Connections.TryGetValue(v.KatmanKodu, out var entry))
         {
-            dto.Sunucu = entry.Server;
-            dto.Veritabani = entry.Database;
-            dto.Port = entry.Port;
-            dto.KimlikDogrulama = entry.KimlikDogrulama;
-            dto.KullaniciAdi = entry.Username ?? dto.KullaniciAdi;
+            if (string.IsNullOrWhiteSpace(dto.Sunucu)
+                || dto.Sunucu.Contains("sirket.local", StringComparison.OrdinalIgnoreCase))
+            {
+                dto.Sunucu = entry.Server;
+                dto.Port = entry.Port;
+                dto.KimlikDogrulama = entry.KimlikDogrulama;
+                dto.KullaniciAdi = entry.Username ?? dto.KullaniciAdi;
+            }
+
+            if (!string.IsNullOrWhiteSpace(entry.Database))
+            {
+                dto.Veritabani = entry.Database;
+            }
         }
 
         return dto;

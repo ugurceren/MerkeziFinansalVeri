@@ -81,6 +81,22 @@ public class SurecController(
                     KayitSayisi = step.KayitSayisi,
                     HataMesaji = step.HataMesaji
                 }).ToList()
+            }).ToList(),
+            OzetSatirlar = layer.OzetSatirlar.Select(item => new SurecKokpitOzetSatirDto
+            {
+                HedefTablo = item.HedefTablo,
+                Durum = item.Durum,
+                DurumMetni = item.DurumMetni
+            }).ToList(),
+            Kayitlar = layer.Kayitlar.Select(item => new SurecKokpitKayitDto
+            {
+                TargetTableName = item.TargetTableName,
+                DataDate = item.DataDate?.ToString("yyyy-MM-dd"),
+                ExecutionStartTime = FormatDateTime(item.ExecutionStartTime),
+                ExecutionEndTime = FormatDateTime(item.ExecutionEndTime),
+                SureDakika = item.SureDakika,
+                ExecutionRecordCount = item.ExecutionRecordCount,
+                ErrorMessageText = item.ErrorMessageText
             }).ToList()
         }).ToList();
 
@@ -236,4 +252,7 @@ public class SurecController(
 
         return Ok(items);
     }
+
+    private static string? FormatDateTime(DateTime? value) =>
+        value?.ToString("yyyy-MM-dd HH:mm:ss");
 }

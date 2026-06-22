@@ -33,6 +33,26 @@ public sealed class EtlLoadCockpitLayer
     public int BasariliAdimSayisi { get; init; }
     public int TamamlanmaYuzdesi { get; init; }
     public IReadOnlyList<EtlLoadCockpitDataset> Datasets { get; init; } = [];
+    public IReadOnlyList<EtlLoadCockpitOzetSatir> OzetSatirlar { get; init; } = [];
+    public IReadOnlyList<EtlLoadCockpitKayit> Kayitlar { get; init; } = [];
+}
+
+public sealed class EtlLoadCockpitOzetSatir
+{
+    public string HedefTablo { get; init; } = string.Empty;
+    public string Durum { get; init; } = "not-started";
+    public string DurumMetni { get; init; } = "Not Started";
+}
+
+public sealed class EtlLoadCockpitKayit
+{
+    public string TargetTableName { get; init; } = string.Empty;
+    public DateOnly? DataDate { get; init; }
+    public DateTime? ExecutionStartTime { get; init; }
+    public DateTime? ExecutionEndTime { get; init; }
+    public double? SureDakika { get; init; }
+    public int? ExecutionRecordCount { get; init; }
+    public string? ErrorMessageText { get; init; }
 }
 
 public sealed class EtlLoadCockpitDataset

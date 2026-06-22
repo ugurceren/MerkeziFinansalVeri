@@ -6,7 +6,8 @@ MERGE VIB.cfg_DataSource AS tgt
 USING (VALUES
     (N'TDSTG',   N'sql-stg-01.sirket.local',  N'TDSTG',   1433, N'sql'),
     (N'TDMAIN',  N'sql-main-01.sirket.local', N'TDMAIN',  1433, N'sql'),
-    (N'TDREPORT', N'sql-rpt-01.sirket.local', N'TDREPORT', 1433, N'sql')
+    (N'TDREPORT', N'sql-rpt-01.sirket.local', N'TDREPORT', 1433, N'sql'),
+    (N'TDUTIL',  N'sql-util-01.sirket.local', N'TDUTIL',  1433, N'sql')
 ) AS src(LayerCode, ServerName, DatabaseName, Port, AuthenticationMode)
 ON tgt.LayerCode = src.LayerCode
 WHEN MATCHED THEN

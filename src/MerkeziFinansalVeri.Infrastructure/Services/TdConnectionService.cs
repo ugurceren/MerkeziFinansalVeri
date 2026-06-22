@@ -214,25 +214,68 @@ public class TdConnectionService(
             .AsNoTracking()
             .FirstOrDefaultAsync(v => v.KatmanKodu == katmanKodu, cancellationToken);
 
-        if (fromDb is not null && !string.IsNullOrWhiteSpace(fromDb.Sunucu))
+        return ResolveFromSources(katmanKodu, fromDb);
+    }
+
+    internal VeriKaynagi? ResolveFromSources(string katmanKodu, VeriKaynagi? fromDb)
+    {
+        tdOptions.Value.Connections.TryGetValue(katmanKodu, out var entry);
+
+        if (fromDb is null && entry is null)
         {
-            return fromDb;
+            return null;
         }
 
-        if (tdOptions.Value.Connections.TryGetValue(katmanKodu, out var entry))
-        {
-            return new VeriKaynagi
+        var kaynak = fromDb is null
+            ? new VeriKaynagi { KatmanKodu = katmanKodu }
+            : new VeriKaynagi
             {
-                KatmanKodu = katmanKodu,
-                Sunucu = entry.Server,
-                Veritabani = entry.Database,
-                Port = entry.Port,
-                KimlikDogrulama = entry.KimlikDogrulama,
-                KullaniciAdi = entry.Username
+                KatmanKodu = fromDb.KatmanKodu,
+                Sunucu = fromDb.Sunucu,
+                Veritabani = fromDb.Veritabani,
+                Port = fromDb.Port,
+                KimlikDogrulama = fromDb.KimlikDogrulama,
+                KullaniciAdi = fromDb.KullaniciAdi
             };
+
+        if (entry is null)
+        {
+            return string.IsNullOrWhiteSpace(kaynak.Sunucu) ? null : kaynak;
         }
 
-        return fromDb;
+        // config/td-connections.json hedef sunucu ve veritabanı için otorite — UI / SSMS ile aynı kaynak.
+        if (!string.IsNullOrWhiteSpace(entry.Server))
+        {
+            kaynak.Sunucu = entry.Server;
+        }
+        else if (string.IsNullOrWhiteSpace(kaynak.Sunucu)
+                 || kaynak.Sunucu.Contains("sirket.local", StringComparison.OrdinalIgnoreCase))
+        {
+            kaynak.Sunucu = entry.Server;
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Database))
+        {
+            kaynak.Veritabani = entry.Database;
+        }
+        else if (string.IsNullOrWhiteSpace(kaynak.Veritabani))
+        {
+            kaynak.Veritabani = katmanKodu;
+        }
+
+        kaynak.KimlikDogrulama = entry.KimlikDogrulama;
+        kaynak.KullaniciAdi = entry.Username ?? kaynak.KullaniciAdi;
+
+        if (entry.Port > 0)
+        {
+            kaynak.Port = entry.Port;
+        }
+        else if (kaynak.Port <= 0)
+        {
+            kaynak.Port = 1433;
+        }
+
+        return string.IsNullOrWhiteSpace(kaynak.Sunucu) ? null : kaynak;
     }
 
     private static SqlConnection CreateConnection(VeriKaynagi kaynak)

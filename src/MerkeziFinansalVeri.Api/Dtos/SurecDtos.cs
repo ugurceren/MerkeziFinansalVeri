@@ -18,6 +18,26 @@ public sealed class SurecKokpitKatmanDto
     public int BasariliAdimSayisi { get; set; }
     public int TamamlanmaYuzdesi { get; set; }
     public IReadOnlyList<SurecKokpitDatasetDto> Datasets { get; set; } = [];
+    public IReadOnlyList<SurecKokpitOzetSatirDto> OzetSatirlar { get; set; } = [];
+    public IReadOnlyList<SurecKokpitKayitDto> Kayitlar { get; set; } = [];
+}
+
+public sealed class SurecKokpitOzetSatirDto
+{
+    public string HedefTablo { get; set; } = string.Empty;
+    public string Durum { get; set; } = string.Empty;
+    public string DurumMetni { get; set; } = string.Empty;
+}
+
+public sealed class SurecKokpitKayitDto
+{
+    public string TargetTableName { get; set; } = string.Empty;
+    public string? DataDate { get; set; }
+    public string? ExecutionStartTime { get; set; }
+    public string? ExecutionEndTime { get; set; }
+    public double? SureDakika { get; set; }
+    public int? ExecutionRecordCount { get; set; }
+    public string? ErrorMessageText { get; set; }
 }
 
 public sealed class SurecKokpitDatasetDto

@@ -266,16 +266,16 @@
                         <span>Toplam fark tutarı</span>
                     </div>
                 </div>
-                <div class="mt-filter-bar">
+                <div class="mt-filter-bar" id="mtDiffFilterPanel">
                     <div class="fg">
                         <label for="mtFilterCode">Hesap Kodu</label>
-                        <input type="text" id="mtFilterCode" placeholder="Kod ara...">
+                        ${(window.FilterBar?.wrapControlHtml('<input type="text" id="mtFilterCode" class="filter-input-with-clear" placeholder="Kod ara...">')) || '<input type="text" id="mtFilterCode" placeholder="Kod ara...">'}
                     </div>
                     <div class="fg">
                         <label for="mtFilterTeam">Sorumlu Ekip</label>
-                        <input type="text" id="mtFilterTeam" placeholder="Ekip ara...">
+                        ${(window.FilterBar?.wrapControlHtml('<input type="text" id="mtFilterTeam" class="filter-input-with-clear" placeholder="Ekip ara...">')) || '<input type="text" id="mtFilterTeam" placeholder="Ekip ara...">'}
                     </div>
-                    <button type="button" class="filter-btn" id="mtFilterBtn">Filtrele</button>
+                    ${window.FilterBar?.clearAllButtonHtml('mtDiffClearAllBtn') || '<button type="button" class="filter-btn filter-btn-clear filter-clear-all-btn" id="mtDiffClearAllBtn"><span>Temizle</span></button>'}
                 </div>
                 <div class="mt-scroll">
                     <table class="mt-table" id="mtDiffTable">
@@ -350,29 +350,33 @@
     }
 
     function buildMatrixMapFilterBar() {
+        const wrap = html => (window.FilterBar?.wrapControlHtml(html)) || html;
+        const clearBtn = window.FilterBar?.clearAllButtonHtml('mtMatrixClearAllBtn')
+            || '<button type="button" class="filter-btn filter-btn-clear filter-clear-all-btn" id="mtMatrixClearAllBtn"><span>Temizle</span></button>';
+
         const fields = MATRIXMAP_FILTER_FIELDS.map(field => {
             const value = escapeHtml(matrixMapFilters[field.apiKey] ?? '');
             if (field.type === 'tinyint') {
                 const selected = value === '' ? '' : value;
                 return `<div class="fg">
                     <label for="mmf-${field.apiKey}">${field.label}</label>
-                    <select id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}">
+                    ${wrap(`<select id="mmf-${field.apiKey}" class="mt-mm-filter-input filter-input-with-clear" data-filter="${field.apiKey}">
                         <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
                         <option value="1"${selected === '1' ? ' selected' : ''}>1</option>
                         <option value="0"${selected === '0' ? ' selected' : ''}>0</option>
-                    </select>
+                    </select>`)}
                 </div>`;
             }
             return `<div class="fg">
                 <label for="mmf-${field.apiKey}">${field.label}</label>
-                <input type="text" id="mmf-${field.apiKey}" class="mt-mm-filter-input" data-filter="${field.apiKey}"
-                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">
+                ${wrap(`<input type="text" id="mmf-${field.apiKey}" class="mt-mm-filter-input filter-input-with-clear" data-filter="${field.apiKey}"
+                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">`)}
             </div>`;
         }).join('');
 
         return `<div class="filter-bar mt-mm-filter-bar" id="mtMatrixFilterPanel">
             ${fields}
-            <button type="button" class="filter-btn" id="mtMatrixFilterBtn">Filtrele</button>
+            ${clearBtn}
         </div>`;
     }
 
@@ -446,16 +450,36 @@
         updateMatrixMapRecordCount(root, matrixMapData);
     }
 
+    async function clearMatrixMapFilters(root) {
+        matrixMapFilters = {};
+        root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
+            input.value = '';
+        });
+        window.FilterBar?.syncFieldsInBar(root.querySelector('#mtMatrixFilterPanel'), '.mt-mm-filter-input');
+        await loadMatrixMapData({});
+        if (!matrixMapData?.basarili) {
+            await initMutabakatPage(root);
+            return;
+        }
+        const tbody = root.querySelector('#mtMatrixTable tbody');
+        if (tbody) {
+            const rows = matrixMapData.satirlar || [];
+            tbody.innerHTML = buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`;
+        }
+        updateMatrixMapRecordCount(root, matrixMapData);
+    }
+
     function bindMatrixMapPage(root) {
         const pageBody = document.getElementById('pageBody');
         pageBody?.classList.add('page-body-matrixmap');
 
-        root.querySelector('#mtMatrixFilterBtn')?.addEventListener('click', () => applyMatrixMapFilter(root));
-
-        root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') applyMatrixMapFilter(root);
-            });
+        window.FilterBar?.bind(root.querySelector('#mtMatrixFilterPanel'), {
+            bindKey: 'matrixmap',
+            fieldSelector: '.mt-mm-filter-input',
+            debounceMs: 300,
+            clearAllId: 'mtMatrixClearAllBtn',
+            onFilter: () => applyMatrixMapFilter(root),
+            onClearAll: () => clearMatrixMapFilters(root)
         });
     }
 
@@ -484,6 +508,15 @@
         }
     }
 
+    async function clearDiffFilters(root) {
+        const codeEl = root.querySelector('#mtFilterCode');
+        const teamEl = root.querySelector('#mtFilterTeam');
+        if (codeEl) codeEl.value = '';
+        if (teamEl) teamEl.value = '';
+        window.FilterBar?.syncFieldsInBar(root.querySelector('#mtDiffFilterPanel'), '#mtFilterCode, #mtFilterTeam');
+        await applyDiffFilter(root);
+    }
+
     function bindMutabakatPage(root) {
         const periodInput = root.querySelector('#mtActivePeriod');
         if (periodInput) {
@@ -503,12 +536,13 @@
             });
         }
 
-        root.querySelector('#mtFilterBtn')?.addEventListener('click', () => applyDiffFilter(root));
-        root.querySelector('#mtFilterCode')?.addEventListener('keydown', e => {
-            if (e.key === 'Enter') applyDiffFilter(root);
-        });
-        root.querySelector('#mtFilterTeam')?.addEventListener('keydown', e => {
-            if (e.key === 'Enter') applyDiffFilter(root);
+        window.FilterBar?.bind(root.querySelector('#mtDiffFilterPanel'), {
+            bindKey: 'fark-veren',
+            fieldSelector: '#mtFilterCode, #mtFilterTeam',
+            debounceMs: 300,
+            clearAllId: 'mtDiffClearAllBtn',
+            onFilter: () => applyDiffFilter(root),
+            onClearAll: () => clearDiffFilters(root)
         });
 
         root.querySelectorAll('[data-period]').forEach(row => {

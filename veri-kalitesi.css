@@ -121,21 +121,6 @@
     color: var(--rb-accent);
 }
 
-.vk-hint {
-    margin: 0;
-    padding: 8px 14px 0;
-    font-size: 11px;
-    color: var(--rb-text-muted);
-}
-
-.vk-hint code {
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    background: var(--rb-filter-bg);
-    color: var(--rb-text-secondary);
-}
-
 .vk-kurallar-filter-bar {
     background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
     border-bottom: 0.5px solid color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));

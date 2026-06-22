@@ -31,50 +31,28 @@ public sealed class ParallelRunTaskListService(
             return Fail(query.Hata!);
         }
 
-        var loadPeriodLookupQuery = await LoadQueryAsync(ayarlar.LoadPeriodLookupSorguDosyasi, cancellationToken);
-        if (!loadPeriodLookupQuery.Basarili)
-        {
-            return Fail(loadPeriodLookupQuery.Hata!);
-        }
-
-        var transferTypeLookupQuery = await LoadQueryAsync(ayarlar.TransferTypeLookupSorguDosyasi, cancellationToken);
-        if (!transferTypeLookupQuery.Basarili)
-        {
-            return Fail(transferTypeLookupQuery.Hata!);
-        }
-
-        var loadPeriodLookup = await LoadLookupAsync(
-            ayarlar,
-            loadPeriodLookupQuery.Sql!,
-            "LoadPeriodTypeId",
-            "LoadPeriodTypeName",
-            cancellationToken);
-
-        if (!loadPeriodLookup.Basarili)
-        {
-            return Fail(loadPeriodLookup.Hata ?? "Yükleme periyodu lookup sorgusu başarısız.", loadPeriodLookup.SureMs);
-        }
-
-        var transferTypeLookup = await LoadLookupAsync(
-            ayarlar,
-            transferTypeLookupQuery.Sql!,
-            "TransferTypeId",
-            "TransferTypeName",
-            cancellationToken);
-
-        if (!transferTypeLookup.Basarili)
-        {
-            return Fail(transferTypeLookup.Hata ?? "Transfer tipi lookup sorgusu başarısız.", transferTypeLookup.SureMs);
-        }
-
         var result = await ExecuteQueryAsync(ayarlar, query.Sql!, cancellationToken);
         if (!result.Basarili)
         {
             return Fail(result.Hata ?? "Paket listesi sorgusu çalıştırılamadı.", result.SureMs);
         }
 
+        var loadPeriodLookup = await TryLoadLookupAsync(
+            ayarlar,
+            ayarlar.LoadPeriodLookupSorguDosyasi,
+            "LoadPeriodTypeId",
+            "LoadPeriodTypeName",
+            cancellationToken);
+
+        var transferTypeLookup = await TryLoadLookupAsync(
+            ayarlar,
+            ayarlar.TransferTypeLookupSorguDosyasi,
+            "TransferTypeId",
+            "TransferTypeName",
+            cancellationToken);
+
         var kayitlar = result.Satirlar
-            .Select(row => MapRow(row, loadPeriodLookup.Lookup, transferTypeLookup.Lookup))
+            .Select(row => MapRow(row, loadPeriodLookup, transferTypeLookup))
             .Where(item => !string.IsNullOrWhiteSpace(item.Task))
             .OrderBy(item => item.Katman, StringComparer.OrdinalIgnoreCase)
             .ThenBy(item => item.DatasetKod, StringComparer.OrdinalIgnoreCase)
@@ -85,7 +63,7 @@ public sealed class ParallelRunTaskListService(
         {
             Basarili = true,
             Kayitlar = kayitlar,
-            SureMs = result.SureMs + loadPeriodLookup.SureMs + transferTypeLookup.SureMs
+            SureMs = result.SureMs
         };
     }
 
@@ -109,14 +87,16 @@ public sealed class ParallelRunTaskListService(
             Task = packageName,
             YuklemePeriyodu = ResolveLookupField(
                 row,
-                "LoadPeriodTypeName",
+                loadPeriodLookup,
                 "LoadPeriodTypeId",
-                loadPeriodLookup),
+                "LoadPeriodTypeName",
+                "Yükleme Periyodu"),
             TransferTipi = ResolveLookupField(
                 row,
-                "TransferTypeName",
+                transferTypeLookup,
                 "TransferTypeId",
-                transferTypeLookup),
+                "TransferTypeName",
+                "Transfer Tipi"),
             Aktif = activeFlag,
             SonGuncelleme = lastExecution
         };
@@ -124,14 +104,24 @@ public sealed class ParallelRunTaskListService(
 
     private static string ResolveLookupField(
         IReadOnlyDictionary<string, object?> row,
-        string nameColumn,
+        IReadOnlyDictionary<int, string> lookup,
         string idColumn,
-        IReadOnlyDictionary<int, string> lookup)
+        string primarySuffix,
+        params string[] nameColumns)
     {
-        var joinedName = GetCell(row, nameColumn)?.Trim();
-        if (!string.IsNullOrWhiteSpace(joinedName))
+        foreach (var nameColumn in nameColumns)
         {
-            return joinedName;
+            var joinedName = GetCell(row, nameColumn)?.Trim();
+            if (!string.IsNullOrWhiteSpace(joinedName))
+            {
+                return joinedName;
+            }
+        }
+
+        var suffixName = FindCellByKeySuffix(row, primarySuffix);
+        if (!string.IsNullOrWhiteSpace(suffixName))
+        {
+            return suffixName;
         }
 
         var id = GetCellInt(row, idColumn);
@@ -143,7 +133,53 @@ public sealed class ParallelRunTaskListService(
         return "—";
     }
 
-    private async Task<(bool Basarili, string? Hata, int SureMs, Dictionary<int, string> Lookup)> LoadLookupAsync(
+    private static string? FindCellByKeySuffix(IReadOnlyDictionary<string, object?> row, string suffix)
+    {
+        foreach (var key in row.Keys)
+        {
+            if (!key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var text = GetCell(row, key)?.Trim();
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<IReadOnlyDictionary<int, string>> TryLoadLookupAsync(
+        ParallelRunTaskListAyarlar ayarlar,
+        string relativePath,
+        string idColumn,
+        string nameColumn,
+        CancellationToken cancellationToken)
+    {
+        var query = await LoadQueryAsync(relativePath, cancellationToken);
+        if (!query.Basarili)
+        {
+            logger.LogWarning("Paket listesi lookup sorgu dosyası okunamadı: {Path} — {Hata}", relativePath, query.Hata);
+            return new Dictionary<int, string>();
+        }
+
+        var result = await LoadLookupAsync(ayarlar, query.Sql!, idColumn, nameColumn, cancellationToken);
+        if (!result.Basarili)
+        {
+            logger.LogWarning(
+                "Paket listesi lookup sorgusu başarısız: {Path} — {Hata}",
+                relativePath,
+                result.Hata);
+            return new Dictionary<int, string>();
+        }
+
+        return result.Lookup;
+    }
+
+    private async Task<(bool Basarili, string? Hata, Dictionary<int, string> Lookup)> LoadLookupAsync(
         ParallelRunTaskListAyarlar ayarlar,
         string sql,
         string idColumn,
@@ -153,7 +189,7 @@ public sealed class ParallelRunTaskListService(
         var result = await ExecuteQueryAsync(ayarlar, sql, cancellationToken);
         if (!result.Basarili)
         {
-            return (false, result.Hata, result.SureMs, []);
+            return (false, result.Hata, []);
         }
 
         var lookup = new Dictionary<int, string>();
@@ -169,7 +205,7 @@ public sealed class ParallelRunTaskListService(
             lookup[id.Value] = name;
         }
 
-        return (true, null, result.SureMs, lookup);
+        return (true, null, lookup);
     }
 
     private async Task<(bool Basarili, string? Sql, string? Hata)> LoadQueryAsync(
@@ -271,6 +307,8 @@ public sealed class ParallelRunTaskListService(
                     return byteValue;
                 case sbyte sbyteValue:
                     return sbyteValue;
+                case ushort ushortValue when ushortValue <= int.MaxValue:
+                    return ushortValue;
                 case short shortValue:
                     return shortValue;
                 case int intValue:
@@ -280,6 +318,12 @@ public sealed class ParallelRunTaskListService(
                 case decimal decimalValue when decimalValue == decimal.Truncate(decimalValue)
                     && decimalValue is >= int.MinValue and <= int.MaxValue:
                     return (int)decimalValue;
+                case double doubleValue when doubleValue == Math.Truncate(doubleValue)
+                    && doubleValue is >= int.MinValue and <= int.MaxValue:
+                    return (int)doubleValue;
+                case float floatValue when floatValue == Math.Truncate(floatValue)
+                    && floatValue is >= int.MinValue and <= int.MaxValue:
+                    return (int)floatValue;
                 default:
                     var text = Convert.ToString(value, CultureInfo.InvariantCulture);
                     if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
