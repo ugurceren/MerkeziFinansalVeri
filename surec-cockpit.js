@@ -837,6 +837,7 @@ function buildDatasetStatusMockBadge() {
     return '<span class="ds-mock-badge" title="API verisi yok; örnek gösterim">Demo veri</span>';
 }
 
+function sortDatasetStatusModelRows(rows) {
     const totals = {};
     rows.forEach(row => {
         totals[row.dataModel] = (totals[row.dataModel] || 0) + (row.adet || 0);
