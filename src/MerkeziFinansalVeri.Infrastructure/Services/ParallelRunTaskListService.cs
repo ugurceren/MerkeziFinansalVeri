@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -214,32 +215,80 @@ public sealed class ParallelRunTaskListService(
     {
         foreach (var columnName in columnNames)
         {
-            if (row.TryGetValue(columnName, out var direct) && direct is not null)
+            if (!TryGetRawCell(row, columnName, out var value) || value is null)
             {
-                return Convert.ToString(direct);
+                continue;
             }
 
-            var key = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
-            if (key is not null && row.TryGetValue(key, out var value) && value is not null)
+            var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                return Convert.ToString(value);
+                return text;
             }
         }
 
         return null;
     }
 
-    private static int? GetCellInt(IReadOnlyDictionary<string, object?> row, params string[] columnNames)
+    private static bool TryGetRawCell(
+        IReadOnlyDictionary<string, object?> row,
+        string columnName,
+        out object? value)
     {
-        var text = GetCell(row, columnNames);
-        if (string.IsNullOrWhiteSpace(text))
+        if (row.TryGetValue(columnName, out value))
         {
-            return null;
+            return true;
         }
 
-        if (int.TryParse(text, out var intValue))
+        var trimmedTarget = columnName.Trim();
+        foreach (var key in row.Keys)
         {
-            return intValue;
+            if (!string.Equals(key.Trim(), trimmedTarget, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            value = row[key];
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    private static int? GetCellInt(IReadOnlyDictionary<string, object?> row, params string[] columnNames)
+    {
+        foreach (var columnName in columnNames)
+        {
+            if (!TryGetRawCell(row, columnName, out var value) || value is null)
+            {
+                continue;
+            }
+
+            switch (value)
+            {
+                case byte byteValue:
+                    return byteValue;
+                case sbyte sbyteValue:
+                    return sbyteValue;
+                case short shortValue:
+                    return shortValue;
+                case int intValue:
+                    return intValue;
+                case long longValue when longValue is >= int.MinValue and <= int.MaxValue:
+                    return (int)longValue;
+                case decimal decimalValue when decimalValue == decimal.Truncate(decimalValue)
+                    && decimalValue is >= int.MinValue and <= int.MaxValue:
+                    return (int)decimalValue;
+                default:
+                    var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+                    if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
+                    {
+                        return parsed;
+                    }
+
+                    break;
+            }
         }
 
         return null;

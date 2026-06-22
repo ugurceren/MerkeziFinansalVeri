@@ -324,6 +324,46 @@
         return d.toLocaleDateString('tr-TR');
     }
 
+    function buildMutabakatKpiSectionHTML({
+        isOffline,
+        kpiFark,
+        kpiMutabakat,
+        kpiDataset,
+        kpiGunlukAkis,
+        gunlukAkisSub,
+        donemLabel
+    }) {
+        const statMuted = isOffline ? ' stat-card-offline' : '';
+        const donemSub = donemLabel || 'Güncel dönem';
+
+        return `<div class="dashboard-panel portal-mutabakat-kpi-panel">
+            <div class="panel-head"><h4>Mutabakat</h4><span>${donemSub}</span></div>
+            <div class="stat-grid stat-grid-4 portal-mutabakat-stat-grid">
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.fark}">
+                    <div class="stat-card-header"><div class="stat-icon amber"><i class="ti ti-alert-triangle"></i></div></div>
+                    <p class="stat-value">${kpiFark}</p>
+                    <p class="stat-label">Açık Fark</p>
+                </a>
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.mutabakat}">
+                    <div class="stat-card-header"><div class="stat-icon green"><i class="ti ti-circle-check"></i></div></div>
+                    <p class="stat-value">${kpiMutabakat}</p>
+                    <p class="stat-label">Mutabakat Tamamlanma</p>
+                </a>
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.dataset}">
+                    <div class="stat-card-header"><div class="stat-icon blue"><i class="ti ti-stack-2"></i></div></div>
+                    <p class="stat-value">${kpiDataset}</p>
+                    <p class="stat-label">Dataset (Katalog)</p>
+                </a>
+                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.gunlukAkis}">
+                    <div class="stat-card-header"><div class="stat-icon purple"><i class="ti ti-timeline"></i></div></div>
+                    <p class="stat-value">${kpiGunlukAkis}</p>
+                    <p class="stat-label">Günlük Akış Tamamlanma</p>
+                    ${gunlukAkisSub}
+                </a>
+            </div>
+        </div>`;
+    }
+
     function buildVkKpiSectionHTML(vkKpi, isOffline) {
         const statMuted = isOffline ? ' stat-card-offline' : '';
         const vk = vkKpi || {};
@@ -514,7 +554,6 @@
             ? buildPortalDatasetCardHTML(surec)
             : '';
 
-        const statMuted = isOffline ? ' stat-card-offline' : '';
         const kpiFark = isOffline ? '—' : (kpi.acikFarkSayisi ?? '—');
         const kpiMutabakat = isOffline ? '—' : `${mutabakatPct}%`;
         const kpiDataset = isOffline ? '—' : (datasetOzet.datasetSayisi ?? '—');
@@ -528,29 +567,15 @@
         return `<section class="dashboard${isOffline ? ' portal-offline' : ''}">
             ${offlineBanner}
             ${donemBand}
-            <div class="stat-grid stat-grid-4">
-                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.fark}">
-                    <div class="stat-card-header"><div class="stat-icon amber"><i class="ti ti-alert-triangle"></i></div></div>
-                    <p class="stat-value">${kpiFark}</p>
-                    <p class="stat-label">Açık Fark</p>
-                </a>
-                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.mutabakat}">
-                    <div class="stat-card-header"><div class="stat-icon green"><i class="ti ti-circle-check"></i></div></div>
-                    <p class="stat-value">${kpiMutabakat}</p>
-                    <p class="stat-label">Mutabakat Tamamlanma</p>
-                </a>
-                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.dataset}">
-                    <div class="stat-card-header"><div class="stat-icon blue"><i class="ti ti-stack-2"></i></div></div>
-                    <p class="stat-value">${kpiDataset}</p>
-                    <p class="stat-label">Dataset (Katalog)</p>
-                </a>
-                <a class="stat-card stat-card-link${statMuted}" href="${KPI_LINKS.gunlukAkis}">
-                    <div class="stat-card-header"><div class="stat-icon purple"><i class="ti ti-timeline"></i></div></div>
-                    <p class="stat-value">${kpiGunlukAkis}</p>
-                    <p class="stat-label">Günlük Akış Tamamlanma</p>
-                    ${gunlukAkisSub}
-                </a>
-            </div>
+            ${buildMutabakatKpiSectionHTML({
+                isOffline,
+                kpiFark,
+                kpiMutabakat,
+                kpiDataset,
+                kpiGunlukAkis,
+                gunlukAkisSub,
+                donemLabel
+            })}
             ${buildVkKpiSectionHTML(vkKpi, isOffline)}
             <div class="dashboard-grid">
                 <div class="dashboard-main">

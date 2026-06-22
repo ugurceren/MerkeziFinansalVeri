@@ -1,24 +1,24 @@
 const COCKPIT_COLUMNS_FALLBACK = [
     {
-        name: 'TDSTG',
-        role: 'Staging — ham veri katmanı',
+        name: 'STG',
+        role: 'TDSTG · STG — LedgerBalance',
         theme: 'cyan',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
     },
     {
-        name: 'TDMAIN',
-        role: 'Ana veri — kurumsal çekirdek',
-        theme: 'blue',
+        name: 'LND',
+        role: 'TDSTG · LND — LedgerBalance',
+        theme: 'teal',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
     },
     {
-        name: 'TDREPORT',
-        role: 'Raporlama — analitik katman',
-        theme: 'purple',
+        name: 'COR',
+        role: 'TDMAIN · COR — LedgerBalance',
+        theme: 'blue',
         paketSayisi: 0,
         tamamlanmaYuzdesi: 0,
         datasets: []
@@ -28,7 +28,8 @@ const COCKPIT_COLUMNS_FALLBACK = [
 let COCKPIT_COLUMNS = COCKPIT_COLUMNS_FALLBACK;
 let DATASET_DOMAINS = [];
 let gunlukAkisDataDate = null;
-let COCKPIT_STATUS_FILTERS = {};
+/** Boş = tüm paketler görünür; dolu = yalnızca seçili statüler */
+let COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
 
 const COCKPIT_FILTER_STG = [
     { key: 'Not Started', label: 'Not Started', className: 'is-not-started' },
@@ -42,6 +43,11 @@ const COCKPIT_FILTER_LND = [
     { key: 'LND Completed', label: 'LND Completed', className: 'is-lnd-done' }
 ];
 
+function getGlobalFilterOptions() {
+    const hasTdStg = COCKPIT_COLUMNS.some(col => col.name === 'TDSTG');
+    return hasTdStg ? [...COCKPIT_FILTER_STG, ...COCKPIT_FILTER_LND] : COCKPIT_FILTER_STG;
+}
+
 function getFilterStatusesForColumn(columnName) {
     if (columnName === 'TDSTG') {
         return [...COCKPIT_FILTER_STG, ...COCKPIT_FILTER_LND];
@@ -49,16 +55,69 @@ function getFilterStatusesForColumn(columnName) {
     return COCKPIT_FILTER_STG;
 }
 
-function resetCockpitStatusFilters() {
-    COCKPIT_STATUS_FILTERS = {};
+function mapKokpitKatmanlar(kokpit) {
+    return (kokpit || []).map(k => ({
+        name: k.katmanKodu,
+        role: k.rol,
+        theme: k.tema,
+        paketSayisi: k.paketSayisi ?? 0,
+        basariliAdimSayisi: k.basariliAdimSayisi ?? 0,
+        tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
+        datasets: (k.datasets || []).map(d => ({
+            name: d.kod,
+            label: d.etiket,
+            targetTableName: d.etiket || d.kod,
+            tasks: (d.gorevler || []).map(g => ({
+                label: g.etiket,
+                status: g.durum,
+                statusText: g.durumMetni || 'Not Started',
+                recordCount: g.kayitSayisi ?? null,
+                errorMessage: g.hataMesaji || null
+            })),
+            lndTasks: (d.lndGorevler || []).map(g => ({
+                label: g.etiket,
+                status: g.durum,
+                statusText: g.durumMetni || 'Not Started',
+                recordCount: g.kayitSayisi ?? null,
+                errorMessage: g.hataMesaji || null
+            }))
+        }))
+    }));
 }
 
-function getCockpitStatusFilters(columnName) {
-    const statuses = getFilterStatusesForColumn(columnName);
-    if (!COCKPIT_STATUS_FILTERS[columnName]) {
-        COCKPIT_STATUS_FILTERS[columnName] = new Set(statuses.map(item => item.key));
+function formatFlowRecordCount(value) {
+    if (value === null || value === undefined) return '';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '';
+    return `${num.toLocaleString('tr-TR')} kayıt`;
+}
+
+function resetCockpitStatusFilters() {
+    COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
+}
+
+function isGlobalFilterActive() {
+    return COCKPIT_GLOBAL_STATUS_FILTERS.size > 0;
+}
+
+function resolveTaskFilterStatus(task) {
+    if (task.statusText === 'LND Failed' || task.statusText === 'LND Completed') {
+        return task.statusText;
     }
-    return COCKPIT_STATUS_FILTERS[columnName];
+    if (task.status === 'failed') return 'Failed';
+    if (task.status === 'done') return 'Success';
+    if (task.status === 'running') return 'In Progress';
+    return 'Not Started';
+}
+
+function isTaskVisible(task) {
+    if (!isGlobalFilterActive()) return true;
+    return COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveTaskFilterStatus(task));
+}
+
+function isDatasetVisible(ds, layerName) {
+    if (!isGlobalFilterActive()) return true;
+    return COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveDatasetFilterStatus(ds, layerName));
 }
 
 function isStgPhaseComplete(tasks) {
@@ -66,6 +125,15 @@ function isStgPhaseComplete(tasks) {
 }
 
 function resolveDatasetFilterStatus(ds, layerName) {
+    if (['STG', 'LND', 'COR'].includes(layerName)) {
+        const tasks = ds.tasks || [];
+        if (!tasks.length) return 'Not Started';
+        if (tasks.some(t => t.status === 'failed')) return 'Failed';
+        if (tasks.every(t => t.status === 'done')) return 'Success';
+        if (tasks.some(t => t.status === 'running')) return 'In Progress';
+        return 'Not Started';
+    }
+
     const tasks = ds.tasks || [];
     const stgActive = resolveActiveFlowLabel(tasks);
 
@@ -85,16 +153,83 @@ function resolveDatasetFilterStatus(ds, layerName) {
     return lndActive;
 }
 
-function countDatasetStatuses(datasets, layerName) {
+function countGlobalDatasetStatuses() {
+    const options = getGlobalFilterOptions();
+    const counts = Object.fromEntries(options.map(item => [item.key, 0]));
+
+    COCKPIT_COLUMNS.forEach(col => {
+        (col.datasets || []).forEach(ds => {
+            if (col.name === 'TDSTG') {
+                const status = resolveDatasetFilterStatus(ds, col.name);
+                if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                    counts[status] += 1;
+                }
+                return;
+            }
+
+            (ds.tasks || []).forEach(task => {
+                const status = resolveTaskFilterStatus(task);
+                if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                    counts[status] += 1;
+                }
+            });
+        });
+    });
+
+    return counts;
+}
+
+function countVisibleDatasetStatuses(datasets, layerName) {
     const statuses = getFilterStatusesForColumn(layerName);
     const counts = Object.fromEntries(statuses.map(item => [item.key, 0]));
+    const isLedgerLayer = ['STG', 'LND', 'COR'].includes(layerName);
+
     (datasets || []).forEach(ds => {
+        if (isLedgerLayer) {
+            (ds.tasks || []).filter(isTaskVisible).forEach(task => {
+                const status = resolveTaskFilterStatus(task);
+                if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                    counts[status] += 1;
+                }
+            });
+            return;
+        }
+
+        if (!isDatasetVisible(ds, layerName)) return;
+
         const status = resolveDatasetFilterStatus(ds, layerName);
         if (Object.prototype.hasOwnProperty.call(counts, status)) {
             counts[status] += 1;
         }
     });
+
     return counts;
+}
+
+function buildGlobalStatusFiltersHtml() {
+    const counts = countGlobalDatasetStatuses();
+    const chips = getGlobalFilterOptions().map(({ key, label, className }) => {
+        const count = counts[key] || 0;
+        const checked = COCKPIT_GLOBAL_STATUS_FILTERS.has(key);
+        return `
+            <label class="cockpit-status-chip ${className}">
+                <input type="checkbox" data-status="${key}" ${checked ? 'checked' : ''} aria-label="${label} filtre">
+                <span>${label}</span>
+                <strong>${count}</strong>
+            </label>`;
+    }).join('');
+
+    return `<div class="cockpit-global-filters" role="group" aria-label="Statü filtresi">${chips}</div>`;
+}
+
+function getVisiblePaketCount(datasets, layerName) {
+    if (['STG', 'LND', 'COR'].includes(layerName)) {
+        return (datasets || []).reduce(
+            (sum, ds) => sum + (ds.tasks || []).filter(isTaskVisible).length,
+            0
+        );
+    }
+    return (datasets || []).filter(ds => isDatasetVisible(ds, layerName)).length;
 }
 
 function buildColumnStatusSummaryText(counts, columnName) {
@@ -105,26 +240,34 @@ function buildColumnStatusSummaryText(counts, columnName) {
     return parts.length ? parts.join(', ') : 'Kayıt yok';
 }
 
-function buildColumnStatusCheckboxesHtml(columnName, counts) {
-    const filters = getCockpitStatusFilters(columnName);
-    const chips = getFilterStatusesForColumn(columnName).map(({ key, label, className }) => {
-        const count = counts[key] || 0;
-        const checked = filters.has(key);
-        return `
-            <label class="cockpit-status-chip ${className}">
-                <input type="checkbox" data-status="${key}" ${checked ? 'checked' : ''} aria-label="${label} filtre">
-                <span>${label}</span>
-                <strong>${count}</strong>
-            </label>`;
-    }).join('');
+function buildSingleStatusFlowHtml(layerName, ds) {
+    const status = resolveDatasetFilterStatus(ds, layerName);
+    const statusClass = {
+        'Not Started': 'not-started',
+        'In Progress': 'running',
+        'Failed': 'failed',
+        'Success': 'done',
+        'LND Failed': 'failed lnd-failed',
+        'LND Completed': 'done lnd-done'
+    }[status] || 'not-started';
 
-    return `<div class="col-status-checkboxes" role="group" aria-label="Statü filtresi">${chips}</div>`;
+    return `<div class="task-flow task-flow-single">
+        <div class="flow-step is-active ${statusClass}">
+            <span class="flow-status-text">${escapeDatasetHtml(status)}</span>
+        </div>
+    </div>`;
 }
 
 function renderCockpitDatasetsHtml(layerName, datasets) {
     const isTdStg = layerName === 'TDSTG';
-    const filters = getCockpitStatusFilters(layerName);
-    const visible = (datasets || []).filter(ds => filters.has(resolveDatasetFilterStatus(ds, layerName)));
+    const isLedgerLayer = ['STG', 'LND', 'COR'].includes(layerName);
+    const visible = (datasets || []).filter(ds => {
+        if (isLedgerLayer) {
+            const tasks = (ds.tasks || []).filter(isTaskVisible);
+            return tasks.length > 0;
+        }
+        return isDatasetVisible(ds, layerName);
+    });
 
     if (!visible.length) {
         if (!datasets?.length) {
@@ -134,25 +277,34 @@ function renderCockpitDatasetsHtml(layerName, datasets) {
     }
 
     return visible.map(ds => {
-        const dsDone = ds.tasks.length > 0 && ds.tasks.every(t => t.status === 'done')
-            && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
-        const dsRunning = ds.tasks.some(t => t.status === 'running')
-            || (ds.lndTasks || []).some(t => t.status === 'running');
-        const dsFailed = ds.tasks.some(t => t.status === 'failed')
-            || (ds.lndTasks || []).some(t => t.status === 'failed');
+        const visibleTasks = isLedgerLayer ? (ds.tasks || []).filter(isTaskVisible) : (ds.tasks || []);
+        const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done');
+        const dsRunning = visibleTasks.some(t => t.status === 'running');
+        const dsFailed = visibleTasks.some(t => t.status === 'failed');
         const dsStatus = dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-        const rowTasks = [...ds.tasks, ...(ds.lndTasks || [])];
-        const tasksHtml = ds.tasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
-        const lndTasksHtml = isTdStg && ds.lndTasks?.length
-            ? ds.lndTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('')
-            : '';
-        const flowClass = isTdStg ? 'task-flow task-flow-tdstg' : 'task-flow';
+        const rowTasks = isTdStg ? [] : [...visibleTasks, ...(ds.lndTasks || [])];
+
+        let flowHtml;
+        if (isTdStg) {
+            flowHtml = buildSingleStatusFlowHtml(layerName, ds);
+        } else if (isLedgerLayer) {
+            const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
+            flowHtml = `<div class="task-flow task-flow-ledger">${tasksHtml}</div>`;
+        } else {
+            const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
+            const lndTasksHtml = isTdStg && ds.lndTasks?.length
+                ? ds.lndTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('')
+                : '';
+            const flowClass = isTdStg ? 'task-flow task-flow-tdstg' : 'task-flow';
+            flowHtml = `<div class="${flowClass}">${tasksHtml}${lndTasksHtml}</div>`;
+        }
+
         return `
             <article class="dataset-card ${dsStatus}">
                 <div class="dataset-head">
                     <strong>${ds.targetTableName || ds.label || ds.name}</strong>
                 </div>
-                <div class="${flowClass}">${tasksHtml}${lndTasksHtml}</div>
+                ${flowHtml}
             </article>`;
     }).join('');
 }
@@ -165,6 +317,31 @@ function refreshCockpitColumnDatasets(columnName) {
     if (listEl) {
         listEl.innerHTML = renderCockpitDatasetsHtml(columnName, col.datasets);
     }
+    const statusCounts = countVisibleDatasetStatuses(col.datasets, columnName);
+    const summaryEl = colEl.querySelector('.col-stats-summary');
+    if (summaryEl) {
+        summaryEl.textContent = buildColumnStatusSummaryText(statusCounts, columnName);
+    }
+    const paketEl = colEl.querySelector('.col-stats-paket strong');
+    if (paketEl) {
+        const visibleCount = getVisiblePaketCount(col.datasets, columnName);
+        paketEl.textContent = isGlobalFilterActive() ? visibleCount : (col.paketSayisi ?? visibleCount);
+    }
+}
+
+function updateGlobalFilterCounts() {
+    const counts = countGlobalDatasetStatuses();
+    document.querySelectorAll('.cockpit-global-filters .cockpit-status-chip input[data-status]').forEach(input => {
+        const strong = input.parentElement?.querySelector('strong');
+        if (strong) {
+            strong.textContent = counts[input.dataset.status] || 0;
+        }
+    });
+}
+
+function refreshAllCockpitColumns() {
+    COCKPIT_COLUMNS.forEach(col => refreshCockpitColumnDatasets(col.name));
+    updateGlobalFilterCounts();
 }
 
 function getDefaultGunlukAkisDate() {
@@ -206,29 +383,7 @@ async function loadSurecData(options = {}) {
     try {
         const kokpit = await ApiClient.getSurecKokpit({ dataDate });
         if (kokpit?.length) {
-            COCKPIT_COLUMNS = kokpit.map(k => ({
-                name: k.katmanKodu,
-                role: k.rol,
-                theme: k.tema,
-                paketSayisi: k.paketSayisi ?? 0,
-                basariliAdimSayisi: k.basariliAdimSayisi ?? 0,
-                tamamlanmaYuzdesi: k.tamamlanmaYuzdesi ?? 0,
-                datasets: k.datasets.map(d => ({
-                    name: d.kod,
-                    label: d.etiket,
-                    targetTableName: d.etiket || d.kod,
-                    tasks: d.gorevler.map(g => ({
-                        label: g.etiket,
-                        status: g.durum,
-                        statusText: g.durumMetni || 'Not Started'
-                    })),
-                    lndTasks: (d.lndGorevler || []).map(g => ({
-                        label: g.etiket,
-                        status: g.durum,
-                        statusText: g.durumMetni || 'Not Started'
-                    }))
-                }))
-            }));
+            COCKPIT_COLUMNS = mapKokpitKatmanlar(kokpit);
             resetCockpitStatusFilters();
         }
         if (!options.kokpitOnly) {
@@ -248,6 +403,27 @@ async function loadSurecData(options = {}) {
 let DATASET_LIST_ROWS = [];
 let DATASET_STATUS_OZET = [];
 let DATASET_STATUS_MODEL_ROWS = [];
+const DATASET_STATUS_OZET_MOCK = [
+    { status: 'Done', adet: 142 },
+    { status: 'In Progress', adet: 28 },
+    { status: 'Not Started', adet: 15 },
+    { status: 'On Hold', adet: 6 },
+    { status: 'Failed', adet: 3 }
+];
+const DATASET_STATUS_MODEL_MOCK = [
+    { dataModel: 'Finance', status: 'Done', adet: 45 },
+    { dataModel: 'Finance', status: 'In Progress', adet: 8 },
+    { dataModel: 'Finance', status: 'Not Started', adet: 3 },
+    { dataModel: 'Risk', status: 'Done', adet: 32 },
+    { dataModel: 'Risk', status: 'In Progress', adet: 6 },
+    { dataModel: 'Risk', status: 'On Hold', adet: 2 },
+    { dataModel: 'Customer', status: 'Done', adet: 38 },
+    { dataModel: 'Customer', status: 'Not Started', adet: 7 },
+    { dataModel: 'Customer', status: 'Failed', adet: 1 },
+    { dataModel: 'Reference', status: 'Done', adet: 27 },
+    { dataModel: 'Reference', status: 'In Progress', adet: 9 },
+    { dataModel: 'Reference', status: 'Not Started', adet: 5 }
+];
 let datasetPageView = 'katalog';
 let datasetCatalogFocusId = null;
 
@@ -639,7 +815,28 @@ function buildDatasetListeHTML() {
     );
 }
 
-function sortDatasetStatusModelRows(rows) {
+function resolveDatasetStatusOzet() {
+    return DATASET_STATUS_OZET.length ? DATASET_STATUS_OZET : DATASET_STATUS_OZET_MOCK;
+}
+
+function resolveDatasetStatusModelRows() {
+    return DATASET_STATUS_MODEL_ROWS.length
+        ? DATASET_STATUS_MODEL_ROWS
+        : sortDatasetStatusModelRows(DATASET_STATUS_MODEL_MOCK);
+}
+
+function isDatasetStatusMock() {
+    return !DATASET_STATUS_OZET.length || !DATASET_STATUS_MODEL_ROWS.length;
+}
+
+function buildDatasetStatusMockBadge() {
+    if (!isDatasetStatusMock()) {
+        return '';
+    }
+
+    return '<span class="ds-mock-badge" title="API verisi yok; örnek gösterim">Demo veri</span>';
+}
+
     const totals = {};
     rows.forEach(row => {
         totals[row.dataModel] = (totals[row.dataModel] || 0) + (row.adet || 0);
@@ -663,11 +860,11 @@ function buildDatasetStatusOzetRows(rows) {
     return rows.map(row => `
         <tr>
             <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td><strong>${row.adet}</strong></td>
+            <td class="ds-num-col"><strong>${row.adet}</strong></td>
         </tr>`).join('') + `
         <tr class="ds-status-total-row">
             <td><strong>Toplam</strong></td>
-            <td><strong>${toplam}</strong></td>
+            <td class="ds-num-col"><strong>${toplam}</strong></td>
         </tr>`;
 }
 
@@ -680,45 +877,56 @@ function buildDatasetStatusModelRows(rows) {
         <tr>
             <td>${escapeDatasetHtml(row.dataModel)}</td>
             <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td><strong>${row.adet}</strong></td>
+            <td class="ds-num-col"><strong>${row.adet}</strong></td>
         </tr>`).join('');
 }
 
 function buildDatasetStatusContent() {
+    const ozetRows = resolveDatasetStatusOzet();
+    const modelRows = resolveDatasetStatusModelRows();
+    const mockBadge = buildDatasetStatusMockBadge();
+
     return `
-        <div class="ds-table-card ds-status-ozet-card">
-            <div class="ds-table-toolbar">
-                <h4>Dataset Durumları</h4>
-                <span class="ds-table-caption">DOC.TDDataset · Status kolonuna göre GROUP BY</span>
+        <div class="ds-status-split">
+            ${mockBadge ? `<div class="ds-status-mock-bar">${mockBadge}</div>` : ''}
+            <div class="ds-table-card ds-status-ozet-card">
+                <div class="ds-table-toolbar">
+                    <div class="ds-table-toolbar-title">
+                        <h4>Dataset Durumları</h4>
+                    </div>
+                    <span class="ds-table-caption">Status · GROUP BY</span>
+                </div>
+                <div class="vs-results-wrap has-data">
+                    <table class="vs-results-table ds-status-compact-table">
+                        <thead>
+                            <tr>
+                                <th>Statü</th>
+                                <th class="ds-num-col">Adet</th>
+                            </tr>
+                        </thead>
+                        <tbody>${buildDatasetStatusOzetRows(ozetRows)}</tbody>
+                    </table>
+                </div>
             </div>
-            <div class="vs-results-wrap has-data">
-                <table class="vs-results-table">
-                    <thead>
-                        <tr>
-                            <th>Statü</th>
-                            <th>Dataset Sayısı</th>
-                        </tr>
-                    </thead>
-                    <tbody>${buildDatasetStatusOzetRows(DATASET_STATUS_OZET)}</tbody>
-                </table>
-            </div>
-        </div>
-        <div class="ds-table-card">
-            <div class="ds-table-toolbar">
-                <h4>Data Model × Statü</h4>
-                <span class="ds-table-caption">DOC.TDDataset · Data_Model ve Status bazında GROUP BY</span>
-            </div>
-            <div class="vs-results-wrap is-fill has-data">
-                <table class="vs-results-table">
-                    <thead>
-                        <tr>
-                            <th>Data Model</th>
-                            <th>Statü</th>
-                            <th>Dataset Sayısı</th>
-                        </tr>
-                    </thead>
-                    <tbody>${buildDatasetStatusModelRows(DATASET_STATUS_MODEL_ROWS)}</tbody>
-                </table>
+            <div class="ds-table-card ds-status-model-card">
+                <div class="ds-table-toolbar">
+                    <div class="ds-table-toolbar-title">
+                        <h4>Data Model × Statü</h4>
+                    </div>
+                    <span class="ds-table-caption">Data_Model · Status</span>
+                </div>
+                <div class="vs-results-wrap is-fill has-data">
+                    <table class="vs-results-table ds-status-compact-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Statü</th>
+                                <th class="ds-num-col">Adet</th>
+                            </tr>
+                        </thead>
+                        <tbody>${buildDatasetStatusModelRows(modelRows)}</tbody>
+                    </table>
+                </div>
             </div>
         </div>`;
 }
@@ -954,7 +1162,7 @@ async function renderDatasetPage(container) {
     if (contentEl) {
         if (loadError && datasetPageView === 'katalog') {
             contentEl.innerHTML = buildDatasetErrorContent(loadError);
-        } else if (loadError && datasetPageView !== 'katalog') {
+        } else if (loadError && datasetPageView === 'liste') {
             contentEl.innerHTML = buildDatasetErrorContent(loadError) + buildDatasetContentOnly(datasetPageView);
         } else {
             contentEl.innerHTML = buildDatasetContentOnly(datasetPageView);
@@ -974,6 +1182,9 @@ async function renderDatasetPage(container) {
 }
 
 function shouldShowFlowStepLabel(layerName, task) {
+    if (['STG', 'LND', 'COR'].includes(layerName)) {
+        return !!(task.label && task.label !== '—');
+    }
     if (task.status === 'done' && (layerName === 'TDSTG' || layerName === 'TDMAIN' || layerName === 'TDREPORT')) {
         return false;
     }
@@ -986,7 +1197,11 @@ function resolveActiveFlowLabel(tasks) {
     return 'Not Started';
 }
 
-function getFlowStepClasses(task, rowTasks) {
+function getFlowStepClasses(task, rowTasks, layerName) {
+    if (['STG', 'LND', 'COR'].includes(layerName)) {
+        return ['flow-step', 'is-active', task.status || 'not-started'].join(' ');
+    }
+
     const isLndFailed = task.statusText === 'LND Failed';
     const isLndCompleted = task.statusText === 'LND Completed';
     const lndTasks = rowTasks.filter(t => t.statusText === 'LND Failed' || t.statusText === 'LND Completed');
@@ -1019,10 +1234,19 @@ function getFlowStepClasses(task, rowTasks) {
 
 function buildFlowStepHtml(layerName, task, rowTasks) {
     const showLabel = shouldShowFlowStepLabel(layerName, task);
+    const recordText = formatFlowRecordCount(task.recordCount);
+    const recordHtml = recordText
+        ? `<span class="flow-record-count">${recordText}</span>`
+        : '';
+    const errorHtml = task.errorMessage
+        ? `<span class="flow-error" title="${escapeDatasetHtml(task.errorMessage)}">${escapeDatasetHtml(task.errorMessage)}</span>`
+        : '';
     return `
-            <div class="${getFlowStepClasses(task, rowTasks)}">
+            <div class="${getFlowStepClasses(task, rowTasks, layerName)}">
                 <span class="flow-status-text">${task.statusText || 'Not Started'}</span>
-                ${showLabel ? `<span class="flow-label">${task.label}</span>` : ''}
+                ${showLabel ? `<span class="flow-label">${escapeDatasetHtml(task.label)}</span>` : ''}
+                ${recordHtml}
+                ${errorHtml}
             </div>`;
 }
 
@@ -1034,9 +1258,8 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
     const hasFailed = datasets.some(ds => ds.tasks.some(t => t.status === 'failed')
         || (ds.lndTasks || []).some(t => t.status === 'failed'));
     const colStatus = hasFailed ? 'failed' : allDone ? 'done' : hasRunning ? 'running' : 'waiting';
-    const statusCounts = countDatasetStatuses(datasets, name);
+    const statusCounts = countVisibleDatasetStatuses(datasets, name);
     const datasetHtml = renderCockpitDatasetsHtml(name, datasets);
-    const checkboxHtml = buildColumnStatusCheckboxesHtml(name, statusCounts);
 
     return `
         <div class="cockpit-col theme-${theme} status-${colStatus}" data-column="${name}">
@@ -1059,7 +1282,6 @@ function buildCockpitColumn({ name, role, theme, datasets, paketSayisi, tamamlan
                     <span class="col-stats-paket"><strong>${paketSayisi ?? 0}</strong> paket</span>
                     <span class="col-stats-summary">${buildColumnStatusSummaryText(statusCounts, name)}</span>
                 </div>
-                ${checkboxHtml}
             </div>
             <div class="dataset-list">${datasetHtml}</div>
         </div>`;
@@ -1071,9 +1293,12 @@ function buildSurecHTML() {
     const columns = COCKPIT_COLUMNS.map(buildCockpitColumn).join('');
     return `<section class="cockpit">
         <div class="cockpit-head">
-            <div>
-                <h3>Günlük Akış</h3>
-                <p>ETLLoad tabanlı dataset adım durumları</p>
+            <div class="cockpit-head-main">
+                <div>
+                    <h3>Günlük Akış</h3>
+                    <p>LedgerBalance · ETLLoad (STG → LND → COR)</p>
+                </div>
+                ${buildGlobalStatusFiltersHtml()}
             </div>
             <div class="cockpit-head-actions">
                 <label class="cockpit-date-filter">
@@ -1109,6 +1334,28 @@ function bindSurecCockpitDateFilter(container) {
     });
 }
 
+function bindGlobalCockpitStatusFilters() {
+    const cockpit = document.querySelector('.cockpit');
+    if (!cockpit || cockpit.dataset.globalFilterBound === '1') return;
+    cockpit.dataset.globalFilterBound = '1';
+
+    cockpit.addEventListener('change', event => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement)) return;
+        if (input.type !== 'checkbox' || !input.closest('.cockpit-global-filters')) return;
+
+        const status = input.dataset.status;
+        if (!status) return;
+
+        if (input.checked) {
+            COCKPIT_GLOBAL_STATUS_FILTERS.add(status);
+        } else {
+            COCKPIT_GLOBAL_STATUS_FILTERS.delete(status);
+        }
+        refreshAllCockpitColumns();
+    });
+}
+
 function bindSurecCockpit() {
     const clock = document.getElementById('cockpitClock');
     if (clock) {
@@ -1118,22 +1365,7 @@ function bindSurecCockpit() {
         }, 1000);
     }
 
-    document.querySelectorAll('.cockpit-col[data-column]').forEach(colEl => {
-        if (colEl.dataset.filterBound === '1') return;
-        colEl.dataset.filterBound = '1';
-        const columnName = colEl.dataset.column;
-        colEl.querySelectorAll('.cockpit-status-chip input[type="checkbox"]').forEach(input => {
-            input.addEventListener('change', () => {
-                const filters = getCockpitStatusFilters(columnName);
-                if (input.checked) {
-                    filters.add(input.dataset.status);
-                } else {
-                    filters.delete(input.dataset.status);
-                }
-                refreshCockpitColumnDatasets(columnName);
-            });
-        });
-    });
+    bindGlobalCockpitStatusFilters();
 }
 
 async function initSurecCockpit(container) {
@@ -1489,3 +1721,13 @@ window.buildDatasetCatalogHTML = buildDatasetCatalogHTML;
 window.buildPortalDatasetCardHTML = buildPortalDatasetCardHTML;
 window.initTaskListesi = initTaskListesi;
 window.getTaskListRows = getTaskListRows;
+window.mapKokpitKatmanlar = mapKokpitKatmanlar;
+window.buildCockpitColumn = buildCockpitColumn;
+window.buildCockpitGridHtml = columns => columns.map(buildCockpitColumn).join('');
+window.bindCockpitColumnFilters = bindSurecCockpit;
+window.bindGlobalCockpitStatusFilters = bindGlobalCockpitStatusFilters;
+window.buildGlobalStatusFiltersHtml = buildGlobalStatusFiltersHtml;
+window.refreshAllCockpitColumns = refreshAllCockpitColumns;
+window.getDefaultGunlukAkisDate = getDefaultGunlukAkisDate;
+window.getGunlukAkisDate = getGunlukAkisDate;
+window.resetCockpitStatusFilters = resetCockpitStatusFilters;

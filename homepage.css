@@ -1048,10 +1048,12 @@
     color: var(--rb-text-muted);
 }
 
+.portal-mutabakat-kpi-panel,
 .portal-vk-kpi-panel {
     margin-top: 0;
 }
 
+.portal-mutabakat-stat-grid,
 .portal-vk-stat-grid {
     grid-template-columns: repeat(4, 1fr);
 }
@@ -1089,6 +1091,7 @@
 }
 
 @media (max-width: 1100px) {
+    .portal-mutabakat-stat-grid,
     .portal-vk-stat-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1097,6 +1100,7 @@
 @media (max-width: 640px) {
     .stat-grid.stat-grid-3,
     .stat-grid.stat-grid-4,
+    .portal-mutabakat-stat-grid,
     .portal-vk-stat-grid {
         grid-template-columns: 1fr;
     }

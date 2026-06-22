@@ -1,264 +1,53 @@
-/* Mizan — dataset task yönetimi */
+/* Mizan — LedgerBalance ETLLoad akışı */
 
-.mizan-layout {
+.mizan-flow {
+    height: 100%;
+    min-height: 0;
+}
+
+.page-area:has([data-mizan-page]) {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    max-width: 640px;
+    min-height: 0;
 }
 
-.mz-head {
+[data-mizan-page] {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 4px 2px 0;
+    flex-direction: column;
 }
 
-.mz-head h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--rb-text);
+[data-mizan-page] .cockpit {
+    flex: 1;
+    min-height: 0;
 }
 
-.mz-head p {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: var(--rb-text-muted);
-}
-
-.mz-overall {
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: var(--rb-filter-bg);
-    color: var(--rb-text-muted);
-}
-
-.mz-overall.status-running {
-    background: rgba(124, 154, 255, 0.14);
-    color: #7c9aff;
-}
-
-.mz-overall.status-done {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
-}
-
-.mz-overall.status-failed {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.mz-dataset-card {
-    background: var(--rb-surface);
-    border: 0.5px solid var(--rb-border);
+.mz-error-box {
+    margin: 16px;
+    padding: 20px 22px;
     border-radius: 12px;
-    overflow: hidden;
-    --mz-accent: #7c9aff;
-    --mz-soft: rgba(124, 154, 255, 0.14);
-}
-
-.mz-dataset-card.status-running {
-    border-color: color-mix(in srgb, var(--mz-accent) 45%, var(--rb-border));
-}
-
-.mz-dataset-card.status-done {
-    border-color: rgba(34, 197, 94, 0.35);
-}
-
-.mz-dataset-head {
-    padding: 14px 16px;
-    border-bottom: 0.5px solid var(--rb-border);
-    background: var(--rb-card);
-}
-
-.mz-dataset-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.mz-dataset-title i {
-    font-size: 22px;
-    color: var(--mz-accent);
-}
-
-.mz-dataset-title strong {
-    display: block;
-    font-size: 14px;
+    border: 0.5px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
     color: var(--rb-text);
 }
 
-.mz-dataset-title code {
-    display: block;
-    margin-top: 2px;
-    font-size: 10px;
-    color: var(--rb-text-muted);
-    font-family: Consolas, monospace;
-}
-
-.mz-dataset-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.mz-layer {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: var(--mz-soft);
-    color: var(--mz-accent);
-}
-
-.mz-layer-desc {
-    font-size: 11px;
-    color: var(--rb-text-muted);
-    align-self: center;
-}
-
-.mz-task-list {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.mz-task {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--rb-bg);
-    border: 0.5px solid var(--rb-border);
-}
-
-.mz-task.running {
-    border-color: color-mix(in srgb, var(--mz-accent) 40%, var(--rb-border));
-    background: var(--mz-soft);
-}
-
-.mz-task.done {
-    border-color: rgba(34, 197, 94, 0.25);
-}
-
-.mz-task.failed {
-    border-color: rgba(239, 68, 68, 0.3);
-}
-
-.mz-task-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-.mz-task-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-    background: var(--rb-card);
-    border: 0.5px solid var(--rb-border);
-    color: var(--rb-text-muted);
-}
-
-.mz-task.running .mz-task-icon {
-    background: var(--mz-soft);
-    color: var(--mz-accent);
-    border-color: var(--mz-accent);
-}
-
-.mz-task.done .mz-task-icon {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
-    border-color: rgba(34, 197, 94, 0.35);
-}
-
-.mz-task.failed .mz-task-icon {
-    background: rgba(239, 68, 68, 0.15);
+.mz-error-box i {
     color: #ef4444;
+    margin-right: 6px;
 }
 
-.mz-task-info strong {
-    display: block;
+.mz-error-box p {
+    margin: 8px 0 0;
     font-size: 13px;
-    color: var(--rb-text);
+    color: var(--rb-text-secondary);
 }
 
-.mz-task-info span {
-    display: block;
-    margin-top: 2px;
-    font-size: 11px;
-    color: var(--rb-text-muted);
+.mz-error-hint {
+    font-size: 11px !important;
+    color: var(--rb-text-muted) !important;
 }
 
-.mz-task.running .mz-task-info span { color: var(--mz-accent); }
-.mz-task.done .mz-task-info span { color: #22c55e; }
-
-.mz-restart-btn {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    height: 30px;
-    padding: 0 10px;
-    border-radius: 8px;
-    border: 0.5px solid var(--rb-border);
-    background: var(--rb-card);
-    color: var(--rb-text);
-    font-size: 11px;
-    font-family: inherit;
-    cursor: pointer;
+.mz-error-hint code {
+    font-size: 10px;
 }
-
-.mz-restart-btn:hover {
-    background: var(--rb-rbtn-hover);
-    border-color: var(--mz-accent);
-    color: var(--mz-accent);
-}
-
-.mz-restart-btn:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-.mz-dataset-foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 16px 12px;
-    border-top: 0.5px solid var(--rb-border);
-    font-size: 11px;
-    color: var(--rb-text-muted);
-    background: var(--rb-filter-bg);
-}
-
-.mz-auth-note {
-    font-weight: 600;
-    color: #22c55e;
-}
-
-.mz-auth-note.muted {
-    color: var(--rb-text-muted);
-    font-weight: 500;
-}
-
-.page-ribbon .mz-head h3 { font-size: 16px; }
-.page-ribbon .mz-task-info strong { font-size: 14px; }

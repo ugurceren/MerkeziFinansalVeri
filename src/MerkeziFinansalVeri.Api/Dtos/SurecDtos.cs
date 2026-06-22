@@ -34,6 +34,8 @@ public sealed class SurecKokpitGorevDto
     public string Etiket { get; set; } = string.Empty;
     public string Durum { get; set; } = string.Empty;
     public string DurumMetni { get; set; } = string.Empty;
+    public int? KayitSayisi { get; set; }
+    public string? HataMesaji { get; set; }
 }
 
 public sealed class VeriDomainDto

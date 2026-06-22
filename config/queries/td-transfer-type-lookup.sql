@@ -1,4 +1,4 @@
 SELECT
     TransferTypeId,
     TransferTypeName
-FROM [OPR].[TransferTypeDefinition]
+FROM [TDUTIL].[OPR].[TransferTypeDefinition]

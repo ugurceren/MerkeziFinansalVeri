@@ -69,13 +69,17 @@ public class SurecController(
                 {
                     Etiket = step.Etiket,
                     Durum = step.Durum,
-                    DurumMetni = step.DurumMetni
+                    DurumMetni = step.DurumMetni,
+                    KayitSayisi = step.KayitSayisi,
+                    HataMesaji = step.HataMesaji
                 }).ToList(),
                 LndGorevler = dataset.LndAdimlar.Select(step => new SurecKokpitGorevDto
                 {
                     Etiket = step.Etiket,
                     Durum = step.Durum,
-                    DurumMetni = step.DurumMetni
+                    DurumMetni = step.DurumMetni,
+                    KayitSayisi = step.KayitSayisi,
+                    HataMesaji = step.HataMesaji
                 }).ToList()
             }).ToList()
         }).ToList();

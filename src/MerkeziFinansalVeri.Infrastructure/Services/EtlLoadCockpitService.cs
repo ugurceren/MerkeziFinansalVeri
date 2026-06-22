@@ -13,31 +13,25 @@ public sealed class EtlLoadCockpitService(
         string KatmanKodu,
         string Rol,
         string Tema,
-        string[] Adimlar);
+        string TargetTableName);
 
-    private static readonly (string Durum, string DurumMetni)[] FlowStatusSlots =
-    [
-        ("not-started", "Not Started"),
-        ("running", "In Progress"),
-        ("failed", "Failed"),
-        ("done", "Success")
-    ];
-
-    private const string TdstgStgKey = "TDSTG.STG";
-    private const string TdstgLndKey = "TDSTG.LND";
+    private sealed record PackageStep(
+        string PackageName,
+        string? ExecutionStatus,
+        int? RecordCount,
+        string? ErrorMessage);
 
     private static readonly LayerDefinition[] LayerDefinitions =
     [
-        new("TDSTG", "Staging — ham veri katmanı", "cyan", []),
-        new("TDMAIN", "Ana veri — kurumsal çekirdek", "blue", []),
-        new("TDREPORT", "Raporlama — analitik katman", "purple", [])
+        new("STG", "TDSTG · STG — LedgerBalance", "cyan", "TDSTG.STG.LedgerBalance"),
+        new("LND", "TDSTG · LND — LedgerBalance", "teal", "TDSTG.LND.LedgerBalance"),
+        new("COR", "TDMAIN · COR — LedgerBalance", "blue", "TDMAIN.COR.LedgerBalance")
     ];
 
     public EtlLoadCockpitAyarlar GetAyarlar() => new()
     {
         KatmanKodu = configuration["GunlukAkis:KatmanKodu"] ?? "TDUTIL",
-        SorguDosyasi = configuration["GunlukAkis:SorguDosyasi"] ?? "config/queries/td-etl-load.sql",
-        ParallelRunSorguDosyasi = configuration["GunlukAkis:ParallelRunSorguDosyasi"] ?? "config/queries/td-parallel-run-packages.sql",
+        SorguDosyasi = configuration["GunlukAkis:SorguDosyasi"] ?? "config/queries/td-etl-load-ledger-balance.sql",
         MaxSatir = int.TryParse(configuration["GunlukAkis:MaxSatir"], out var maxSatir) ? maxSatir : 100000,
         SorguTimeoutSaniye = int.TryParse(configuration["GunlukAkis:SorguTimeoutSaniye"], out var timeout)
             ? timeout
@@ -70,26 +64,9 @@ public sealed class EtlLoadCockpitService(
             return Fail(etlResult.Hata ?? "Günlük akış sorgusu çalıştırılamadı.", etlResult.SureMs);
         }
 
-        var paketSayilari = await LoadPaketSayilariAsync(ayarlar, cancellationToken);
-        var (rowIndex, basariliAdimSayilari, paketSayilariFromEtl) = BuildRowIndex(etlResult.Satirlar);
-
-        foreach (var layer in LayerDefinitions)
-        {
-            if (string.Equals(layer.KatmanKodu, "TDSTG", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (paketSayilariFromEtl.TryGetValue(layer.KatmanKodu, out var etlCount) && etlCount > 0)
-            {
-                paketSayilari[layer.KatmanKodu] = etlCount;
-            }
-        }
-
+        var stepsByLayer = BuildStepsByLayer(etlResult.Satirlar);
         var katmanlar = LayerDefinitions
-            .Select(layer => string.Equals(layer.KatmanKodu, "TDSTG", StringComparison.OrdinalIgnoreCase)
-                ? BuildTdStgLayer(layer, rowIndex, paketSayilari, basariliAdimSayilari)
-                : BuildLayer(layer, rowIndex, paketSayilari, basariliAdimSayilari))
+            .Select(layer => BuildLayer(layer, stepsByLayer))
             .ToList();
 
         return new EtlLoadCockpitResult
@@ -100,82 +77,114 @@ public sealed class EtlLoadCockpitService(
         };
     }
 
-    private async Task<Dictionary<string, int>> LoadPaketSayilariAsync(
-        EtlLoadCockpitAyarlar ayarlar,
-        CancellationToken cancellationToken)
+    private static Dictionary<string, List<PackageStep>> BuildStepsByLayer(
+        IReadOnlyList<IReadOnlyDictionary<string, object?>> rows)
     {
-        var counts = LayerDefinitions.ToDictionary(
+        var targetToLayer = LayerDefinitions.ToDictionary(
+            layer => layer.TargetTableName,
             layer => layer.KatmanKodu,
-            _ => 0,
             StringComparer.OrdinalIgnoreCase);
 
-        var sql = await ReadSqlFileAsync(ayarlar.ParallelRunSorguDosyasi, cancellationToken);
-        if (sql is null)
-        {
-            logger.LogWarning("ParallelRun paket sorgu dosyası bulunamadı: {Path}", ayarlar.ParallelRunSorguDosyasi);
-            return counts;
-        }
+        var index = LayerDefinitions.ToDictionary(
+            layer => layer.KatmanKodu,
+            _ => new List<PackageStep>(),
+            StringComparer.OrdinalIgnoreCase);
 
-        var result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
-            ayarlar.KatmanKodu,
-            sql,
-            ayarlar.SorguTimeoutSaniye,
-            ayarlar.MaxSatir,
-            cancellationToken);
-
-        if (!result.Basarili)
+        foreach (var row in rows)
         {
-            logger.LogWarning("ParallelRun paket sorgusu başarısız: {Hata}", result.Hata);
-            return counts;
-        }
-
-        foreach (var row in result.Satirlar)
-        {
-            var target1 = GetCell(row, "Target1", "target1");
-            var countText = GetCell(row, "PaketSayisi", "ToplamKayit", "toplam_kayit", "PackageCount", "Count");
-            if (!int.TryParse(countText, out var paketSayisi))
+            var targetTable = GetCell(row, "TargetTableName")?.Trim();
+            var packageName = GetCell(row, "StepName", "PackageName")?.Trim();
+            if (string.IsNullOrWhiteSpace(targetTable)
+                || string.IsNullOrWhiteSpace(packageName)
+                || !targetToLayer.TryGetValue(targetTable, out var layerCode))
             {
                 continue;
             }
 
-            var layer = MapTarget1ToLayer(target1);
-            if (string.IsNullOrWhiteSpace(layer))
-            {
-                continue;
-            }
-
-            if (counts.ContainsKey(layer))
-            {
-                counts[layer] = Math.Max(counts[layer], paketSayisi);
-            }
+            index[layerCode].Add(new PackageStep(
+                packageName,
+                GetCell(row, "ExecutionStatus"),
+                ParseNullableInt(GetCell(row, "ExecutionRecordCount")),
+                GetCell(row, "ErrorMessageText")));
         }
 
-        return counts;
+        foreach (var layer in LayerDefinitions)
+        {
+            index[layer.KatmanKodu] = index[layer.KatmanKodu]
+                .OrderBy(step => step.PackageName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        return index;
     }
 
-    private static string MapTarget1ToLayer(string? target1)
+    private static EtlLoadCockpitLayer BuildLayer(
+        LayerDefinition layer,
+        Dictionary<string, List<PackageStep>> stepsByLayer)
     {
-        if (string.IsNullOrWhiteSpace(target1))
-        {
-            return string.Empty;
-        }
+        stepsByLayer.TryGetValue(layer.KatmanKodu, out var steps);
+        steps ??= [];
 
-        return target1.Trim().ToUpperInvariant() switch
+        var adimlar = steps
+            .Select(step =>
+            {
+                var mapped = MapExecutionStatus(step.ExecutionStatus);
+                return new EtlLoadCockpitStep
+                {
+                    Etiket = step.PackageName,
+                    Durum = mapped.Durum,
+                    DurumMetni = mapped.DurumMetni,
+                    KayitSayisi = step.RecordCount,
+                    HataMesaji = string.IsNullOrWhiteSpace(step.ErrorMessage) ? null : step.ErrorMessage.Trim()
+                };
+            })
+            .ToList();
+
+        var paketSayisi = adimlar.Count;
+        var basariliAdimSayisi = adimlar.Count(step => step.Durum == "done");
+        var tamamlanmaYuzdesi = paketSayisi > 0
+            ? (int)Math.Round(basariliAdimSayisi * 100.0 / paketSayisi)
+            : 0;
+
+        return new EtlLoadCockpitLayer
         {
-            "STG" or "LND" => "TDSTG",
-            "TDMAIN" => "TDMAIN",
-            "TDREPORT" => "TDREPORT",
-            _ => target1.Trim()
+            KatmanKodu = layer.KatmanKodu,
+            Rol = layer.Rol,
+            Tema = layer.Tema,
+            PaketSayisi = paketSayisi,
+            BasariliAdimSayisi = basariliAdimSayisi,
+            TamamlanmaYuzdesi = tamamlanmaYuzdesi,
+            Datasets =
+            [
+                new EtlLoadCockpitDataset
+                {
+                    Kod = "LedgerBalance",
+                    Etiket = layer.TargetTableName,
+                    Adimlar = adimlar
+                }
+            ]
         };
     }
 
     private static string ApplyDataDateFilter(string sql, DateOnly dataDate)
     {
         var filter = $"CAST(el.DataDate AS DATE) = '{dataDate:yyyy-MM-dd}'";
-        var orderIndex = sql.IndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
-        if (orderIndex >= 0)
+        var whereIndex = sql.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase);
+        if (whereIndex >= 0)
         {
-            return sql.Insert(orderIndex, $"WHERE {filter}\n");
+            var orderIndex = sql.IndexOf("ORDER BY", whereIndex, StringComparison.OrdinalIgnoreCase);
+            if (orderIndex >= 0)
+            {
+                return sql.Insert(orderIndex, $"AND {filter}\n");
+            }
+
+            return $"{sql}\nAND {filter}";
+        }
+
+        var orderOnlyIndex = sql.IndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
+        if (orderOnlyIndex >= 0)
+        {
+            return sql.Insert(orderOnlyIndex, $"WHERE {filter}\n");
         }
 
         return $"{sql}\nWHERE {filter}";
@@ -199,294 +208,6 @@ public sealed class EtlLoadCockpitService(
             logger.LogWarning(ex, "Sorgu dosyası okunamadı: {Path}", sqlPath);
             return null;
         }
-    }
-
-    private sealed record DatasetRowIndex(string TargetTableName, Dictionary<string, string?> Steps);
-
-    private static (Dictionary<string, Dictionary<string, DatasetRowIndex>> RowIndex, Dictionary<string, int> SuccessCounts, Dictionary<string, int> PaketCounts) BuildRowIndex(
-        IReadOnlyList<IReadOnlyDictionary<string, object?>> rows)
-    {
-        var index = new Dictionary<string, Dictionary<string, DatasetRowIndex>>(StringComparer.OrdinalIgnoreCase);
-        var successCounts = LayerDefinitions.ToDictionary(
-            layer => layer.KatmanKodu,
-            _ => 0,
-            StringComparer.OrdinalIgnoreCase);
-        var paketCounts = LayerDefinitions.ToDictionary(
-            layer => layer.KatmanKodu,
-            _ => 0,
-            StringComparer.OrdinalIgnoreCase);
-
-        foreach (var row in rows)
-        {
-            var mainPackage = GetCell(row, "DataLayer", "MainPackageName", "TargetLayer", "LayerCode");
-            var layerTableName = GetCell(row, "LayerTableName", "ParallelTargetTableName", "TargetTableName")?.Trim();
-            var datasetCode = GetCell(row, "DatasetCode", "TargetTableName", "TableName")?.Trim();
-            var layer = ResolveLayerCode(mainPackage, layerTableName ?? datasetCode);
-            var stepName = GetCell(row, "StepName", "PackageName", "LoadStep", "TaskName", "PhaseName", "Step")?.Trim();
-            var executionStatus = GetCell(row, "ExecutionStatus");
-
-            if (string.IsNullOrWhiteSpace(layer)
-                || string.IsNullOrWhiteSpace(datasetCode)
-                || string.IsNullOrWhiteSpace(stepName))
-            {
-                continue;
-            }
-
-            if (string.Equals(layer, TdstgStgKey, StringComparison.OrdinalIgnoreCase))
-            {
-                paketCounts["TDSTG"]++;
-                if (MapExecutionStatus(executionStatus).Durum == "done")
-                {
-                    successCounts["TDSTG"]++;
-                }
-            }
-            else if (paketCounts.ContainsKey(layer))
-            {
-                paketCounts[layer]++;
-                if (MapExecutionStatus(executionStatus).Durum == "done" && successCounts.ContainsKey(layer))
-                {
-                    successCounts[layer]++;
-                }
-            }
-
-            if (!index.TryGetValue(layer, out var datasets))
-            {
-                datasets = new Dictionary<string, DatasetRowIndex>(StringComparer.OrdinalIgnoreCase);
-                index[layer] = datasets;
-            }
-
-            var targetTableName = string.IsNullOrWhiteSpace(layerTableName) ? datasetCode : layerTableName;
-            if (!datasets.TryGetValue(datasetCode, out var datasetIndex))
-            {
-                datasetIndex = new DatasetRowIndex(
-                    targetTableName!,
-                    new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase));
-                datasets[datasetCode] = datasetIndex;
-            }
-            else if (string.IsNullOrWhiteSpace(datasetIndex.TargetTableName)
-                && !string.IsNullOrWhiteSpace(targetTableName))
-            {
-                datasetIndex = datasetIndex with { TargetTableName = targetTableName };
-                datasets[datasetCode] = datasetIndex;
-            }
-
-            datasetIndex.Steps[stepName] = executionStatus;
-        }
-
-        return (index, successCounts, paketCounts);
-    }
-
-    private static EtlLoadCockpitLayer BuildTdStgLayer(
-        LayerDefinition layer,
-        Dictionary<string, Dictionary<string, DatasetRowIndex>> rowIndex,
-        Dictionary<string, int> paketSayilari,
-        Dictionary<string, int> basariliAdimSayilari)
-    {
-        rowIndex.TryGetValue(TdstgStgKey, out var stgDatasets);
-        rowIndex.TryGetValue(TdstgLndKey, out var lndDatasets);
-        stgDatasets ??= new Dictionary<string, DatasetRowIndex>(StringComparer.OrdinalIgnoreCase);
-        lndDatasets ??= new Dictionary<string, DatasetRowIndex>(StringComparer.OrdinalIgnoreCase);
-
-        var datasetKeys = stgDatasets.Keys
-            .Union(lndDatasets.Keys, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(key => key, StringComparer.OrdinalIgnoreCase);
-
-        var datasets = datasetKeys
-            .Select(key =>
-            {
-                stgDatasets.TryGetValue(key, out var stg);
-                lndDatasets.TryGetValue(key, out var lnd);
-                var targetTableName = stg?.TargetTableName ?? lnd?.TargetTableName ?? key;
-
-                return new EtlLoadCockpitDataset
-                {
-                    Kod = key,
-                    Etiket = targetTableName,
-                    Adimlar = BuildDatasetSteps(stg?.Steps ?? [], layer.KatmanKodu),
-                    LndAdimlar = BuildLndSteps(lnd?.Steps ?? [])
-                };
-            })
-            .ToList();
-
-        paketSayilari.TryGetValue(layer.KatmanKodu, out var paketSayisi);
-        basariliAdimSayilari.TryGetValue(layer.KatmanKodu, out var basariliAdimSayisi);
-        var tamamlanmaYuzdesi = paketSayisi > 0
-            ? (int)Math.Round(basariliAdimSayisi * 100.0 / paketSayisi)
-            : 0;
-
-        return new EtlLoadCockpitLayer
-        {
-            KatmanKodu = layer.KatmanKodu,
-            Rol = layer.Rol,
-            Tema = layer.Tema,
-            PaketSayisi = paketSayisi,
-            BasariliAdimSayisi = basariliAdimSayisi,
-            TamamlanmaYuzdesi = tamamlanmaYuzdesi,
-            Datasets = datasets
-        };
-    }
-
-    private static EtlLoadCockpitLayer BuildLayer(
-        LayerDefinition layer,
-        Dictionary<string, Dictionary<string, DatasetRowIndex>> rowIndex,
-        Dictionary<string, int> paketSayilari,
-        Dictionary<string, int> basariliAdimSayilari)
-    {
-        rowIndex.TryGetValue(layer.KatmanKodu, out var datasetsForLayer);
-        datasetsForLayer ??= new Dictionary<string, DatasetRowIndex>(StringComparer.OrdinalIgnoreCase);
-
-        var datasets = datasetsForLayer
-            .OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(entry => new EtlLoadCockpitDataset
-            {
-                Kod = entry.Key,
-                Etiket = entry.Value.TargetTableName,
-                Adimlar = BuildDatasetSteps(entry.Value.Steps, layer.KatmanKodu)
-            })
-            .ToList();
-
-        paketSayilari.TryGetValue(layer.KatmanKodu, out var paketSayisi);
-        basariliAdimSayilari.TryGetValue(layer.KatmanKodu, out var basariliAdimSayisi);
-        var tamamlanmaYuzdesi = paketSayisi > 0
-            ? (int)Math.Round(basariliAdimSayisi * 100.0 / paketSayisi)
-            : 0;
-
-        return new EtlLoadCockpitLayer
-        {
-            KatmanKodu = layer.KatmanKodu,
-            Rol = layer.Rol,
-            Tema = layer.Tema,
-            PaketSayisi = paketSayisi,
-            BasariliAdimSayisi = basariliAdimSayisi,
-            TamamlanmaYuzdesi = tamamlanmaYuzdesi,
-            Datasets = datasets
-        };
-    }
-
-    private static readonly HashSet<string> HideSuccessStepLabelLayers = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "TDSTG",
-        "TDMAIN",
-        "TDREPORT"
-    };
-
-    private static IReadOnlyList<EtlLoadCockpitStep> BuildDatasetSteps(
-        Dictionary<string, string?> stepStatuses,
-        string katmanKodu)
-    {
-        var mappedSteps = stepStatuses
-            .Select(entry => new
-            {
-                PackageName = entry.Key,
-                Mapped = MapExecutionStatus(entry.Value)
-            })
-            .ToList();
-
-        return FlowStatusSlots
-            .Select(slot =>
-            {
-                var match = mappedSteps.FirstOrDefault(step => step.Mapped.Durum == slot.Durum);
-                var hasMatch = match is not null;
-                var hideSuccessLabel = slot.Durum == "done"
-                    && HideSuccessStepLabelLayers.Contains(katmanKodu);
-                var showLabel = hasMatch && !hideSuccessLabel;
-
-                return new EtlLoadCockpitStep
-                {
-                    Etiket = showLabel ? match!.PackageName : "—",
-                    Durum = hasMatch ? slot.Durum : "not-started",
-                    DurumMetni = slot.DurumMetni
-                };
-            })
-            .ToList();
-    }
-
-    private static IReadOnlyList<EtlLoadCockpitStep> BuildLndSteps(Dictionary<string, string?> stepStatuses)
-    {
-        var mappedSteps = stepStatuses
-            .Select(entry => MapExecutionStatus(entry.Value))
-            .ToList();
-
-        var hasFailed = mappedSteps.Any(step => step.Durum == "failed");
-        var hasDone = mappedSteps.Any(step => step.Durum == "done");
-        var hasRunning = mappedSteps.Any(step => step.Durum == "running");
-
-        return
-        [
-            new EtlLoadCockpitStep
-            {
-                Etiket = "—",
-                Durum = hasFailed ? "failed" : "not-started",
-                DurumMetni = "LND Failed"
-            },
-            new EtlLoadCockpitStep
-            {
-                Etiket = "—",
-                Durum = hasDone ? "done" : hasRunning ? "running" : "not-started",
-                DurumMetni = "LND Completed"
-            }
-        ];
-    }
-
-    private static string ResolveLayerCode(string? mainPackageName, string? targetTableName)
-    {
-        if (string.IsNullOrWhiteSpace(mainPackageName))
-        {
-            return string.Empty;
-        }
-
-        var mainPackage = mainPackageName.Trim();
-        if (mainPackage.Equals("TDSTG", StringComparison.OrdinalIgnoreCase))
-        {
-            var schema = ParseTargetTableSchema(targetTableName);
-            if (schema.Equals("LND", StringComparison.OrdinalIgnoreCase))
-            {
-                return TdstgLndKey;
-            }
-
-            if (schema.Equals("STG", StringComparison.OrdinalIgnoreCase))
-            {
-                return TdstgStgKey;
-            }
-
-            return string.Empty;
-        }
-
-        return mainPackage switch
-        {
-            "TDSTG.STG" or "TDSTG.LND" or "TDMAIN" or "TDREPORT" => mainPackage,
-            _ => mainPackage
-        };
-    }
-
-    private static string ParseTargetTableSchema(string? targetTableName)
-    {
-        if (string.IsNullOrWhiteSpace(targetTableName))
-        {
-            return string.Empty;
-        }
-
-        var normalized = targetTableName.Trim().Replace("[", string.Empty).Replace("]", string.Empty);
-        var parts = normalized.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        foreach (var part in parts)
-        {
-            if (part.Equals("LND", StringComparison.OrdinalIgnoreCase))
-            {
-                return "LND";
-            }
-
-            if (part.Equals("STG", StringComparison.OrdinalIgnoreCase))
-            {
-                return "STG";
-            }
-        }
-
-        return string.Empty;
     }
 
     internal static (string Durum, string DurumMetni) MapExecutionStatus(string? statusRaw)
@@ -514,6 +235,23 @@ public sealed class EtlLoadCockpitService(
                 || normalized.Contains("waiting", StringComparison.OrdinalIgnoreCase) => ("not-started", "Not Started"),
             _ => ("not-started", "Not Started")
         };
+    }
+
+    private static int? ParseNullableInt(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (int.TryParse(value, out var intValue))
+        {
+            return intValue;
+        }
+
+        return long.TryParse(value, out var longValue) && longValue is >= int.MinValue and <= int.MaxValue
+            ? (int)longValue
+            : null;
     }
 
     private static string? GetCell(IReadOnlyDictionary<string, object?> row, params string[] columnNames)

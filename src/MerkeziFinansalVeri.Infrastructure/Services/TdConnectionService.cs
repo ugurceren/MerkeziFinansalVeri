@@ -288,7 +288,7 @@ public class TdConnectionService(
         var columnNames = new string[fieldCount];
         for (var i = 0; i < fieldCount; i++)
         {
-            columnNames[i] = reader.GetName(i);
+            columnNames[i] = reader.GetName(i).Trim();
         }
 
         var satirlar = new List<Dictionary<string, object?>>(Math.Min(maxRows, 4096));

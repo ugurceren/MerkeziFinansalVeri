@@ -131,6 +131,12 @@
             return request(`/surec/gorevler${qs ? `?${qs}` : ''}`);
         },
         getTaskListesi() { return request('/surec/task-listesi'); },
+        getMizanAkis(params = {}) {
+            const q = new URLSearchParams();
+            if (params.dataDate) q.set('dataDate', params.dataDate);
+            const suffix = q.toString() ? `?${q}` : '';
+            return request(`/mizan/akis${suffix}`);
+        },
         getMizanGorevler() { return request('/mizan/gorevler'); },
         yenidenBaslatMizanGorev(gorevTanimId) {
             return request('/mizan/gorevler/yeniden-baslat', { method: 'POST', body: { gorevTanimId } });

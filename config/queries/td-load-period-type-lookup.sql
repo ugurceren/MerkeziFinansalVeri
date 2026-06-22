@@ -1,4 +1,4 @@
 SELECT
     LoadPeriodTypeId,
     LoadPeriodTypeName
-FROM [OPR].[LoadPeriodTypeDefinition]
+FROM [TDUTIL].[OPR].[LoadPeriodTypeDefinition]

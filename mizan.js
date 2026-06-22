@@ -1,150 +1,104 @@
 (function () {
-    const DATASET_ID = 'ds_mizan';
-    const RESTART_ROLES = ['admin', 'mutabakat', 'surec'];
+    let mizanColumns = [];
+    let mizanDataDate = null;
 
-    let mizanGorevler = [];
-    let datasetMeta = { layer: 'TDMAIN', layerRole: 'Ana veri — kurumsal çekirdek', label: 'Mizan' };
-
-    function getUserRole() {
-        return ApiClient?.userRole || localStorage.getItem('userRole') || 'admin';
-    }
-
-    function canRestartTasks() {
-        return RESTART_ROLES.includes(getUserRole());
-    }
-
-    async function loadMizanData() {
-        try {
-            mizanGorevler = await ApiClient.getMizanGorevler();
-        } catch (err) {
-            console.error('Mizan görevleri yüklenemedi:', err);
-            mizanGorevler = [];
+    function getMizanDataDate() {
+        if (mizanDataDate) return mizanDataDate;
+        if (typeof window.getDefaultGunlukAkisDate === 'function') {
+            return window.getDefaultGunlukAkisDate();
         }
+        const date = new Date();
+        date.setDate(date.getDate() - 1);
+        return date.toISOString().slice(0, 10);
     }
 
-    function statusText(status) {
-        if (status === 'done') return 'Tamamlandı';
-        if (status === 'running') return 'Çalışıyor';
-        if (status === 'failed') return 'Hata';
-        return 'Bekliyor';
+    async function loadMizanAkis(dataDate) {
+        const kokpit = await ApiClient.getMizanAkis({ dataDate });
+        return window.mapKokpitKatmanlar(kokpit);
     }
 
-    function overallStatus(tasks) {
-        if (tasks.every(t => t.durum === 'done')) return { label: 'Tamam', cls: 'done' };
-        if (tasks.some(t => t.durum === 'running')) return { label: 'Aktif', cls: 'running' };
-        if (tasks.some(t => t.durum === 'failed')) return { label: 'Hata', cls: 'failed' };
-        return { label: 'Bekliyor', cls: 'waiting' };
-    }
-
-    function buildTaskHTML(task, index, authorized) {
-        const restartBtn = authorized
-            ? `<button type="button" class="mz-restart-btn" data-restart="${index}" data-gorev-id="${task.gorevTanimId}" title="Taskı yeniden başlat">
-                    <i class="ti ti-refresh" aria-hidden="true"></i>
-                    <span>Yeniden Başlat</span>
-               </button>`
+    function buildMizanHTML(columns) {
+        const dataDate = getMizanDataDate();
+        const grid = window.buildCockpitGridHtml(columns);
+        const globalFilters = typeof window.buildGlobalStatusFiltersHtml === 'function'
+            ? window.buildGlobalStatusFiltersHtml()
             : '';
 
-        return `
-            <div class="mz-task ${task.durum}" data-task-index="${index}">
-                <div class="mz-task-main">
-                    <span class="mz-task-icon">${task.durum === 'done' ? '✓' : task.durum === 'running' ? '◉' : task.durum === 'failed' ? '✕' : '○'}</span>
-                    <div class="mz-task-info">
-                        <strong>${task.etiket}</strong>
-                        <span>${statusText(task.durum)}</span>
+        return `<section class="cockpit mizan-flow">
+            <div class="cockpit-head">
+                <div class="cockpit-head-main">
+                    <div>
+                        <h3>Mizan</h3>
+                        <p>LedgerBalance günlük akışı · TDUTIL.OPR.ETLLoad</p>
                     </div>
+                    ${globalFilters}
                 </div>
-                ${restartBtn}
-            </div>`;
-    }
-
-    function buildMizanHTML() {
-        const authorized = canRestartTasks();
-        const overall = overallStatus(mizanGorevler);
-        const tasksHtml = mizanGorevler.map((t, i) => buildTaskHTML(t, i, authorized)).join('');
-        const lastUpdated = mizanGorevler.reduce((max, t) => {
-            if (!t.sonGuncelleme) return max;
-            const d = new Date(t.sonGuncelleme);
-            return !max || d > max ? d : max;
-        }, null);
-        const updatedLabel = lastUpdated ? lastUpdated.toLocaleString('tr-TR') : '—';
-
-        return `<section class="mizan-layout">
-            <div class="mz-head">
-                <div>
-                    <h3>Mizan</h3>
-                    <p>${datasetMeta.layer} dataset task durumu ve yönetimi</p>
+                <div class="cockpit-head-actions">
+                    <label class="cockpit-date-filter">
+                        <span>Veri Tarihi</span>
+                        <input type="date" id="mizanDataDate" value="${dataDate}" aria-label="Veri tarihi">
+                    </label>
                 </div>
-                <span class="mz-overall status-${overall.cls}">${overall.label}</span>
             </div>
-            <article class="mz-dataset-card status-${overall.cls}">
-                <div class="mz-dataset-head">
-                    <div class="mz-dataset-title">
-                        <i class="ti ti-database" aria-hidden="true"></i>
-                        <div>
-                            <strong>${datasetMeta.label}</strong>
-                            <code>${DATASET_ID}</code>
-                        </div>
-                    </div>
-                    <div class="mz-dataset-meta">
-                        <span class="mz-layer">${datasetMeta.layer}</span>
-                        <span class="mz-layer-desc">${datasetMeta.layerRole}</span>
-                    </div>
-                </div>
-                <div class="mz-task-list">${tasksHtml}</div>
-                <footer class="mz-dataset-foot">
-                    <span>Son güncelleme: <time>${updatedLabel}</time></span>
-                    ${authorized
-                        ? '<span class="mz-auth-note">Task yeniden başlatma yetkiniz var</span>'
-                        : '<span class="mz-auth-note muted">Task yeniden başlatma için yetkiniz yok</span>'}
-                </footer>
-            </article>
+            <div class="cockpit-grid">${grid}</div>
         </section>`;
     }
 
-    function bindMizanEvents(root) {
-        const scope = root || document;
-        scope.querySelectorAll('[data-restart]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const gorevId = parseInt(btn.dataset.gorevId, 10);
-                if (Number.isNaN(gorevId) || !canRestartTasks()) return;
+    function bindMizanDateFilter(root) {
+        const input = root.querySelector('#mizanDataDate');
+        if (!input || input.dataset.bound === '1') return;
+        input.dataset.bound = '1';
 
-                btn.disabled = true;
-                btn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i><span>Başlatılıyor…</span>';
-
-                try {
-                    await ApiClient.yenidenBaslatMizanGorev(gorevId);
-                    await loadMizanData();
-                    const host = scope.querySelector('.mizan-layout')?.parentElement || scope;
-                    if (host.id === 'pageBody' || host.hasAttribute('data-mizan-page')) {
-                        host.innerHTML = buildMizanHTML();
-                        bindMizanEvents(host);
-                    } else {
-                        const layout = scope.querySelector('.mizan-layout');
-                        if (layout) {
-                            layout.outerHTML = buildMizanHTML();
-                            bindMizanEvents(scope);
-                        }
-                    }
-                } catch (err) {
-                    alert('Yeniden başlatma başarısız: ' + err.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i><span>Yeniden Başlat</span>';
+        input.addEventListener('change', async () => {
+            if (!input.value) return;
+            mizanDataDate = input.value;
+            root.innerHTML = '<div class="cockpit-loading">Yükleniyor…</div>';
+            try {
+                mizanColumns = await loadMizanAkis(input.value);
+                if (typeof COCKPIT_COLUMNS !== 'undefined') {
+                    COCKPIT_COLUMNS = mizanColumns;
                 }
-            });
+                window.resetCockpitStatusFilters?.();
+                root.innerHTML = buildMizanHTML(mizanColumns);
+                window.bindGlobalCockpitStatusFilters?.();
+                bindMizanDateFilter(root);
+            } catch (err) {
+                root.innerHTML = `<div class="mz-error-box">
+                    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                    <strong>Mizan akışı yüklenemedi</strong>
+                    <p>${err.message || 'Bilinmeyen hata'}</p>
+                </div>`;
+            }
         });
     }
 
     async function initMizanPage(container) {
         const el = container || document.querySelector('[data-mizan-page]') || document.getElementById('pageBody');
         if (!el) return;
-        await loadMizanData();
-        el.innerHTML = buildMizanHTML();
-        bindMizanEvents(el);
+
+        el.innerHTML = '<div class="cockpit-loading">Yükleniyor…</div>';
+
+        try {
+            mizanColumns = await loadMizanAkis(getMizanDataDate());
+            if (typeof COCKPIT_COLUMNS !== 'undefined') {
+                COCKPIT_COLUMNS = mizanColumns;
+            }
+            window.resetCockpitStatusFilters?.();
+            el.innerHTML = buildMizanHTML(mizanColumns);
+            window.bindGlobalCockpitStatusFilters?.();
+            bindMizanDateFilter(el);
+        } catch (err) {
+            console.error('Mizan akışı yüklenemedi:', err);
+            el.innerHTML = `<div class="mz-error-box">
+                <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                <strong>Mizan akışı yüklenemedi</strong>
+                <p>${err.message || 'API bağlantısı kurulamadı. API çalışıyor mu kontrol edin.'}</p>
+                <p class="mz-error-hint">Kaynak: <code>TDUTIL.OPR.ETLLoad</code> · <code>/api/mizan/akis</code></p>
+            </div>`;
+        }
     }
 
-    window.buildMizanHTML = buildMizanHTML;
     window.initMizanPage = initMizanPage;
-    window.canRestartMizanTasks = canRestartTasks;
 
     document.addEventListener('DOMContentLoaded', async () => {
         await window.PagePermissions?.ready?.();
