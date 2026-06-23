@@ -53,6 +53,7 @@ public sealed class DatasetCatalogService(
         {
             var model = GetCell(row, "Data_Model");
             var name = GetCell(row, "Dataset_Name");
+            var descriptionScope = GetCell(row, "Description_Scope");
             var stagingTable = GetCell(row, "Staging_Table_Name")?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(model) || string.IsNullOrWhiteSpace(name))
             {
@@ -76,6 +77,7 @@ public sealed class DatasetCatalogService(
             list.Add(new DatasetCatalogItem
             {
                 Ad = name,
+                DescriptionScope = string.IsNullOrWhiteSpace(descriptionScope) ? null : descriptionScope.Trim(),
                 StagingTableName = stagingTable
             });
         }

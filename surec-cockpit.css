@@ -1898,10 +1898,10 @@
 }
 
 .ds-status-model-card {
-    flex: 1 1 320px;
-    width: auto;
-    max-width: none;
-    min-width: 280px;
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .dataset-view-liste .ds-table-card {
@@ -1929,15 +1929,17 @@
 }
 
 .dataset-view-statu .ds-status-model-card {
-    flex: 1 1 320px;
-    width: auto;
-    max-width: none;
-    min-width: 280px;
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
     min-height: 0;
 }
 
 .dataset-view-statu .ds-status-model-card .vs-results-wrap {
     flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
     min-height: 0;
     overflow: auto;
     max-height: min(70vh, 520px);
@@ -1946,6 +1948,12 @@
 .dataset-view-statu .ds-status-model-card .vs-results-wrap.is-fill {
     flex: 0 0 auto;
     min-height: auto;
+}
+
+.ds-status-model-card .ds-status-compact-table,
+.ds-status-model-card .vs-results-table {
+    width: auto;
+    table-layout: auto;
 }
 
 .ds-status-split .ds-table-toolbar {
@@ -2017,19 +2025,13 @@
     text-overflow: ellipsis;
 }
 
-.ds-status-model-card .ds-status-compact-table {
-    table-layout: auto;
-}
-
 .ds-status-model-card .ds-status-compact-table th:nth-child(1),
 .ds-status-model-card .ds-status-compact-table td:nth-child(1) {
     width: auto;
-    min-width: 140px;
-    max-width: none;
-    overflow: visible;
-    text-overflow: clip;
-    white-space: normal;
-    word-break: break-word;
+    max-width: 420px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ds-status-model-card .ds-status-compact-table th:nth-child(2),
@@ -2040,16 +2042,16 @@
 
 .ds-status-model-card .ds-status-compact-table th:nth-child(3),
 .ds-status-model-card .ds-status-compact-table td:nth-child(3) {
-    width: 52px;
+    width: 1%;
     white-space: nowrap;
 }
 
 .ds-status-model-card .vs-results-table td.ds-model-name-col {
-    max-width: none;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    word-break: break-word;
+    max-width: 420px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
 }
 
 .ds-status-compact-table .ds-status-badge {
@@ -2075,7 +2077,7 @@
     .ds-status-model-card {
         flex: 0 0 auto;
         width: 100%;
-        max-width: none;
+        max-width: 100%;
         min-height: 240px;
     }
 }
@@ -2140,6 +2142,18 @@
     font-size: 12px;
     font-weight: 700;
     color: var(--domain-accent, var(--rb-accent));
+}
+
+.domain-detail-panel .vs-results-table .domain-detail-scope {
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: min(480px, 42vw);
+    min-width: 160px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--rb-text-secondary);
 }
 
 .ds-loading {

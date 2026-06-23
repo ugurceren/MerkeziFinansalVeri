@@ -72,4 +72,11 @@
     window.StatusBarInfo = APP_INFO;
 
     document.addEventListener('DOMContentLoaded', initStatusBar);
+
+    if (!document.querySelector('script[src="date-locale.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'date-locale.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    }
 })();

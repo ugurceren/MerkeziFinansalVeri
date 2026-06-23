@@ -126,6 +126,7 @@ public class SurecController(
                 {
                     Kod = dataset.StagingTableName,
                     Etiket = dataset.Ad,
+                    DescriptionScope = dataset.DescriptionScope,
                     Gorevler = []
                 })
                 .ToList()

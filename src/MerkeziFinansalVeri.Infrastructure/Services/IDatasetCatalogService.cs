@@ -65,6 +65,7 @@ public sealed class DatasetCatalogCategory
 public sealed class DatasetCatalogItem
 {
     public string Ad { get; init; } = string.Empty;
+    public string? DescriptionScope { get; init; }
     public string StagingTableName { get; init; } = string.Empty;
 }
 

@@ -553,6 +553,7 @@ function mapDatasetKatalog(domainler) {
         theme: d.tema,
         datasets: d.datasets.map(ds => ({
             label: ds.etiket,
+            descriptionScope: ds.descriptionScope || '',
             stagingTable: ds.kod || ''
         }))
     }));
@@ -761,6 +762,7 @@ function buildDomainDetailRows(datasets) {
         <tr>
             <td class="domain-detail-num">${index + 1}</td>
             <td class="domain-detail-name">${escapeDatasetHtml(ds.label)}</td>
+            <td class="domain-detail-scope">${escapeDatasetHtml(ds.descriptionScope || '—')}</td>
             <td class="domain-detail-staging"><code>${escapeDatasetHtml(ds.stagingTable || '—')}</code></td>
         </tr>`).join('');
 }
@@ -804,7 +806,7 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
                     <h3>Dataset listesi</h3>
                     <label class="domain-detail-search">
                         <i class="ti ti-search" aria-hidden="true"></i>
-                        <input type="search" id="dsDomainSearch" placeholder="Dataset veya staging tablo ara…" autocomplete="off">
+                        <input type="search" id="dsDomainSearch" placeholder="Dataset, kapsam veya staging tablo ara…" autocomplete="off">
                     </label>
                 </div>
                 <div class="vs-results-wrap is-fill has-data">
@@ -813,6 +815,7 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
                             <tr>
                                 <th>#</th>
                                 <th>Dataset</th>
+                                <th>Kapsam</th>
                                 <th>Staging tablo</th>
                             </tr>
                         </thead>
@@ -1108,7 +1111,7 @@ function buildDatasetStatusContent() {
                     </div>
                     <span class="ds-table-caption">Data_Model · Status</span>
                 </div>
-                <div class="vs-results-wrap is-fill has-data">
+                <div class="vs-results-wrap has-data">
                     <table class="vs-results-table ds-status-compact-table">
                         <thead>
                             <tr>
@@ -1222,11 +1225,11 @@ function bindDatasetDetailSearch(root, domain) {
         const filtered = !term
             ? domain.datasets
             : domain.datasets.filter(ds =>
-                [ds.label, ds.stagingTable].some(value => String(value || '').toLowerCase().includes(term))
+                [ds.label, ds.descriptionScope, ds.stagingTable].some(value => String(value || '').toLowerCase().includes(term))
             );
         tbody.innerHTML = filtered.length
             ? buildDomainDetailRows(filtered)
-            : '<tr><td colspan="3" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>';
+            : '<tr><td colspan="4" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>';
     };
 
     window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });

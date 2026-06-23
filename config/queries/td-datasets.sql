@@ -1,6 +1,7 @@
 SELECT
     Data_Model,
     Dataset_Name,
+    Description_Scope,
     Staging_Table_Name
 FROM [DOC].[TDDataset]
 WHERE LTRIM(RTRIM(Data_Model)) <> ''

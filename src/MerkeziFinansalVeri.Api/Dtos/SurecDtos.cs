@@ -44,6 +44,7 @@ public sealed class SurecKokpitDatasetDto
 {
     public string Kod { get; set; } = string.Empty;
     public string Etiket { get; set; } = string.Empty;
+    public string? DescriptionScope { get; set; }
     public IReadOnlyList<SurecKokpitGorevDto> Gorevler { get; set; } = [];
     public IReadOnlyList<SurecKokpitGorevDto> LndGorevler { get; set; } = [];
 }
