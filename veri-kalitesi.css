@@ -145,6 +145,12 @@
     line-height: 1.2;
 }
 
+.vk-kurallar-filter-bar .filter-input-wrap {
+    width: 200px;
+    max-width: 100%;
+}
+
+.vk-kurallar-filter-bar .filter-input-wrap .vk-filter-input,
 .vk-kurallar-filter-bar .vk-filter-input {
     height: 30px;
     padding: 0 10px;
@@ -154,8 +160,16 @@
     background: var(--rb-input-bg);
     color: var(--rb-text);
     font-family: inherit;
-    width: 200px;
     max-width: 100%;
+    box-sizing: border-box;
+}
+
+.vk-kurallar-filter-bar .filter-input-wrap .vk-filter-input {
+    width: 100%;
+}
+
+.vk-kurallar-filter-bar > .fg > .vk-filter-input {
+    width: 200px;
 }
 
 .vk-kurallar-filter-bar .vk-filter-input:focus {

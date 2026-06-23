@@ -157,6 +157,56 @@
         <div class="page-body" data-db-page></div>
     </div>
 
+    <div class="dbc-modal" id="dbcConnModal" hidden aria-hidden="true">
+        <div class="dbc-modal-backdrop" data-dbc-modal-close></div>
+        <div class="dbc-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="dbcConnModalTitle">
+            <header class="dbc-modal-header">
+                <h3 id="dbcConnModalTitle">Yeni Bağlantı</h3>
+                <button type="button" class="dbc-modal-close" data-dbc-modal-close aria-label="Kapat">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="dbc-modal-body">
+                <div class="dbc-modal-form">
+                    <div class="dbc-field">
+                        <label for="dbcConnEtiket">Bağlantı adı</label>
+                        <input type="text" id="dbcConnEtiket" data-conn-field="etiket" placeholder="Örn. PASIFIK — TDUTIL">
+                    </div>
+                    <div class="dbc-field">
+                        <label for="dbcConnServer">Sunucu</label>
+                        <input type="text" id="dbcConnServer" data-conn-field="sunucu" placeholder="PASIFIK veya srvdev\\PASIFIK">
+                    </div>
+                    <div class="dbc-row">
+                        <div class="dbc-field">
+                            <label for="dbcConnDatabase">Veritabanı</label>
+                            <input type="text" id="dbcConnDatabase" data-conn-field="veritabani" placeholder="TDUTIL">
+                        </div>
+                        <div class="dbc-field">
+                            <label for="dbcConnPort">Port</label>
+                            <input type="text" id="dbcConnPort" data-conn-field="port" value="1433">
+                        </div>
+                    </div>
+                    <div class="dbc-field">
+                        <label for="dbcConnAuth">Kimlik Doğrulama</label>
+                        <select id="dbcConnAuth" data-conn-field="auth">
+                            <option value="windows" selected>Windows (Entegre)</option>
+                            <option value="sql">SQL Server</option>
+                        </select>
+                    </div>
+                    <div class="dbc-field" data-conn-sql-user-wrap style="display:none">
+                        <label for="dbcConnSqlUser">SQL Kullanıcı Adı</label>
+                        <input type="text" id="dbcConnSqlUser" data-conn-field="sqlUser" placeholder="sa veya uygulama kullanıcısı">
+                    </div>
+                    <p class="dbc-test-msg" data-conn-test-msg role="status" hidden></p>
+                    <div class="dbc-actions">
+                        <button type="button" class="dbc-test-btn" data-conn-test>Bağlantıyı Test Et</button>
+                        <button type="button" class="dbc-save-btn" data-conn-save>Kaydet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script src="dev-admin-mode.js"></script>

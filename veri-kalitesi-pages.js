@@ -61,7 +61,28 @@
     }
 
     function getVkRowValue(row, column) {
-        return window.FilterBar?.getQueryRowValue(row, column);
+        if (window.FilterBar?.getQueryRowValue) {
+            const value = window.FilterBar.getQueryRowValue(row, column);
+            if (value !== undefined && value !== null) return value;
+        }
+
+        if (!row || column == null || column === '') return undefined;
+
+        const name = String(column);
+        const candidates = [
+            name,
+            name.charAt(0).toLowerCase() + name.slice(1),
+            name.charAt(0).toUpperCase() + name.slice(1)
+        ];
+
+        for (const key of candidates) {
+            if (Object.prototype.hasOwnProperty.call(row, key) && row[key] !== undefined && row[key] !== null) {
+                return row[key];
+            }
+        }
+
+        const matchedKey = Object.keys(row).find(key => key.toLowerCase() === name.toLowerCase());
+        return matchedKey ? row[matchedKey] : undefined;
     }
 
     function normalizeVkStatusLabel(value) {
@@ -112,9 +133,10 @@
     }
 
     function collectVkKurallarFilters(root) {
+        const panel = root.querySelector('#vkKurallarFilterPanel') || root;
         const filters = {};
         VK_KURALLAR_FILTER_FIELDS.forEach(field => {
-            const input = root.querySelector(`#vkf-${field.key}`);
+            const input = panel.querySelector(`#vkf-${field.key}`);
             if (!input) return;
             const val = (input.value || '').trim();
             if (!val) return;
@@ -199,11 +221,12 @@
     }
 
     function clearVkKurallarFilters(root) {
+        const panel = root.querySelector('#vkKurallarFilterPanel') || root;
         vkKurallarFilters = {};
-        root.querySelectorAll('.vk-filter-input').forEach(input => {
+        panel.querySelectorAll('.vk-filter-input').forEach(input => {
             input.value = '';
         });
-        window.FilterBar?.syncFieldsInBar(root.querySelector('#vkKurallarFilterPanel'), '.vk-filter-input');
+        window.FilterBar?.syncFieldsInBar(panel, '.vk-filter-input');
         applyVkKurallarFilter(root);
     }
 
@@ -211,7 +234,8 @@
         const panel = root.querySelector('#vkKurallarFilterPanel');
         if (!panel) return;
 
-        window.FilterBar?.bind(panel, {
+        window.FilterBar?.bind(root, {
+            barSelector: '#vkKurallarFilterPanel',
             bindKey: 'vk-kurallar',
             fieldSelector: '.vk-filter-input',
             debounceMs: 300,

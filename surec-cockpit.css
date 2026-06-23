@@ -473,28 +473,50 @@
     scrollbar-color: var(--rb-border) var(--rb-bg);
 }
 
-.flow-layer-detail-table {
+.flow-layer-detail-table.vs-results-table {
     width: max-content;
     min-width: 100%;
     table-layout: auto;
 }
 
-.flow-layer-detail-table td.flow-detail-statu {
+.flow-layer-detail-table.vs-results-table th,
+.flow-layer-detail-table.vs-results-table td.flow-detail-nowrap,
+.flow-layer-detail-table.vs-results-table td.flow-detail-target,
+.flow-layer-detail-table.vs-results-table td.flow-detail-statu {
     white-space: nowrap;
     vertical-align: middle;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
 }
 
-.flow-layer-detail-table td.flow-detail-error {
+.flow-layer-detail-table.vs-results-table td.flow-detail-target {
+    min-width: max(12rem, 28ch);
+    font-weight: 600;
+    color: var(--rb-text);
+}
+
+.flow-layer-detail-table.vs-results-table td.flow-detail-error {
     min-width: 200px;
-    max-width: min(520px, 42vw);
-    max-height: 180px;
-    overflow: auto;
+    max-width: min(480px, 40vw);
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+    overflow: visible;
+    vertical-align: top;
     color: #ef4444;
     font-size: 11px;
 }
 
-.flow-layer-detail-table td.flow-detail-target {
-    max-width: min(280px, 28vw);
+.flow-layer-detail-table.vs-results-table tbody tr:not(.virtual-spacer) {
+    height: auto;
+}
+
+.flow-layer-detail-table.vs-results-table tbody tr:not(.virtual-spacer) td.flow-detail-nowrap,
+.flow-layer-detail-table.vs-results-table tbody tr:not(.virtual-spacer) td.flow-detail-target,
+.flow-layer-detail-table.vs-results-table tbody tr:not(.virtual-spacer) td.flow-detail-statu {
+    height: auto;
 }
 
 @media (max-width: 1500px) {

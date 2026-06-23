@@ -240,7 +240,6 @@
         const sql = document.getElementById('vsQueryInput')?.value?.trim();
         const selected = getSelectedConnection();
         const runBtn = document.getElementById('vsRunBtn');
-        const testBtn = document.getElementById('vsTestBtn');
 
         if (!sql) {
             setError('Sorgu metni boş.');
@@ -255,7 +254,6 @@
         setError('');
         setMeta('Sorgu çalıştırılıyor…');
         if (runBtn) runBtn.disabled = true;
-        if (testBtn) testBtn.disabled = true;
 
         const payload = { katmanKodu: selected.katmanKodu, sql };
         if (selected.baglanti) payload.baglanti = selected.baglanti;
@@ -281,151 +279,14 @@
             if (wrap) wrap.classList.remove('has-data');
         } finally {
             if (runBtn) runBtn.disabled = false;
-            if (testBtn) testBtn.disabled = false;
         }
     }
 
-    function readConnForm(modal) {
-        const data = {};
-        modal.querySelectorAll('[data-conn-field]').forEach(el => {
-            const key = el.dataset.connField;
-            if (key === 'etiket') data.etiket = el.value.trim();
-            else if (key === 'sunucu') data.sunucu = el.value.trim();
-            else if (key === 'veritabani') data.veritabani = el.value.trim();
-            else if (key === 'port') data.port = parseInt(el.value.trim(), 10) || 1433;
-            else if (key === 'auth') data.kimlikDogrulama = el.value.trim();
-            else if (key === 'sqlUser') data.kullaniciAdi = el.value.trim() || null;
-        });
-        return data;
-    }
-
-    function clearConnForm(modal) {
-        modal.querySelector('[data-conn-field="etiket"]').value = '';
-        modal.querySelector('[data-conn-field="sunucu"]').value = '';
-        modal.querySelector('[data-conn-field="veritabani"]').value = '';
-        modal.querySelector('[data-conn-field="port"]').value = '1433';
-        modal.querySelector('[data-conn-field="auth"]').value = 'windows';
-        modal.querySelector('[data-conn-field="sqlUser"]').value = '';
-        toggleConnSqlUser(modal);
-        showConnTestMsg(modal, '', false);
-    }
-
-    function toggleConnSqlUser(modal) {
-        const auth = modal.querySelector('[data-conn-field="auth"]')?.value;
-        const wrap = modal.querySelector('[data-conn-sql-user-wrap]');
-        if (wrap) wrap.style.display = auth === 'sql' ? '' : 'none';
-    }
-
-    function showConnTestMsg(modal, message, isError) {
-        const el = modal.querySelector('[data-conn-test-msg]');
-        if (!el) return;
-        el.hidden = !message;
-        el.textContent = message || '';
-        el.classList.toggle('error', !!isError);
-        el.classList.toggle('success', !!message && !isError);
-    }
-
-    function openConnModal() {
-        const modal = document.getElementById('vsConnModal');
-        if (!modal) return;
-        clearConnForm(modal);
-        modal.hidden = false;
-        modal.setAttribute('aria-hidden', 'false');
-        modal.classList.add('is-open');
-        modal.querySelector('[data-conn-field="sunucu"]')?.focus();
-    }
-
-    function closeConnModal() {
-        const modal = document.getElementById('vsConnModal');
-        if (!modal) return;
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-        modal.classList.remove('is-open');
-    }
-
-    function bindConnModal() {
-        const modal = document.getElementById('vsConnModal');
-        if (!modal) return;
-
-        document.getElementById('vsNewConnBtn')?.addEventListener('click', openConnModal);
-
-        modal.querySelectorAll('[data-vs-modal-close]').forEach(el => {
-            el.addEventListener('click', closeConnModal);
-        });
-
-        modal.querySelector('[data-conn-field="auth"]')?.addEventListener('change', () => {
-            toggleConnSqlUser(modal);
-        });
-
-        modal.querySelector('[data-conn-test]')?.addEventListener('click', async (btn) => {
-            const formData = readConnForm(modal);
-            if (!formData.sunucu || !formData.veritabani) {
-                showConnTestMsg(modal, 'Sunucu ve veritabanı alanları zorunludur.', true);
-                return;
-            }
-
-            const button = btn.currentTarget;
-            button.disabled = true;
-            button.textContent = 'Test ediliyor…';
-            showConnTestMsg(modal, '', false);
-
-            try {
-                const result = await ApiClient.testVeritabaniSorguBaglanti(toBaglantiDto(formData));
-                showConnTestMsg(
-                    modal,
-                    result.mesaj || (result.basarili ? 'Bağlantı başarılı.' : 'Bağlantı başarısız.'),
-                    !result.basarili
-                );
-            } catch (err) {
-                showConnTestMsg(modal, 'Test isteği başarısız: ' + err.message, true);
-            }
-
-            button.disabled = false;
-            button.textContent = 'Bağlantıyı Test Et';
-        });
-
-        modal.querySelector('[data-conn-save]')?.addEventListener('click', () => {
-            const formData = readConnForm(modal);
-            if (!formData.sunucu || !formData.veritabani) {
-                showConnTestMsg(modal, 'Kaydetmeden önce sunucu ve veritabanı girin.', true);
-                return;
-            }
-
-            if (!formData.etiket) {
-                formData.etiket = `${formData.sunucu} — ${formData.veritabani}`;
-            }
-
-            const entry = {
-                id: `c${Date.now()}`,
-                etiket: formData.etiket,
-                sunucu: formData.sunucu,
-                veritabani: formData.veritabani,
-                port: formData.port,
-                kimlikDogrulama: formData.kimlikDogrulama,
-                kullaniciAdi: formData.kullaniciAdi
-            };
-
-            customConnections.push(entry);
-            saveCustomConnections();
-            selectedKatman = `${CUSTOM_PREFIX}${entry.id}`;
-            renderKatmanSelect();
-            closeConnModal();
-            setStatus('pending', 'Yeni bağlantı seçildi. Test ediliyor…');
-            testConnection();
-        });
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
-                closeConnModal();
-            }
-        });
-    }
-
     function bindEvents() {
-        document.getElementById('vsTestBtn')?.addEventListener('click', testConnection);
         document.getElementById('vsRunBtn')?.addEventListener('click', runQuery);
         document.getElementById('vsKatmanSelect')?.addEventListener('change', e => {
             selectedKatman = e.target.value;
+            testConnection();
         });
         document.getElementById('vsQueryInput')?.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -433,7 +294,6 @@
                 runQuery();
             }
         });
-        bindConnModal();
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

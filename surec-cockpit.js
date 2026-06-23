@@ -394,16 +394,16 @@ function buildFlowLayerDetail(col) {
     const kayitlar = getVisibleKayitlar(col);
     const rows = kayitlar.map(row => `
         <tr>
-            <td class="flow-detail-target vs-cell-wrap">${escapeDatasetHtml(row.targetTableName)}</td>
+            <td class="flow-detail-target" title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
             <td class="flow-detail-statu">
                 <span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni || 'Not Started')}</span>
             </td>
-            <td>${escapeDatasetHtml(formatDatasetDate(resolveFlowKayitDataDate(row)))}</td>
-            <td>${formatGunlukAkisDateTime(row.executionStartTime)}</td>
-            <td>${formatGunlukAkisDateTime(row.executionEndTime)}</td>
-            <td>${formatGunlukAkisMinutes(row.sureDakika)}</td>
-            <td>${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
-            <td class="flow-detail-error vs-cell-wrap">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
+            <td class="flow-detail-nowrap">${escapeDatasetHtml(formatDatasetDate(resolveFlowKayitDataDate(row)))}</td>
+            <td class="flow-detail-nowrap">${formatGunlukAkisDateTime(row.executionStartTime)}</td>
+            <td class="flow-detail-nowrap">${formatGunlukAkisDateTime(row.executionEndTime)}</td>
+            <td class="flow-detail-nowrap">${formatGunlukAkisMinutes(row.sureDakika)}</td>
+            <td class="flow-detail-nowrap">${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
+            <td class="flow-detail-error" title="${escapeDatasetHtml(row.errorMessageText || '')}">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
         </tr>`).join('');
     const emptyMessage = allKayitlar.length > 0 && !kayitlar.length
         ? 'Seçili statülere uygun kayıt yok.'

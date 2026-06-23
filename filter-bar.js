@@ -57,8 +57,28 @@
     function resolveBar(root, barSelector) {
         if (!root) return null;
         if (typeof root === 'string') return document.querySelector(root);
-        if (root.matches?.(barSelector)) return root;
-        return root.querySelector(barSelector);
+
+        const selector = (barSelector || '').trim();
+        if (selector.startsWith('#')) {
+            if (root.id && selector === `#${root.id}`) return root;
+            const byId = root.querySelector(selector);
+            if (byId) return byId;
+        }
+
+        if (selector.includes(',')) {
+            const parts = selector.split(',').map(part => part.trim()).filter(Boolean);
+            for (const part of parts) {
+                if (root.matches?.(part)) return root;
+            }
+            for (const part of parts) {
+                const nested = root.querySelector(part);
+                if (nested) return nested;
+            }
+            return null;
+        }
+
+        if (selector && root.matches?.(selector)) return root;
+        return selector ? root.querySelector(selector) : root;
     }
 
     function getFilterFields(bar, fieldSelector) {

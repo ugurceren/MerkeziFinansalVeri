@@ -123,19 +123,15 @@
     }
 
     function resetResultsChrome() {
-        const info = document.getElementById('nzRecordInfo');
         const exportBtn = document.getElementById('nzExportBtn');
-        if (info) info.innerHTML = '';
         if (exportBtn) exportBtn.disabled = true;
         exportContext = null;
     }
 
     function updateResultsMeta(payload, cols, rows) {
-        const info = document.getElementById('nzRecordInfo');
         const exportBtn = document.getElementById('nzExportBtn');
         const allRows = payload.satirlar || rows;
 
-        window.ReportResults.setRecordCount(info, payload, rows);
         if (exportBtn) exportBtn.disabled = !allRows.length;
 
         exportContext = allRows.length ? {

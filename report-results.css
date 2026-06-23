@@ -53,7 +53,7 @@
     grid-row: 2;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 12px;
     min-height: 32px;
     padding: 0 12px;
@@ -86,11 +86,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 64px;
+    height: 64px;
     padding: 0;
     border: 0.5px solid var(--rb-border);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--rb-card);
     color: var(--rb-text-muted);
     cursor: pointer;
@@ -111,8 +111,8 @@
 
 .report-export-icon {
     display: block;
-    width: 20px;
-    height: 20px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
 }
 
