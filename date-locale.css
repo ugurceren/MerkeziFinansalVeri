@@ -1,24 +1,113 @@
 @import url("https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css");
 @import url("https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/style.css");
 
-input.flatpickr-input:not([type="hidden"]) {
-    height: 32px;
-    padding: 0 10px;
+.date-input-wrap {
+    --date-input-height: 36px;
+    --date-input-min-width: 156px;
+    --date-input-font-size: 13px;
+    --date-input-radius: 8px;
+    --date-input-pad-x: 12px;
+    --date-input-icon-space: 34px;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: var(--date-input-min-width);
+    max-width: 100%;
+}
+
+.date-input-wrap::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    background-color: var(--rb-text-muted, #7a84a1);
+    opacity: 0.72;
+    pointer-events: none;
+    z-index: 1;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z'/%3E%3Cpath d='M16 3v4'/%3E%3Cpath d='M8 3v4'/%3E%3Cpath d='M4 11h16'/%3E%3Cpath d='M8 15h2v2h-2z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z'/%3E%3Cpath d='M16 3v4'/%3E%3Cpath d='M8 3v4'/%3E%3Cpath d='M4 11h16'/%3E%3Cpath d='M8 15h2v2h-2z'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.date-input-wrap:hover::before,
+.date-input-wrap:focus-within::before {
+    opacity: 1;
+    background-color: var(--rb-accent, #7c9aff);
+}
+
+.date-input-wrap > input.date-input-field,
+.date-input-wrap > input.flatpickr-input:not([type="hidden"]),
+input.flatpickr-input.date-input-field:not([type="hidden"]) {
+    width: 100%;
+    min-width: 0;
+    height: var(--date-input-height);
+    padding: 0 var(--date-input-pad-x) 0 var(--date-input-icon-space);
     border: 0.5px solid var(--rb-border, rgba(255, 255, 255, 0.09));
-    border-radius: 8px;
+    border-radius: var(--date-input-radius);
     background: var(--rb-input-bg, #2e374c);
     color: var(--rb-text, #e5e9f0);
-    font-size: 13px;
+    font-size: var(--date-input-font-size);
     font-family: inherit;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-input.flatpickr-input:not([type="hidden"]):focus {
+.date-input-wrap > input.date-input-field::placeholder,
+.date-input-wrap > input.flatpickr-input:not([type="hidden"])::placeholder,
+input.flatpickr-input.date-input-field:not([type="hidden"])::placeholder {
+    color: var(--rb-text-muted, #7a84a1);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.date-input-wrap:hover > input.date-input-field,
+.date-input-wrap:hover > input.flatpickr-input:not([type="hidden"]) {
+    border-color: color-mix(in srgb, var(--rb-accent, #7c9aff) 35%, var(--rb-border, rgba(255, 255, 255, 0.09)));
+}
+
+.date-input-wrap > input.date-input-field:focus,
+.date-input-wrap > input.flatpickr-input:not([type="hidden"]):focus,
+input.flatpickr-input.date-input-field:not([type="hidden"]):focus {
     outline: none;
     border-color: var(--rb-accent, #7c9aff);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--rb-accent, #7c9aff) 18%, transparent);
 }
 
-input.flatpickr-input[readonly] {
+.date-input-wrap > input.date-input-field[readonly],
+.date-input-wrap > input.flatpickr-input:not([type="hidden"])[readonly],
+input.flatpickr-input.date-input-field:not([type="hidden"])[readonly] {
     cursor: pointer;
+}
+
+/* Compact variants in ribbon / filter toolbars */
+.cockpit-date-filter .date-input-wrap,
+.mizan-date-filter .date-input-wrap {
+    --date-input-height: 32px;
+    --date-input-min-width: 132px;
+    --date-input-font-size: 12px;
+    --date-input-radius: 8px;
+    width: auto;
+}
+
+.al-field .date-input-wrap {
+    --date-input-min-width: 164px;
+}
+
+.tb-field .date-input-wrap,
+.nz-field .date-input-wrap {
+    --date-input-height: 34px;
+    --date-input-min-width: 156px;
+    --date-input-font-size: 12px;
+    --date-input-radius: 6px;
 }
 
 .flatpickr-calendar {

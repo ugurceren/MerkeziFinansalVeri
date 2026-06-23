@@ -49,23 +49,6 @@
     color: var(--rb-text-secondary);
 }
 
-.mizan-date-filter input {
-    height: 30px;
-    padding: 0 10px;
-    border: 0.5px solid var(--rb-border);
-    border-radius: 8px;
-    background: var(--rb-input-bg);
-    color: var(--rb-text);
-    font-size: 12px;
-    font-family: inherit;
-    color-scheme: light dark;
-}
-
-.mizan-date-filter input:focus {
-    outline: none;
-    border-color: var(--rb-accent);
-}
-
 /* Sequence diagram — yatay, içerik boyutunda */
 .mizan-seq {
     padding: 8px 0;

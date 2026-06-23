@@ -79,4 +79,11 @@
         script.defer = true;
         document.head.appendChild(script);
     }
+
+    if (!document.querySelector('script[src="table-count.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'table-count.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    }
 })();

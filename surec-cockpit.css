@@ -41,23 +41,6 @@
     color: var(--rb-text-secondary);
 }
 
-.cockpit-date-filter input {
-    height: 30px;
-    padding: 0 10px;
-    border: 0.5px solid var(--rb-border);
-    border-radius: 8px;
-    background: var(--rb-input-bg);
-    color: var(--rb-text);
-    font-size: 12px;
-    font-family: inherit;
-    color-scheme: light dark;
-}
-
-.cockpit-date-filter input:focus {
-    outline: none;
-    border-color: var(--rb-accent);
-}
-
 .cockpit-loading {
     display: grid;
     place-items: center;
@@ -237,7 +220,14 @@
 
 .flow-layer-tile.status-done { border-color: rgba(34, 197, 94, 0.35); }
 .flow-layer-tile.status-failed { border-color: rgba(239, 68, 68, 0.35); }
-.flow-layer-tile.status-running { border-color: color-mix(in srgb, var(--flow-accent) 45%, var(--rb-border)); }
+.flow-layer-tile.status-running {
+    border-color: rgba(245, 158, 11, 0.6);
+}
+
+.flow-layer-tile.status-running .flow-layer-tile-badge {
+    background: rgba(251, 191, 36, 0.2);
+    color: #d97706;
+}
 
 .flow-layer-tile-head {
     display: flex;
@@ -378,7 +368,8 @@
 }
 
 .flow-status-pill.is-done { background: rgba(34, 197, 94, 0.14); color: #22c55e; }
-.flow-status-pill.is-running { background: rgba(139, 164, 255, 0.16); color: var(--rb-accent); }
+/* In Progress — turuncuya yakın sarı (üst filtre ile aynı) */
+.flow-status-pill.is-running { background: rgba(251, 191, 36, 0.2); color: #d97706; }
 .flow-status-pill.is-failed { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
 .flow-status-pill.is-not-started { background: rgba(132, 145, 168, 0.18); color: var(--rb-text-muted); }
 
@@ -477,14 +468,42 @@
 .flow-layer-detail-table-wrap {
     flex: 1;
     min-height: 280px;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rb-border) var(--rb-bg);
+}
+
+.flow-layer-detail-table {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+.flow-layer-detail-table td.flow-detail-statu {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.flow-layer-detail-table td.flow-detail-target {
+    max-width: min(280px, 28vw);
+    white-space: normal;
+    word-break: break-word;
+    vertical-align: top;
 }
 
 .flow-layer-detail-table td.flow-detail-error {
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: min(520px, 42vw);
+    min-width: 200px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow: auto;
+    max-height: 180px;
+    vertical-align: top;
     color: #ef4444;
+    font-size: 11px;
+    line-height: 1.45;
+    text-overflow: clip;
 }
 
 @media (max-width: 1500px) {
@@ -1892,9 +1911,9 @@
 }
 
 .ds-status-ozet-card {
-    flex: 0 0 clamp(200px, 26vw, 280px);
-    max-width: 280px;
-    min-width: 200px;
+    flex: 0 0 clamp(220px, 30vw, 350px);
+    max-width: 350px;
+    min-width: 220px;
 }
 
 .ds-status-model-card {
@@ -1918,7 +1937,8 @@
 }
 
 .dataset-view-statu .ds-status-ozet-card {
-    flex: 0 0 clamp(200px, 26vw, 280px);
+    flex: 0 0 clamp(220px, 30vw, 350px);
+    max-width: 350px;
     max-height: none;
 }
 
@@ -1991,11 +2011,6 @@
     white-space: nowrap;
 }
 
-.ds-status-split .ds-table-caption {
-    font-size: 9px;
-    line-height: 1.2;
-}
-
 .ds-status-compact-table {
     font-size: 11px;
     table-layout: fixed;
@@ -2008,12 +2023,15 @@
     max-width: none;
 }
 
+.ds-status-compact-table th {
+    text-align: center;
+}
+
 .ds-status-compact-table .ds-num-col {
     width: 52px;
     text-align: right;
 }
 
-.ds-status-compact-table th.ds-num-col,
 .ds-status-compact-table td:last-child {
     text-align: right;
 }
@@ -2021,8 +2039,14 @@
 .ds-status-ozet-card .ds-status-compact-table th:first-child,
 .ds-status-ozet-card .ds-status-compact-table td:first-child {
     width: auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.ds-status-ozet-card .ds-status-compact-table .ds-status-badge {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .ds-status-model-card .ds-status-compact-table th:nth-child(1),
@@ -2182,12 +2206,6 @@
     color: var(--rb-text);
 }
 
-.ds-table-caption {
-    font-size: 10px;
-    color: var(--rb-text-muted);
-    font-weight: 500;
-}
-
 .ds-status-total-row td {
     border-top: 0.5px solid var(--rb-border);
     background: var(--rb-filter-bg);
@@ -2226,12 +2244,6 @@
 .ds-table-search input:focus {
     outline: none;
     border-color: var(--rb-accent);
-}
-
-.ds-table-count {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--rb-text-muted);
 }
 
 .ds-status-badge {

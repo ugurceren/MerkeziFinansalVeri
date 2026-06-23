@@ -31,9 +31,50 @@
         box.textContent = message;
     }
 
-    function setMeta(text) {
+    function setMeta(textOrPayload) {
         const meta = document.getElementById('vsQueryMeta');
-        if (meta) meta.textContent = text || '';
+        if (!meta) return;
+
+        if (typeof textOrPayload === 'string') {
+            meta.textContent = textOrPayload || '';
+            return;
+        }
+
+        if (!textOrPayload) {
+            meta.innerHTML = '';
+            return;
+        }
+
+        const rows = textOrPayload.satirlar || [];
+        const total = textOrPayload.satirSayisi ?? rows.length;
+        const notes = [];
+        if (textOrPayload.sureMs != null) notes.push(`${textOrPayload.sureMs} ms`);
+        if (textOrPayload.kisitlandi) notes.push(`ilk ${textOrPayload.maxSatir} satır gösterildi`);
+
+        if (window.TableCount?.set) {
+            window.TableCount.set(meta, rows.length, total, {
+                wrapId: 'vsQueryMeta',
+                footnote: notes.join(' · ') || undefined
+            });
+            return;
+        }
+
+        let metaText = `${total} satır`;
+        if (textOrPayload.sureMs != null) metaText += ` · ${textOrPayload.sureMs} ms`;
+        if (textOrPayload.kisitlandi) metaText += ` · ilk ${textOrPayload.maxSatir} satır gösterildi`;
+        meta.textContent = metaText;
+    }
+
+    function getQueryRowValue(row, column) {
+        if (window.FilterBar?.getQueryRowValue) {
+            return window.FilterBar.getQueryRowValue(row, column);
+        }
+        if (!row || column == null || column === '') return undefined;
+        if (Object.prototype.hasOwnProperty.call(row, column) && row[column] !== undefined && row[column] !== null) {
+            return row[column];
+        }
+        const matchedKey = Object.keys(row).find(key => key.toLowerCase() === String(column).toLowerCase());
+        return matchedKey ? row[matchedKey] : undefined;
     }
 
     function renderKatmanSelect() {
@@ -66,7 +107,7 @@
         head.innerHTML = `<tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
         body.innerHTML = rows.map(row => {
             const cells = cols.map(col => {
-                const val = row[col];
+                const val = getQueryRowValue(row, col);
                 const display = val === null || val === undefined ? '' : String(val);
                 return `<td title="${escapeHtml(display)}">${escapeHtml(display)}</td>`;
             }).join('');
@@ -76,10 +117,7 @@
         if (empty) empty.hidden = rows.length > 0;
         wrap.classList.toggle('has-data', rows.length > 0);
 
-        let meta = `${payload.satirSayisi ?? rows.length} satır`;
-        if (payload.sureMs != null) meta += ` · ${payload.sureMs} ms`;
-        if (payload.kisitlandi) meta += ` · ilk ${payload.maxSatir} satır gösterildi`;
-        setMeta(meta);
+        setMeta(payload);
     }
 
     function apiErrorMessage(err) {

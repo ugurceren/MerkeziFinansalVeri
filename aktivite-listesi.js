@@ -98,7 +98,7 @@
 
     async function loadActivities() {
         const listEl = document.getElementById('alActivityList');
-        const countEl = document.getElementById('alRecordCount');
+        const countHost = document.getElementById('alRecordCount');
         const clearAllBtn = document.getElementById('alClearAllBtn');
         if (!listEl) return;
 
@@ -112,19 +112,24 @@
 
         setStatus('');
         if (clearAllBtn) clearAllBtn.disabled = true;
-        if (countEl) countEl.textContent = 'Yükleniyor…';
+        if (countHost) countHost.textContent = 'Yükleniyor…';
 
         try {
             const items = await ApiClient.getAktiviteLog(filters);
             listEl.innerHTML = renderActivityRows(items);
-            if (countEl) countEl.textContent = `${items.length} kayıt`;
+            const count = items.length;
+            if (window.TableCount?.set) {
+                window.TableCount.set(countHost, count, count, { wrapId: 'alRecordCount' });
+            } else if (countHost) {
+                countHost.textContent = `${count} kayıt`;
+            }
         } catch (err) {
             const msg = err?.message || String(err);
             setStatus(msg.includes('Failed to fetch')
                 ? `API'ye ulaşılamıyor. Varsayılan: ${ApiClient.baseUrl}`
                 : msg);
             listEl.innerHTML = '<li class="activity-item"><div class="activity-body"><span>Aktiviteler yüklenemedi.</span></div></li>';
-            if (countEl) countEl.textContent = '—';
+            if (countHost) countHost.textContent = '—';
         } finally {
             if (clearAllBtn) clearAllBtn.disabled = false;
         }

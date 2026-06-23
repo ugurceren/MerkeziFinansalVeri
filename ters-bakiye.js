@@ -241,7 +241,7 @@
     function resetResultsChrome() {
         const info = document.getElementById('tbRecordInfo');
         const exportBtn = document.getElementById('tbExportBtn');
-        if (info) info.textContent = '';
+        if (info) info.innerHTML = '';
         if (exportBtn) exportBtn.disabled = true;
         exportContext = null;
     }
@@ -250,14 +250,8 @@
         const info = document.getElementById('tbRecordInfo');
         const exportBtn = document.getElementById('tbExportBtn');
         const allRows = payload.satirlar || rows;
-        const total = payload.satirSayisi ?? allRows.length;
 
-        if (info) {
-            info.textContent = window.ReportResults.formatRecordInfo(total, {
-                kisitlandi: payload.kisitlandi,
-                maxSatir: payload.maxSatir
-            });
-        }
+        window.ReportResults.setRecordCount(info, payload, rows);
         if (exportBtn) exportBtn.disabled = !allRows.length;
 
         exportContext = allRows.length ? {

@@ -91,6 +91,8 @@ public class SurecController(
             Kayitlar = layer.Kayitlar.Select(item => new SurecKokpitKayitDto
             {
                 TargetTableName = item.TargetTableName,
+                Durum = item.Durum,
+                DurumMetni = item.DurumMetni,
                 DataDate = item.DataDate?.ToString("yyyy-MM-dd"),
                 ExecutionStartTime = FormatDateTime(item.ExecutionStartTime),
                 ExecutionEndTime = FormatDateTime(item.ExecutionEndTime),

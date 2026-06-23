@@ -1,0 +1,97 @@
+.table-count-wrap,
+.tl-count-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.table-count,
+.tl-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--rb-filter-bg);
+    border: 0.5px solid var(--rb-border);
+}
+
+.table-count.is-filtered,
+.tl-count.is-filtered {
+    border-color: color-mix(in srgb, var(--rb-accent) 35%, var(--rb-border));
+    background: var(--rb-accent-soft);
+}
+
+.table-count-block,
+.tl-count-block {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 52px;
+}
+
+.table-count-label,
+.tl-count-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rb-text-muted);
+    line-height: 1.1;
+}
+
+.table-count-value,
+.tl-count-value {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--rb-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.table-count.is-filtered .table-count-block:first-child .table-count-value,
+.tl-count.is-filtered .tl-count-block:first-child .tl-count-value {
+    color: var(--rb-accent);
+}
+
+.table-count-divider,
+.tl-count-divider {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--rb-text-muted);
+    line-height: 1;
+    padding-bottom: 2px;
+}
+
+.table-count-note {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+    line-height: 1.2;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.page-ribbon .table-count-value,
+.page-ribbon .tl-count-value {
+    font-size: 22px;
+}
+
+.page-ribbon .table-count-label,
+.page-ribbon .tl-count-label {
+    font-size: 11px;
+}
+
+.vk-card-head .table-count-wrap,
+.mt-mm-head .table-count-wrap,
+.panel-head .table-count-wrap,
+.report-toolbar-results .table-count-wrap {
+    margin-left: auto;
+}
+
+.report-toolbar-results .table-count-wrap {
+    align-items: flex-end;
+}

@@ -32,6 +32,8 @@ public sealed class SurecKokpitOzetSatirDto
 public sealed class SurecKokpitKayitDto
 {
     public string TargetTableName { get; set; } = string.Empty;
+    public string Durum { get; set; } = "not-started";
+    public string DurumMetni { get; set; } = "Not Started";
     public string? DataDate { get; set; }
     public string? ExecutionStartTime { get; set; }
     public string? ExecutionEndTime { get; set; }

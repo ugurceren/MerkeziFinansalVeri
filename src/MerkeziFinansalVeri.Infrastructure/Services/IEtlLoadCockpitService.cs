@@ -47,6 +47,8 @@ public sealed class EtlLoadCockpitOzetSatir
 public sealed class EtlLoadCockpitKayit
 {
     public string TargetTableName { get; init; } = string.Empty;
+    public string Durum { get; init; } = "not-started";
+    public string DurumMetni { get; init; } = "Not Started";
     public DateOnly? DataDate { get; init; }
     public DateTime? ExecutionStartTime { get; init; }
     public DateTime? ExecutionEndTime { get; init; }

@@ -317,10 +317,15 @@
     }
 
     function buildMatrixMapRows(rows) {
+        const readCell = (row, col) => {
+            const dbKey = MATRIXMAP_COLUMN_KEYS[col.key];
+            return window.FilterBar?.getQueryRowValue(row, dbKey)
+                ?? window.FilterBar?.getQueryRowValue(row, col.key);
+        };
+
         return rows.map(row => {
             const cells = MATRIXMAP_COLUMNS.map(col => {
-                const dbKey = MATRIXMAP_COLUMN_KEYS[col.key];
-                const val = row[dbKey] ?? row[col.key] ?? row[dbKey?.toLowerCase()];
+                const val = readCell(row, col);
                 const display = formatMatrixMapCell(col.key, val);
                 const title = val === null || val === undefined ? '' : String(val);
                 return `<td title="${escapeHtml(title)}">${display}</td>`;
@@ -330,22 +335,30 @@
     }
 
     function formatMatrixMapRecordCount(data) {
-        if (!data?.basarili) return '— kayıt';
+        if (!data?.basarili) return { shown: 0, total: 0 };
         const rows = data.satirlar || [];
-        const shown = rows.length;
-        const total = data.satirSayisi ?? shown;
-        return `${shown.toLocaleString('tr-TR')}/${total.toLocaleString('tr-TR')} kayıt`;
+        return {
+            shown: rows.length,
+            total: data.satirSayisi ?? rows.length
+        };
     }
 
     function updateMatrixMapRecordCount(root, data) {
-        const el = root.querySelector('#mtMatrixRecordCount');
-        if (el) el.textContent = formatMatrixMapRecordCount(data);
+        if (!data?.basarili) return;
+        const { shown, total } = formatMatrixMapRecordCount(data);
+        window.TableCount?.set(root, shown, total, { wrapId: 'mtMatrixRecordCount' });
     }
 
-    function buildMatrixMapHead(recordText = '— kayıt') {
+    function buildMatrixMapHead(data) {
+        const { shown, total } = data?.basarili
+            ? formatMatrixMapRecordCount(data)
+            : { shown: 0, total: 0 };
+        const countHtml = window.TableCount?.formatHtml(shown, total, { wrapId: 'mtMatrixRecordCount' })
+            || '<span>—</span>';
+
         return `<div class="mt-head mt-mm-head">
             <h3>Matrix Map</h3>
-            <span class="mt-mm-record-count" id="mtMatrixRecordCount">${escapeHtml(recordText)}</span>
+            ${countHtml}
         </div>`;
     }
 
@@ -411,10 +424,9 @@
 
     function buildMatrixMapHTML() {
         const data = matrixMapData;
-        const recordText = data?.basarili ? formatMatrixMapRecordCount(data) : '— kayıt';
 
         return `<section class="mt-layout mt-matrixmap-layout">
-            ${buildMatrixMapHead(recordText)}
+            ${buildMatrixMapHead(data)}
             ${buildMatrixMapTableSection(data)}
         </section>`;
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Globalization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace MerkeziFinansalVeri.Infrastructure.Services;
@@ -88,7 +89,7 @@ public sealed class EtlLoadCockpitService(
         }
 
         var katmanlar = LayerDefinitions
-            .Select(layer => BuildLayer(layer, rawRows, paketSayilari))
+            .Select(layer => BuildLayer(layer, rawRows, paketSayilari, dataDate))
             .ToList();
 
         return new EtlLoadCockpitResult
@@ -231,22 +232,29 @@ public sealed class EtlLoadCockpitService(
     private static EtlLoadCockpitLayer BuildLayer(
         LayerDefinition layer,
         IReadOnlyList<EtlLoadRawRow> rawRows,
-        IReadOnlyDictionary<string, int> paketSayilari)
+        IReadOnlyDictionary<string, int> paketSayilari,
+        DateOnly? filterDataDate = null)
     {
         var layerRows = rawRows
             .Where(row => row.LayerKey.Equals(layer.KatmanKodu, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         var kayitlar = layerRows
-            .Select(row => new EtlLoadCockpitKayit
+            .Select(row =>
             {
-                TargetTableName = row.TargetTableName,
-                DataDate = row.DataDate,
-                ExecutionStartTime = row.ExecutionStartTime,
-                ExecutionEndTime = row.ExecutionEndTime,
-                SureDakika = ComputeSureDakika(row.ExecutionStartTime, row.ExecutionEndTime),
-                ExecutionRecordCount = row.ExecutionRecordCount,
-                ErrorMessageText = row.ErrorMessageText
+                var status = MapExecutionStatus(row.ExecutionStatus);
+                return new EtlLoadCockpitKayit
+                {
+                    TargetTableName = row.TargetTableName,
+                    Durum = status.Durum,
+                    DurumMetni = status.DurumMetni,
+                    DataDate = row.DataDate ?? filterDataDate,
+                    ExecutionStartTime = row.ExecutionStartTime,
+                    ExecutionEndTime = row.ExecutionEndTime,
+                    SureDakika = ComputeSureDakika(row.ExecutionStartTime, row.ExecutionEndTime),
+                    ExecutionRecordCount = row.ExecutionRecordCount,
+                    ErrorMessageText = row.ErrorMessageText
+                };
             })
             .OrderBy(k => k.TargetTableName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(k => k.ExecutionStartTime)
@@ -457,7 +465,17 @@ public sealed class EtlLoadCockpitService(
             return null;
         }
 
-        return DateOnly.TryParse(value, out var date) ? date : null;
+        if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateOnly))
+        {
+            return dateOnly;
+        }
+
+        if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var dateTime))
+        {
+            return DateOnly.FromDateTime(dateTime);
+        }
+
+        return null;
     }
 
     private static DateTime? ParseDateTime(string? value)

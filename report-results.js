@@ -10,6 +10,51 @@
         return rows.slice(0, DISPLAY_MAX_ROWS);
     }
 
+    function buildRecordCountFootnote(total, options = {}) {
+        const opts = options || {};
+        const notes = [];
+        const displayMax = opts.displayMax ?? DISPLAY_MAX_ROWS;
+
+        if (total > displayMax) {
+            notes.push(`ekranda ilk ${displayMax.toLocaleString('tr-TR')} gösteriliyor`);
+        }
+        if (opts.kisitlandi && opts.maxSatir) {
+            notes.push(`sunucu limiti (${Number(opts.maxSatir).toLocaleString('tr-TR')}) uygulandı`);
+        }
+        if (opts.extraNotes?.length) {
+            notes.push(...opts.extraNotes.filter(Boolean));
+        }
+        return notes.join(' · ');
+    }
+
+    function setRecordCount(host, payload, rows, options = {}) {
+        if (!host) return;
+
+        const allRows = payload?.satirlar || rows || [];
+        const total = Number(payload?.satirSayisi ?? allRows.length) || 0;
+        const displayMax = options.displayMax ?? DISPLAY_MAX_ROWS;
+        const shown = total === 0 ? 0 : Math.min(allRows.length, displayMax);
+        const footnote = buildRecordCountFootnote(total, {
+            displayMax,
+            kisitlandi: payload?.kisitlandi,
+            maxSatir: payload?.maxSatir,
+            extraNotes: options.extraNotes
+        });
+
+        if (window.TableCount?.set) {
+            window.TableCount.set(host, shown, total, {
+                wrapId: host.id || options.wrapId,
+                footnote: footnote || undefined
+            });
+            return;
+        }
+
+        host.textContent = formatRecordInfo(total, {
+            kisitlandi: payload?.kisitlandi,
+            maxSatir: payload?.maxSatir
+        });
+    }
+
     function formatRecordInfo(totalCount, options) {
         const opts = options || {};
         const total = Number(totalCount) || 0;
@@ -45,6 +90,18 @@
             activeTable.destroy();
             activeTable = null;
         }
+    }
+
+    function getRowCell(row, column) {
+        if (window.FilterBar?.getQueryRowValue) {
+            return window.FilterBar.getQueryRowValue(row, column);
+        }
+        if (!row || column == null || column === '') return undefined;
+        if (Object.prototype.hasOwnProperty.call(row, column) && row[column] !== undefined && row[column] !== null) {
+            return row[column];
+        }
+        const matchedKey = Object.keys(row).find(key => key.toLowerCase() === String(column).toLowerCase());
+        return matchedKey ? row[matchedKey] : undefined;
     }
 
     function renderTable({ scrollEl, headEl, bodyEl, cols, rows, getColumnLabel }) {
@@ -85,7 +142,7 @@
                 const row = rows[i];
                 let rowHtml = '<tr>';
                 for (let c = 0; c < cols.length; c++) {
-                    rowHtml += `<td>${escapeHtmlFast(row[cols[c]])}</td>`;
+                    rowHtml += `<td>${escapeHtmlFast(getRowCell(row, cols[c]))}</td>`;
                 }
                 parts[partIndex++] = `${rowHtml}</tr>`;
             }
@@ -144,7 +201,7 @@
 
         const labelFn = typeof getHeaderLabel === 'function' ? getHeaderLabel : col => col;
         const headers = columns.map(labelFn);
-        const data = rows.map(row => columns.map(col => cellValue(row[col])));
+        const data = rows.map(row => columns.map(col => cellValue(getRowCell(row, col))));
         const sheet = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
         const workbook = window.XLSX.utils.book_new();
         window.XLSX.utils.book_append_sheet(workbook, sheet, 'Sonuç');
@@ -176,6 +233,8 @@
         ROW_HEIGHT,
         sliceForDisplay,
         formatRecordInfo,
+        buildRecordCountFootnote,
+        setRecordCount,
         escapeHtmlFast,
         renderTable,
         destroyActiveTable,

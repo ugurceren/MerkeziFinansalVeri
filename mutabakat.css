@@ -310,15 +310,6 @@
     margin: 0;
 }
 
-.mt-mm-record-count {
-    margin-left: auto;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--rb-text-secondary);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
 .mt-mm-filter-bar {
     background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
     border-bottom-color: color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));

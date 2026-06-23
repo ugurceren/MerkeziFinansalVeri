@@ -208,6 +208,26 @@
         });
     }
 
+    function getQueryRowValue(row, column) {
+        if (!row || column == null || column === '') return undefined;
+
+        const name = String(column);
+        const candidates = [
+            name,
+            name.charAt(0).toLowerCase() + name.slice(1),
+            name.charAt(0).toUpperCase() + name.slice(1)
+        ];
+
+        for (const key of candidates) {
+            if (Object.prototype.hasOwnProperty.call(row, key) && row[key] !== undefined && row[key] !== null) {
+                return row[key];
+            }
+        }
+
+        const matchedKey = Object.keys(row).find(key => key.toLowerCase() === name.toLowerCase());
+        return matchedKey ? row[matchedKey] : undefined;
+    }
+
     window.FilterBar = {
         bind,
         bindField,
@@ -215,6 +235,7 @@
         wrapControlHtml,
         wrapFilterField,
         syncFieldClearBtn,
-        syncFieldsInBar
+        syncFieldsInBar,
+        getQueryRowValue
     };
 })();

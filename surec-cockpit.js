@@ -79,14 +79,16 @@ function mapKokpitKatmanlar(kokpit) {
             durum: row.durum || 'not-started',
             durumMetni: row.durumMetni || 'Not Started'
         }));
-        const kayitlar = (k.kayitlar || []).map(row => ({
-            targetTableName: row.targetTableName || '',
-            dataDate: row.dataDate || null,
-            executionStartTime: row.executionStartTime || null,
-            executionEndTime: row.executionEndTime || null,
-            sureDakika: row.sureDakika ?? null,
-            executionRecordCount: row.executionRecordCount ?? null,
-            errorMessageText: row.errorMessageText || null
+        const kayitlar = (k.kayitlar || k.Kayitlar || []).map(row => ({
+            targetTableName: row.targetTableName || row.TargetTableName || '',
+            durum: row.durum || row.Durum || 'not-started',
+            durumMetni: row.durumMetni || row.DurumMetni || 'Not Started',
+            dataDate: row.dataDate || row.DataDate || null,
+            executionStartTime: row.executionStartTime || row.ExecutionStartTime || null,
+            executionEndTime: row.executionEndTime || row.ExecutionEndTime || null,
+            sureDakika: row.sureDakika ?? row.SureDakika ?? null,
+            executionRecordCount: row.executionRecordCount ?? row.ExecutionRecordCount ?? null,
+            errorMessageText: row.errorMessageText || row.ErrorMessageText || null
         }));
 
         return {
@@ -137,12 +139,20 @@ function isGlobalFilterActive() {
 }
 
 function isOzetRowVisible(row) {
+    return isFlowStatusRowVisible(row);
+}
+
+function isFlowStatusRowVisible(row) {
     if (!isGlobalFilterActive()) return true;
-    return COCKPIT_GLOBAL_STATUS_FILTERS.has(row.durumMetni);
+    return COCKPIT_GLOBAL_STATUS_FILTERS.has(row.durumMetni || 'Not Started');
 }
 
 function getVisibleOzetRows(col) {
     return (col?.ozetSatirlar || []).filter(isOzetRowVisible);
+}
+
+function getVisibleKayitlar(col) {
+    return (col?.kayitlar || []).filter(isFlowStatusRowVisible);
 }
 
 function gunlukAkisStatusChipClass(durumMetni, durum) {
@@ -364,18 +374,29 @@ function buildFlowLayerTile(col) {
         </article>`;
 }
 
+function resolveFlowKayitDataDate(row) {
+    return row?.dataDate || getGunlukAkisDate();
+}
+
 function buildFlowLayerDetail(col) {
-    const kayitlar = col.kayitlar || [];
+    const allKayitlar = col.kayitlar || [];
+    const kayitlar = getVisibleKayitlar(col);
     const rows = kayitlar.map(row => `
         <tr>
-            <td title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
-            <td>${escapeDatasetHtml(row.dataDate ? formatDatasetDate(row.dataDate) : '—')}</td>
+            <td class="flow-detail-target" title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
+            <td class="flow-detail-statu">
+                <span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni || 'Not Started')}</span>
+            </td>
+            <td>${escapeDatasetHtml(formatDatasetDate(resolveFlowKayitDataDate(row)))}</td>
             <td>${formatGunlukAkisDateTime(row.executionStartTime)}</td>
             <td>${formatGunlukAkisDateTime(row.executionEndTime)}</td>
             <td>${formatGunlukAkisMinutes(row.sureDakika)}</td>
             <td>${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
-            <td class="flow-detail-error" title="${escapeDatasetHtml(row.errorMessageText || '')}">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
+            <td class="flow-detail-error">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
         </tr>`).join('');
+    const emptyMessage = allKayitlar.length > 0 && !kayitlar.length
+        ? 'Seçili statülere uygun kayıt yok.'
+        : 'Kayıt bulunamadı.';
 
     return `
         <div class="flow-layer-detail theme-${col.theme}" data-flow-detail="${escapeDatasetHtml(col.name)}">
@@ -395,6 +416,7 @@ function buildFlowLayerDetail(col) {
                     <thead>
                         <tr>
                             <th>Hedef Tablo</th>
+                            <th>Statü</th>
                             <th>Veri Tarihi</th>
                             <th>Başlangıç</th>
                             <th>Bitiş</th>
@@ -403,7 +425,7 @@ function buildFlowLayerDetail(col) {
                             <th>Hata</th>
                         </tr>
                     </thead>
-                    <tbody>${rows || '<tr><td colspan="7" class="flow-layer-empty">Kayıt bulunamadı.</td></tr>'}</tbody>
+                    <tbody>${rows || `<tr><td colspan="8" class="flow-layer-empty">${emptyMessage}</td></tr>`}</tbody>
                 </table>
             </div>
         </div>`;
@@ -527,7 +549,9 @@ function updateGlobalFilterCounts() {
 }
 
 function refreshAllCockpitColumns() {
-    if (!cockpitFocusLayer) {
+    if (cockpitFocusLayer) {
+        rerenderSurecCockpit();
+    } else {
         const grid = document.getElementById('cockpitFlowGrid');
         if (grid) {
             grid.innerHTML = buildFlowLayerGridHtml();
@@ -976,7 +1000,7 @@ function buildDatasetListeContent() {
                     <i class="ti ti-search" aria-hidden="true"></i>
                     <input type="search" id="dsListSearch" placeholder="Dataset, model, staging, statü ara…">
                 </label>
-                <span class="ds-table-count">${count} kayıt</span>
+                ${tableCountHtml(count, count, { wrapId: 'dsListCountWrap' })}
             </div>
             <div class="vs-results-wrap is-fill has-data">
                 <table class="vs-results-table" id="dsListTable">
@@ -1090,7 +1114,6 @@ function buildDatasetStatusContent() {
                     <div class="ds-table-toolbar-title">
                         <h4>Dataset Durumları</h4>
                     </div>
-                    <span class="ds-table-caption">Status · GROUP BY</span>
                 </div>
                 <div class="vs-results-wrap has-data">
                     <table class="vs-results-table ds-status-compact-table">
@@ -1109,7 +1132,6 @@ function buildDatasetStatusContent() {
                     <div class="ds-table-toolbar-title">
                         <h4>Data Model × Statü</h4>
                     </div>
-                    <span class="ds-table-caption">Data_Model · Status</span>
                 </div>
                 <div class="vs-results-wrap has-data">
                     <table class="vs-results-table ds-status-compact-table">
@@ -1266,7 +1288,6 @@ function refreshDatasetCatalogContent(shell) {
 function bindDatasetListSearch(root) {
     const input = root.querySelector('#dsListSearch');
     const tbody = root.querySelector('#dsListTable tbody');
-    const countEl = root.querySelector('.ds-table-count');
     if (!input || !tbody) return;
 
     const applySearch = () => {
@@ -1274,14 +1295,24 @@ function bindDatasetListSearch(root) {
         const filtered = !term
             ? DATASET_LIST_ROWS
             : DATASET_LIST_ROWS.filter(row =>
-                [row.datasetName, row.dataModel, row.stagingTableName, row.status, row.layer, row.tdAnalyst, row.tester]
-                    .some(value => String(value || '').toLowerCase().includes(term))
+                [
+                    row.datasetName,
+                    row.descriptionScope,
+                    row.dataModel,
+                    row.stagingTableName,
+                    row.status,
+                    row.statusResponsible,
+                    row.layer,
+                    row.tdAnalyst,
+                    row.tester,
+                    row.ktResponsibleItUnit,
+                    row.ktSpName,
+                    row.note
+                ].some(value => String(value || '').toLowerCase().includes(term))
             );
 
         tbody.innerHTML = buildDatasetListRows(filtered);
-        if (countEl) {
-            countEl.textContent = `${filtered.length} kayıt`;
-        }
+        updateTableCount(root, filtered.length, DATASET_LIST_ROWS.length, { wrapId: 'dsListCountWrap' });
     };
 
     window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
@@ -1741,31 +1772,23 @@ function renderTaskListesiRows(rows) {
         </tr>`).join('');
 }
 
-function formatTaskListCountInner(filtered, total) {
-    const isFiltered = filtered !== total;
-    return `
-            <span class="tl-count${isFiltered ? ' is-filtered' : ''}" role="status" aria-live="polite">
-                <span class="tl-count-block">
-                    <span class="tl-count-label">Gösterilen</span>
-                    <strong class="tl-count-value">${filtered}</strong>
-                </span>
-                <span class="tl-count-divider" aria-hidden="true">/</span>
-                <span class="tl-count-block">
-                    <span class="tl-count-label">Toplam</span>
-                    <strong class="tl-count-value">${total}</strong>
-                </span>
-            </span>`;
+function tableCountHtml(filtered, total, options = {}) {
+    if (window.TableCount?.formatHtml) {
+        return window.TableCount.formatHtml(filtered, total, options);
+    }
+    return `<span>${filtered} kayıt</span>`;
+}
+
+function updateTableCount(root, filtered, total, options = {}) {
+    window.TableCount?.set(root, filtered, total, options);
 }
 
 function formatTaskListCountHtml(filtered, total) {
-    return `<div class="tl-count-wrap" id="tlCountWrap">${formatTaskListCountInner(filtered, total)}</div>`;
+    return tableCountHtml(filtered, total, { wrapId: 'tlCountWrap' });
 }
 
 function updateTaskListCount(root, filtered, total) {
-    const wrap = root.querySelector('#tlCountWrap');
-    if (wrap) {
-        wrap.innerHTML = formatTaskListCountInner(filtered, total);
-    }
+    updateTableCount(root, filtered, total, { wrapId: 'tlCountWrap' });
 }
 
 function buildTaskListesiHTML() {

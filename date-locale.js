@@ -61,6 +61,35 @@
         return type === 'date' || type === 'month' || type === 'datetime-local';
     }
 
+    function decorateDateInput(instance, sourceInput) {
+        const altInput = instance?.altInput;
+        if (!altInput || altInput.closest('.date-input-wrap')) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'date-input-wrap';
+        altInput.classList.add('date-input-field');
+
+        const parent = altInput.parentNode;
+        parent.insertBefore(wrap, altInput);
+        wrap.appendChild(altInput);
+
+        const label = sourceInput.labels?.[0]
+            || (sourceInput.id ? document.querySelector(`label[for="${sourceInput.id}"]`) : null);
+        const ariaLabel = sourceInput.getAttribute('aria-label')
+            || label?.textContent?.trim()
+            || '';
+        if (ariaLabel && !altInput.getAttribute('aria-label')) {
+            altInput.setAttribute('aria-label', ariaLabel);
+        }
+
+        wrap.addEventListener('mousedown', event => {
+            if (event.target === altInput) return;
+            event.preventDefault();
+            instance.open();
+            altInput.focus();
+        });
+    }
+
     function buildOptions(input) {
         const type = (input.getAttribute('type') || 'date').toLowerCase();
         const locale = window.flatpickr?.l10ns?.tr || 'tr';
@@ -69,7 +98,10 @@
             allowInput: true,
             disableMobile: true,
             altInput: true,
-            monthSelectorType: 'dropdown'
+            monthSelectorType: 'dropdown',
+            onReady(_selectedDates, _dateStr, instance) {
+                decorateDateInput(instance, input);
+            }
         };
 
         if (type === 'month') {
@@ -77,6 +109,7 @@
                 ...common,
                 altFormat: 'F Y',
                 dateFormat: 'Y-m',
+                placeholder: 'Ay seçin',
                 plugins: [
                     new window.monthSelectPlugin({
                         shorthand: false,
@@ -93,14 +126,16 @@
                 enableTime: true,
                 time_24hr: true,
                 altFormat: 'd.m.Y H:i',
-                dateFormat: 'Y-m-d H:i'
+                dateFormat: 'Y-m-d H:i',
+                placeholder: 'GG.AA.YYYY SS:DD'
             };
         }
 
         return {
             ...common,
             altFormat: 'd.m.Y',
-            dateFormat: 'Y-m-d'
+            dateFormat: 'Y-m-d',
+            placeholder: 'GG.AA.YYYY'
         };
     }
 
@@ -118,6 +153,7 @@
 
         if (input._flatpickr) {
             input.dataset.fpBound = '1';
+            decorateDateInput(input._flatpickr, input);
             return;
         }
 

@@ -60,22 +60,53 @@
         return text === '1' || text === 'true' || text === 'y' || text === 'evet';
     }
 
+    function getVkRowValue(row, column) {
+        return window.FilterBar?.getQueryRowValue(row, column);
+    }
+
+    function normalizeVkStatusLabel(value) {
+        const text = String(value ?? '').trim().toLowerCase();
+        if (['active', 'aktif', '1', 'true', 'y', 'evet'].includes(text)) return 'aktif';
+        if (['inactive', 'pasif', '0', 'false', 'hayır', 'hayir', 'n'].includes(text)) return 'pasif';
+        return text;
+    }
+
+    function matchVkStatusFilter(cellValue, filterText) {
+        const cell = String(cellValue ?? '').toLowerCase();
+        const filter = filterText.toLowerCase().trim();
+        if (!filter) return true;
+        if (cell.includes(filter)) return true;
+
+        const cellNorm = normalizeVkStatusLabel(cell);
+        const filterNorm = normalizeVkStatusLabel(filter);
+        if (!cellNorm || !filterNorm) return false;
+        return cellNorm === filterNorm
+            || cellNorm.includes(filterNorm)
+            || filterNorm.includes(cellNorm);
+    }
+
     function filterVkKurallarRows(rows, filters) {
         return (rows || []).filter(row => {
-            if (filters.qualityLevel) {
-                const level = String(row.QualityLevel ?? '').toLowerCase();
-                if (!level.includes(filters.qualityLevel.toLowerCase())) return false;
+            for (const field of VK_KURALLAR_FILTER_FIELDS) {
+                const filterVal = filters[field.key];
+                if (!filterVal) continue;
+
+                if (field.type === 'active') {
+                    const active = isVkRowActive(getVkRowValue(row, field.column));
+                    if (filterVal === '1' && !active) return false;
+                    if (filterVal === '0' && active) return false;
+                    continue;
+                }
+
+                const cellVal = getVkRowValue(row, field.column);
+                if (field.key === 'status') {
+                    if (!matchVkStatusFilter(cellVal, filterVal)) return false;
+                    continue;
+                }
+
+                const haystack = String(cellVal ?? '').toLowerCase();
+                if (!haystack.includes(filterVal.toLowerCase())) return false;
             }
-            if (filters.ruleDesc) {
-                const desc = String(row.RuleDesc ?? '').toLowerCase();
-                if (!desc.includes(filters.ruleDesc.toLowerCase())) return false;
-            }
-            if (filters.status) {
-                const status = String(row.Status ?? '').toLowerCase();
-                if (!status.includes(filters.status.toLowerCase())) return false;
-            }
-            if (filters.activeFlag === '1' && !isVkRowActive(row.ActiveFlag)) return false;
-            if (filters.activeFlag === '0' && isVkRowActive(row.ActiveFlag)) return false;
             return true;
         });
     }
@@ -127,16 +158,24 @@
         </div>`;
     }
 
-    function buildVkKurallarMeta(data, rows) {
-        const activeCount = rows.filter(r => isVkRowActive(r.ActiveFlag)).length;
+    function buildVkKurallarCountOptions(data, rows) {
+        const activeCount = rows.filter(r => isVkRowActive(getVkRowValue(r, 'ActiveFlag'))).length;
         const total = data.satirSayisi ?? (data.satirlar || []).length;
         const shown = rows.length;
-        let meta = Object.keys(vkKurallarFilters).length
-            ? `${shown.toLocaleString('tr-TR')}/${total.toLocaleString('tr-TR')} kural`
-            : `${total.toLocaleString('tr-TR')} kural`;
-        if (data.kisitlandi) meta += ` · ilk ${data.maxSatir} satır`;
-        meta += ` · ${activeCount} aktif`;
-        return meta;
+        const notes = [`${window.TableCount?.formatNumber(activeCount) ?? activeCount} aktif`];
+        if (data.kisitlandi) {
+            notes.unshift(`ilk ${window.TableCount?.formatNumber(data.maxSatir) ?? data.maxSatir} satır`);
+        }
+        return {
+            shown,
+            total,
+            footnote: notes.join(' · ')
+        };
+    }
+
+    function renderVkKurallarCount(root, data, rows) {
+        const { shown, total, footnote } = buildVkKurallarCountOptions(data, rows);
+        window.TableCount?.set(root, shown, total, { wrapId: 'vkKurallarMeta', footnote });
     }
 
     function applyVkKurallarFilter(root) {
@@ -154,7 +193,9 @@
         }
 
         const metaEl = root.querySelector('#vkKurallarMeta');
-        if (metaEl) metaEl.textContent = buildVkKurallarMeta(data, filtered);
+        if (metaEl) {
+            renderVkKurallarCount(root, data, filtered);
+        }
     }
 
     function clearVkKurallarFilters(root) {
@@ -167,7 +208,10 @@
     }
 
     function bindVkKurallarPage(root) {
-        window.FilterBar?.bind(root.querySelector('#vkKurallarFilterPanel'), {
+        const panel = root.querySelector('#vkKurallarFilterPanel');
+        if (!panel) return;
+
+        window.FilterBar?.bind(panel, {
             bindKey: 'vk-kurallar',
             fieldSelector: '.vk-filter-input',
             debounceMs: 300,
@@ -217,8 +261,9 @@
 
         const bodyRows = rows.map(row => {
             const cells = cols.map(col => {
-                const display = formatCell(col, row[col]);
-                const title = row[col] === null || row[col] === undefined ? '' : String(row[col]);
+                const raw = getVkRowValue(row, col);
+                const display = formatCell(col, raw);
+                const title = raw === null || raw === undefined ? '' : String(raw);
                 return `<td title="${escapeHtml(title)}">${display}</td>`;
             }).join('');
             return `<tr>${cells}</tr>`;
@@ -279,7 +324,11 @@
         const cols = data.kolonlar || [];
         const allRows = data.satirlar || [];
         const rows = filterVkKurallarRows(allRows, vkKurallarFilters);
-        const meta = buildVkKurallarMeta(data, rows);
+        const total = data.satirSayisi ?? allRows.length;
+        const countHtml = window.TableCount?.formatHtml(rows.length, total, {
+            wrapId: 'vkKurallarMeta',
+            footnote: buildVkKurallarCountOptions(data, rows).footnote
+        }) || '';
 
         return `<section class="vk-layout">
             <div class="vk-head">
@@ -289,7 +338,7 @@
             <div class="vk-card">
                 <div class="vk-card-head">
                     <h4>Kural Listesi</h4>
-                    <span id="vkKurallarMeta">${escapeHtml(meta)}</span>
+                    ${countHtml}
                 </div>
                 ${buildVkKurallarFilterBar()}
                 <div class="vk-scroll vk-kurallar-scroll">
@@ -325,9 +374,12 @@
 
         const cols = data.kolonlar || [];
         const rows = data.satirlar || [];
-
-        let meta = `${data.satirSayisi ?? rows.length} kayıt`;
-        if (data.kisitlandi) meta += ` · ilk ${data.maxSatir} satır gösterildi`;
+        const total = data.satirSayisi ?? rows.length;
+        const footnote = data.kisitlandi ? `ilk ${data.maxSatir} satır gösterildi` : '';
+        const countHtml = window.TableCount?.formatHtml(rows.length, total, {
+            wrapId: 'vkGunlukMeta',
+            footnote
+        }) || '';
 
         const today = new Date().toLocaleDateString('tr-TR');
 
@@ -339,7 +391,7 @@
             <div class="vk-card">
                 <div class="vk-card-head">
                     <h4>Başarısız Sonuçlar</h4>
-                    <span>${meta}</span>
+                    ${countHtml}
                 </div>
                 <div class="vk-scroll">
                     ${buildResultTable(cols, rows, formatGunlukCell, GUNLUK_COLUMN_LABELS)}
