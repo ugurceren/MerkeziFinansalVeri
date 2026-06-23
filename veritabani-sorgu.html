@@ -183,14 +183,17 @@
 
                     <div class="vs-query-header">
                         <label class="vs-query-label" for="vsQueryInput">SQL sorgusu</label>
-                        <button type="button" class="vs-execute-btn" id="vsRunBtn" title="Sorguyu çalıştır (Ctrl+Enter)">
-                            <span class="vs-execute-icon" aria-hidden="true">
-                                <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M4 2.5v11l9-5.5-9-5.5z"/>
-                                </svg>
-                            </span>
-                            <span>Çalıştır</span>
-                        </button>
+                        <div class="vs-execute-wrap">
+                            <button type="button" class="vs-execute-btn" id="vsRunBtn" title="Sorguyu çalıştır">
+                                <span class="vs-execute-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 2.5v11l9-5.5-9-5.5z"/>
+                                    </svg>
+                                </span>
+                                <span>Çalıştır</span>
+                            </button>
+                            <span class="vs-execute-shortcut" id="vsRunShortcut" aria-hidden="true"></span>
+                        </div>
                     </div>
                     <textarea id="vsQueryInput" class="vs-query-input" spellcheck="false" placeholder="SELECT .."></textarea>
 

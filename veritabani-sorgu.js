@@ -2,6 +2,15 @@
     const CUSTOM_CONN_KEY = 'vs_custom_connections';
     const CUSTOM_PREFIX = '__custom__:';
 
+    const RUN_QUERY_SHORTCUT = {
+        matches(e) {
+            return (e.ctrlKey || e.metaKey) && e.key === 'Enter';
+        },
+        label() {
+            return /Mac|iPhone|iPad/i.test(navigator.userAgent) ? '⌘Enter' : 'Ctrl+Enter';
+        }
+    };
+
     let ayarlar = null;
     let selectedKatman = 'TDSTG';
     let customConnections = [];
@@ -283,13 +292,22 @@
     }
 
     function bindEvents() {
-        document.getElementById('vsRunBtn')?.addEventListener('click', runQuery);
+        const shortcutLabel = RUN_QUERY_SHORTCUT.label();
+        const runBtn = document.getElementById('vsRunBtn');
+        const shortcutEl = document.getElementById('vsRunShortcut');
+
+        if (runBtn) {
+            runBtn.title = `Sorguyu çalıştır (${shortcutLabel})`;
+            runBtn.addEventListener('click', runQuery);
+        }
+        if (shortcutEl) shortcutEl.textContent = shortcutLabel;
+
         document.getElementById('vsKatmanSelect')?.addEventListener('change', e => {
             selectedKatman = e.target.value;
             testConnection();
         });
         document.getElementById('vsQueryInput')?.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (RUN_QUERY_SHORTCUT.matches(e)) {
                 e.preventDefault();
                 runQuery();
             }

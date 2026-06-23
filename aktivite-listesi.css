@@ -9,9 +9,11 @@
 }
 
 .al-filters {
-    padding: 10px 16px 12px;
+    padding: 14px 16px 12px;
     border-bottom: 0.5px solid var(--rb-border);
     flex-shrink: 0;
+    background: var(--rb-card);
+    border-radius: 12px 12px 0 0;
 }
 
 .al-filter-row {
@@ -38,13 +40,6 @@
     width: 100%;
 }
 
-.al-filter-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding-bottom: 1px;
-}
-
 .al-panel .activity-list {
     flex: 1;
     min-height: 0;
@@ -61,10 +56,4 @@
     color: #f76379;
     border: 0.5px solid rgba(247, 99, 121, 0.25);
     flex-shrink: 0;
-}
-
-.filter-btn-secondary {
-    background: var(--rb-filter-bg);
-    color: var(--rb-text);
-    border: 0.5px solid var(--rb-border);
 }

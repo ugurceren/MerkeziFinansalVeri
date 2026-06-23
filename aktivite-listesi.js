@@ -1,4 +1,6 @@
 (function () {
+    let loadTimer = null;
+
     function escapeHtml(str) {
         return String(str ?? '')
             .replace(/&/g, '&amp;')
@@ -96,10 +98,15 @@
         if (end) end.value = dates.end;
     }
 
+    function scheduleLoadActivities() {
+        clearTimeout(loadTimer);
+        loadTimer = setTimeout(() => {
+            loadActivities();
+        }, 200);
+    }
+
     async function loadActivities() {
         const listEl = document.getElementById('alActivityList');
-        const countHost = document.getElementById('alRecordCount');
-        const clearAllBtn = document.getElementById('alClearAllBtn');
         if (!listEl) return;
 
         let filters;
@@ -111,27 +118,16 @@
         }
 
         setStatus('');
-        if (clearAllBtn) clearAllBtn.disabled = true;
-        if (countHost) countHost.textContent = 'Yükleniyor…';
 
         try {
             const items = await ApiClient.getAktiviteLog(filters);
             listEl.innerHTML = renderActivityRows(items);
-            const count = items.length;
-            if (window.TableCount?.set) {
-                window.TableCount.set(countHost, count, count, { wrapId: 'alRecordCount' });
-            } else if (countHost) {
-                countHost.textContent = `${count} kayıt`;
-            }
         } catch (err) {
             const msg = err?.message || String(err);
             setStatus(msg.includes('Failed to fetch')
                 ? `API'ye ulaşılamıyor. Varsayılan: ${ApiClient.baseUrl}`
                 : msg);
             listEl.innerHTML = '<li class="activity-item"><div class="activity-body"><span>Aktiviteler yüklenemedi.</span></div></li>';
-            if (countHost) countHost.textContent = '—';
-        } finally {
-            if (clearAllBtn) clearAllBtn.disabled = false;
         }
     }
 
@@ -141,17 +137,8 @@
             loadActivities();
         });
 
-        window.FilterBar?.bind(document.getElementById('alFilterForm'), {
-            bindKey: 'aktivite',
-            clearAllId: 'alClearAllBtn',
-            onFilter: loadActivities,
-            onClearAll: () => {
-                resetFilters();
-                setStatus('');
-                window.FilterBar?.syncFieldsInBar(document.getElementById('alFilterForm'));
-                loadActivities();
-            }
-        });
+        document.getElementById('alBeginDate')?.addEventListener('change', scheduleLoadActivities);
+        document.getElementById('alEndDate')?.addEventListener('change', scheduleLoadActivities);
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

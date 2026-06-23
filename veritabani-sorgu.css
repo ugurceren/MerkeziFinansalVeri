@@ -95,6 +95,23 @@
     border-radius: 6px;
 }
 
+.vs-execute-wrap {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.vs-execute-shortcut {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--rb-text-muted);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    user-select: none;
+}
+
 .vs-execute-btn {
     display: inline-flex;
     align-items: center;
