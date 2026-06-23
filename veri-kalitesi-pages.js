@@ -254,6 +254,13 @@
         return escapeHtml(String(val));
     }
 
+    function isVkWrapColumn(col) {
+        const key = String(col || '');
+        if (/flag$/i.test(key) || key === 'ActiveFlag') return false;
+        if (/^(ruleid|qualitylevel|rulecode)$/i.test(key)) return false;
+        return true;
+    }
+
     function buildResultTable(cols, rows, formatCell, columnLabels) {
         const headerCells = cols.map(c =>
             `<th>${escapeHtml(columnLabels[c] || c)}</th>`
@@ -264,14 +271,15 @@
                 const raw = getVkRowValue(row, col);
                 const display = formatCell(col, raw);
                 const title = raw === null || raw === undefined ? '' : String(raw);
-                return `<td title="${escapeHtml(title)}">${display}</td>`;
+                const cellClass = isVkWrapColumn(col) ? 'vk-cell-wrap' : 'vk-cell-nowrap';
+                return `<td class="${cellClass}" title="${escapeHtml(title)}">${display}</td>`;
             }).join('');
             return `<tr>${cells}</tr>`;
         }).join('');
 
         const emptyRow = `<tr><td colspan="${cols.length || 1}">Kayıt bulunamadı.</td></tr>`;
 
-        return `<table class="vk-table">
+        return `<table class="vk-table vk-table--wrap">
             <thead><tr>${headerCells}</tr></thead>
             <tbody>${bodyRows || emptyRow}</tbody>
         </table>`;

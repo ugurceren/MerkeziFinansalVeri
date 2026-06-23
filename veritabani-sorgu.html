@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="theme-menu.css">
     <link rel="stylesheet" href="query-results-table.css">
+    <link rel="stylesheet" href="veritabani-baglantisi.css">
     <link rel="stylesheet" href="veritabani-sorgu.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
@@ -172,13 +173,19 @@
             <div class="vs-layout">
                 <div class="vs-workspace">
                     <div class="vs-controls">
-                        <span class="vs-katman-label" for="vsKatmanSelect">Katman</span>
-                        <select id="vsKatmanSelect" class="vs-katman-select" aria-label="Veritabanı katmanı"></select>
-                        <button type="button" class="rbtn vs-action-btn" id="vsTestBtn">Bağlantıyı Test Et</button>
-                        <div class="vs-status">
-                            <span class="vs-status-dot" id="vsStatusDot" aria-hidden="true"></span>
-                            <span id="vsStatusText">API bağlantısı kontrol ediliyor…</span>
+                        <div class="vs-controls-left">
+                            <span class="vs-katman-label" for="vsKatmanSelect">Katman</span>
+                            <select id="vsKatmanSelect" class="vs-katman-select" aria-label="Veritabanı katmanı"></select>
+                            <button type="button" class="rbtn vs-action-btn" id="vsTestBtn">Bağlantıyı Test Et</button>
+                            <div class="vs-status">
+                                <span class="vs-status-dot" id="vsStatusDot" aria-hidden="true"></span>
+                                <span id="vsStatusText">API bağlantısı kontrol ediliyor…</span>
+                            </div>
                         </div>
+                        <button type="button" class="vs-new-conn-btn" id="vsNewConnBtn">
+                            <i class="ti ti-plus" aria-hidden="true"></i>
+                            <span>Yeni Bağlantı</span>
+                        </button>
                     </div>
 
 
@@ -206,6 +213,58 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vs-modal" id="vsConnModal" hidden aria-hidden="true">
+        <div class="vs-modal-backdrop" data-vs-modal-close></div>
+        <div class="vs-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vsConnModalTitle">
+            <header class="vs-modal-header">
+                <h3 id="vsConnModalTitle">Yeni Bağlantı</h3>
+                <button type="button" class="vs-modal-close" data-vs-modal-close aria-label="Kapat">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="vs-modal-body">
+                <article class="dbc-panel theme-main vs-conn-panel" data-vs-conn-panel>
+                    <div class="dbc-panel-body">
+                        <div class="dbc-field">
+                            <label for="vsConnEtiket">Bağlantı adı</label>
+                            <input type="text" id="vsConnEtiket" data-conn-field="etiket" placeholder="Örn. PASIFIK — TDUTIL">
+                        </div>
+                        <div class="dbc-field">
+                            <label for="vsConnServer">Sunucu</label>
+                            <input type="text" id="vsConnServer" data-conn-field="sunucu" placeholder="PASIFIK veya srvdev\PASIFIK">
+                        </div>
+                        <div class="dbc-row">
+                            <div class="dbc-field">
+                                <label for="vsConnDatabase">Veritabanı</label>
+                                <input type="text" id="vsConnDatabase" data-conn-field="veritabani" placeholder="TDUTIL">
+                            </div>
+                            <div class="dbc-field">
+                                <label for="vsConnPort">Port</label>
+                                <input type="text" id="vsConnPort" data-conn-field="port" value="1433">
+                            </div>
+                        </div>
+                        <div class="dbc-field">
+                            <label for="vsConnAuth">Kimlik Doğrulama</label>
+                            <select id="vsConnAuth" data-conn-field="auth">
+                                <option value="windows" selected>Windows (Entegre)</option>
+                                <option value="sql">SQL Server</option>
+                            </select>
+                        </div>
+                        <div class="dbc-field" data-conn-sql-user-wrap style="display:none">
+                            <label for="vsConnSqlUser">SQL Kullanıcı Adı</label>
+                            <input type="text" id="vsConnSqlUser" data-conn-field="sqlUser" placeholder="sa veya uygulama kullanıcısı">
+                        </div>
+                        <p class="dbc-test-msg" data-conn-test-msg role="status" hidden></p>
+                        <div class="dbc-actions">
+                            <button type="button" class="dbc-test-btn" data-conn-test>Bağlantıyı Test Et</button>
+                            <button type="button" class="dbc-save-btn" data-conn-save>Kaydet</button>
+                        </div>
+                    </div>
+                </article>
             </div>
         </div>
     </div>

@@ -207,7 +207,8 @@
             bodyEl: body,
             cols,
             rows: displayRows,
-            getColumnLabel: columnLabel
+            getColumnLabel: columnLabel,
+            wrapCells: true
         });
 
         if (timeEl) {

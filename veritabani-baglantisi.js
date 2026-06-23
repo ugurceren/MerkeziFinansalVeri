@@ -107,7 +107,6 @@
                     </div>
                 </div>
             </article>
-            <p class="dbc-hint">Bağlantı bilgileri sunucu tarafında (cfg.VeriKaynagi) saklanır. appsettings.json içindeki TdConnections değerleri ilk yüklemede varsayılan olarak uygulanır.</p>
             <div class="dbc-footer">
                 <span class="dbc-footer-msg" id="dbcSaveMsg" role="status">Kaydedildi</span>
             </div>

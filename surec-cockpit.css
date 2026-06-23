@@ -484,26 +484,17 @@
     vertical-align: middle;
 }
 
-.flow-layer-detail-table td.flow-detail-target {
-    max-width: min(280px, 28vw);
-    white-space: normal;
-    word-break: break-word;
-    vertical-align: top;
-}
-
 .flow-layer-detail-table td.flow-detail-error {
-    max-width: min(520px, 42vw);
     min-width: 200px;
-    white-space: normal;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    overflow: auto;
+    max-width: min(520px, 42vw);
     max-height: 180px;
-    vertical-align: top;
+    overflow: auto;
     color: #ef4444;
     font-size: 11px;
-    line-height: 1.45;
-    text-overflow: clip;
+}
+
+.flow-layer-detail-table td.flow-detail-target {
+    max-width: min(280px, 28vw);
 }
 
 @media (max-width: 1500px) {
@@ -1766,30 +1757,24 @@
 }
 
 .ds-page-head {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
     min-height: 72px;
     padding: 4px 2px 8px;
     flex-shrink: 0;
-    flex-wrap: wrap;
-}
-
-.ds-page-head-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-    flex: 1 1 auto;
 }
 
 .ds-page-head-text {
+    grid-column: 1;
+    justify-self: start;
     display: flex;
     align-items: baseline;
     gap: 10px;
     flex-wrap: wrap;
     min-width: 0;
+    max-width: 100%;
 }
 
 .ds-page-head-text h3 {
@@ -1808,16 +1793,19 @@
 }
 
 .ds-page-head-toolbar {
+    grid-column: 2;
+    justify-self: center;
     flex-shrink: 0;
 }
 
 .ds-page-head-summary {
+    grid-column: 3;
+    justify-self: end;
     flex-shrink: 0;
     min-width: 168px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    margin-left: auto;
 }
 
 .ds-view-toolbar {
@@ -2052,10 +2040,7 @@
 .ds-status-model-card .ds-status-compact-table th:nth-child(1),
 .ds-status-model-card .ds-status-compact-table td:nth-child(1) {
     width: auto;
-    max-width: 420px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: min(420px, 36vw);
 }
 
 .ds-status-model-card .ds-status-compact-table th:nth-child(2),
@@ -2071,11 +2056,7 @@
 }
 
 .ds-status-model-card .vs-results-table td.ds-model-name-col {
-    max-width: 420px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    word-break: normal;
+    max-width: min(420px, 36vw);
 }
 
 .ds-status-compact-table .ds-status-badge {
@@ -2143,13 +2124,8 @@
 .ds-table-card .vs-results-table code {
     font-size: 11px;
     color: var(--rb-text-secondary);
-}
-
-.ds-table-card .vs-results-table td.ds-cell-wrap {
     white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    max-width: 420px;
+    word-break: break-word;
 }
 
 .ds-empty-cell {
@@ -2169,14 +2145,9 @@
 }
 
 .domain-detail-panel .vs-results-table .domain-detail-scope {
-    white-space: normal;
-    word-break: break-word;
-    overflow: visible;
-    text-overflow: clip;
     max-width: min(480px, 42vw);
     min-width: 160px;
     font-size: 12px;
-    line-height: 1.45;
     color: var(--rb-text-secondary);
 }
 

@@ -233,6 +233,17 @@ function countGlobalDatasetStatuses() {
     const options = getGlobalFilterOptions();
     const counts = Object.fromEntries(options.map(item => [item.key, 0]));
 
+    if (cockpitFocusLayer) {
+        const col = COCKPIT_COLUMNS.find(column => column.name === cockpitFocusLayer);
+        (col?.kayitlar || []).forEach(row => {
+            const status = row.durumMetni || 'Not Started';
+            if (Object.prototype.hasOwnProperty.call(counts, status)) {
+                counts[status] += 1;
+            }
+        });
+        return counts;
+    }
+
     COCKPIT_COLUMNS.forEach(col => {
         (col.ozetSatirlar || []).forEach(row => {
             if (Object.prototype.hasOwnProperty.call(counts, row.durumMetni)) {
@@ -383,7 +394,7 @@ function buildFlowLayerDetail(col) {
     const kayitlar = getVisibleKayitlar(col);
     const rows = kayitlar.map(row => `
         <tr>
-            <td class="flow-detail-target" title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
+            <td class="flow-detail-target vs-cell-wrap">${escapeDatasetHtml(row.targetTableName)}</td>
             <td class="flow-detail-statu">
                 <span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni || 'Not Started')}</span>
             </td>
@@ -392,7 +403,7 @@ function buildFlowLayerDetail(col) {
             <td>${formatGunlukAkisDateTime(row.executionEndTime)}</td>
             <td>${formatGunlukAkisMinutes(row.sureDakika)}</td>
             <td>${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
-            <td class="flow-detail-error">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
+            <td class="flow-detail-error vs-cell-wrap">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
         </tr>`).join('');
     const emptyMessage = allKayitlar.length > 0 && !kayitlar.length
         ? 'Seçili statülere uygun kayıt yok.'
@@ -412,7 +423,7 @@ function buildFlowLayerDetail(col) {
                 <p>${escapeDatasetHtml(col.role)}</p>
             </header>
             <div class="vs-results-wrap is-fill has-data flow-layer-detail-table-wrap">
-                <table class="vs-results-table flow-layer-detail-table">
+                <table class="vs-results-table vs-results-table--wrap flow-layer-detail-table">
                     <thead>
                         <tr>
                             <th>Hedef Tablo</th>
@@ -785,9 +796,9 @@ function buildDomainDetailRows(datasets) {
     return datasets.map((ds, index) => `
         <tr>
             <td class="domain-detail-num">${index + 1}</td>
-            <td class="domain-detail-name">${escapeDatasetHtml(ds.label)}</td>
-            <td class="domain-detail-scope">${escapeDatasetHtml(ds.descriptionScope || '—')}</td>
-            <td class="domain-detail-staging"><code>${escapeDatasetHtml(ds.stagingTable || '—')}</code></td>
+            <td class="domain-detail-name vs-cell-wrap">${escapeDatasetHtml(ds.label)}</td>
+            <td class="domain-detail-scope vs-cell-wrap">${escapeDatasetHtml(ds.descriptionScope || '—')}</td>
+            <td class="domain-detail-staging vs-cell-wrap"><code>${escapeDatasetHtml(ds.stagingTable || '—')}</code></td>
         </tr>`).join('');
 }
 
@@ -834,7 +845,7 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
                     </label>
                 </div>
                 <div class="vs-results-wrap is-fill has-data">
-                    <table class="vs-results-table">
+                    <table class="vs-results-table vs-results-table--wrap">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -881,13 +892,11 @@ function buildDatasetPageShell(activeView) {
 
     return `<section class="dataset-catalog dataset-view-${activeView}">
         <div class="ds-page-head">
-            <div class="ds-page-head-left">
-                <div class="ds-page-head-text">
-                    <h3>${title}</h3>
-                    <span class="ds-page-head-subtitle">${subtitle}</span>
-                </div>
-                <div class="ds-page-head-toolbar">${buildDatasetViewToolbar(activeView)}</div>
+            <div class="ds-page-head-text">
+                <h3>${title}</h3>
+                <span class="ds-page-head-subtitle">${subtitle}</span>
             </div>
+            <div class="ds-page-head-toolbar">${buildDatasetViewToolbar(activeView)}</div>
             <div class="ds-page-head-summary">${buildDatasetSummaryBlocks()}</div>
         </div>
         <div class="ds-page-content"><div class="ds-loading">Yükleniyor…</div></div>
@@ -974,19 +983,19 @@ function buildDatasetListRows(rows) {
 
     return rows.map(row => `
         <tr>
-            <td>${escapeDatasetHtml(row.datasetName)}</td>
-            <td>${escapeDatasetHtml(row.dataModel)}</td>
-            <td>${escapeDatasetHtml(row.stagingTableName)}</td>
-            <td>${escapeDatasetHtml(row.layer)}</td>
-            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td>${formatDatasetDate(row.statusChangeDate)}</td>
-            <td>${escapeDatasetHtml(row.statusResponsible)}</td>
-            <td>${escapeDatasetHtml(row.tdAnalyst)}</td>
-            <td>${escapeDatasetHtml(row.tester)}</td>
-            <td>${escapeDatasetHtml(row.ktResponsibleItUnit)}</td>
-            <td>${escapeDatasetHtml(row.ktSpName || '—')}</td>
-            <td>${escapeDatasetHtml(row.descriptionScope || '—')}</td>
-            <td>${escapeDatasetHtml(row.note || '—')}</td>
+            <td class="vs-cell-nowrap">${escapeDatasetHtml(row.datasetName)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.dataModel)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.stagingTableName)}</td>
+            <td class="vs-cell-nowrap">${escapeDatasetHtml(row.layer)}</td>
+            <td class="vs-cell-nowrap"><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
+            <td class="vs-cell-nowrap">${formatDatasetDate(row.statusChangeDate)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.statusResponsible)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.tdAnalyst)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.tester)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.ktResponsibleItUnit)}</td>
+            <td class="vs-cell-wrap vs-cell-wrap--kt-sp">${escapeDatasetHtml(row.ktSpName || '—')}</td>
+            <td class="vs-cell-wrap vs-cell-wrap--scope">${escapeDatasetHtml(row.descriptionScope || '—')}</td>
+            <td class="vs-cell-wrap vs-cell-wrap--note">${escapeDatasetHtml(row.note || '—')}</td>
         </tr>`).join('');
 }
 
@@ -1003,7 +1012,7 @@ function buildDatasetListeContent() {
                 ${tableCountHtml(count, count, { wrapId: 'dsListCountWrap' })}
             </div>
             <div class="vs-results-wrap is-fill has-data">
-                <table class="vs-results-table" id="dsListTable">
+                <table class="vs-results-table vs-results-table--wrap" id="dsListTable">
                     <thead>
                         <tr>
                             <th>Dataset</th>
@@ -1095,7 +1104,7 @@ function buildDatasetStatusModelRows(rows) {
 
     return rows.map(row => `
         <tr>
-            <td class="ds-cell-wrap ds-model-name-col">${escapeDatasetHtml(row.dataModel)}</td>
+            <td class="vs-cell-wrap ds-model-name-col">${escapeDatasetHtml(row.dataModel)}</td>
             <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
             <td class="ds-num-col"><strong>${row.adet}</strong></td>
         </tr>`).join('');
@@ -1134,7 +1143,7 @@ function buildDatasetStatusContent() {
                     </div>
                 </div>
                 <div class="vs-results-wrap has-data">
-                    <table class="vs-results-table ds-status-compact-table">
+                    <table class="vs-results-table vs-results-table--wrap ds-status-compact-table">
                         <thead>
                             <tr>
                                 <th>Model</th>
@@ -1761,14 +1770,14 @@ function renderTaskListesiRows(rows) {
     }
     return rows.map(row => `
         <tr>
-            <td>${row.layer}</td>
-            <td>${escapeDatasetHtml(row.task)}</td>
-            <td>${escapeDatasetHtml(row.datasetCode)}</td>
-            <td>${formatAktiflikCell(row.active)}</td>
-            <td>${formatDatasetDate(row.lastExecution)}</td>
-            <td>${formatTransferTypeCell(row)}</td>
-            <td>${escapeDatasetHtml(row.loadPeriodType)}</td>
-            <td>${row.datasetLabel}</td>
+            <td class="vs-cell-nowrap">${row.layer}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.task)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.datasetCode)}</td>
+            <td class="vs-cell-nowrap">${formatAktiflikCell(row.active)}</td>
+            <td class="vs-cell-nowrap">${formatDatasetDate(row.lastExecution)}</td>
+            <td class="vs-cell-wrap">${formatTransferTypeCell(row)}</td>
+            <td class="vs-cell-wrap">${escapeDatasetHtml(row.loadPeriodType)}</td>
+            <td class="vs-cell-wrap">${row.datasetLabel}</td>
         </tr>`).join('');
 }
 
@@ -1808,7 +1817,7 @@ function buildTaskListesiHTML() {
                 ${formatTaskListCountHtml(total, total)}
             </div>
             <div class="vs-results-wrap is-fill has-data" id="tlResultsWrap">
-                <table class="vs-results-table">
+                <table class="vs-results-table vs-results-table--wrap">
                     <thead>
                         <tr>
                             <th>Katman</th>

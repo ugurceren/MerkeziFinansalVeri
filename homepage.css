@@ -714,6 +714,11 @@
     .portal-tree-action {
         flex: 1;
     }
+
+    .portal-view-quick {
+        width: 100%;
+        max-width: 100%;
+    }
 }
 
 /* Portal — hızlı erişim ağaç menüsü */
@@ -992,8 +997,9 @@
 
 .portal-view-quick {
     align-self: flex-start;
-    width: 100%;
-    max-width: 100%;
+    width: 50%;
+    max-width: 50%;
+    min-width: 280px;
     gap: 10px;
 }
 

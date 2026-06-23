@@ -67,12 +67,26 @@ public class VeritabaniSorguController(
         var timeoutSeconds = int.TryParse(configuration["sorguTimeoutSaniye"], out var timeout) ? timeout : 120;
         var katman = string.IsNullOrWhiteSpace(dto.KatmanKodu) ? "TDSTG" : dto.KatmanKodu.Trim();
 
-        var result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
-            katman,
-            dto.Sql,
-            timeoutSeconds,
-            maxRows,
-            cancellationToken);
+        TdQueryResult result;
+        if (TryMapBaglanti(dto.Baglanti, katman, out var baglantiParams))
+        {
+            result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
+                baglantiParams,
+                dto.Sql,
+                timeoutSeconds,
+                maxRows,
+                cancellationToken);
+            katman = FormatLogKatman(katman, dto.Baglanti);
+        }
+        else
+        {
+            result = await tdConnectionService.ExecuteReadOnlyQueryAsync(
+                katman,
+                dto.Sql,
+                timeoutSeconds,
+                maxRows,
+                cancellationToken);
+        }
 
         await TryLogExecutionAsync(katman, result, cancellationToken);
 
@@ -112,6 +126,37 @@ public class VeritabaniSorguController(
             Mesaj = basarili
                 ? "Bağlantı başarılı."
                 : "Bağlantı başarısız. config/td-connections.json dosyasını kontrol edin."
+        });
+    }
+
+    [HttpPost("test-baglanti")]
+    public async Task<ActionResult<VeriKaynagiTestSonucDto>> TestBaglanti(
+        [FromBody] VeritabaniSorguBaglantiDto dto,
+        CancellationToken cancellationToken)
+    {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "veritabani-sorgu", cancellationToken);
+        if (denied is not null) return denied;
+
+        if (!TryMapBaglanti(dto, "OZEL", out var baglantiParams))
+        {
+            return BadRequest(new VeriKaynagiTestSonucDto
+            {
+                KatmanKodu = "OZEL",
+                Basarili = false,
+                Mesaj = "Sunucu ve veritabanı alanları zorunludur."
+            });
+        }
+
+        var basarili = await tdConnectionService.TestConnectionAsync(baglantiParams, cancellationToken);
+        var etiket = string.IsNullOrWhiteSpace(dto.Etiket) ? dto.Veritabani : dto.Etiket.Trim();
+        return Ok(new VeriKaynagiTestSonucDto
+        {
+            KatmanKodu = etiket,
+            Basarili = basarili,
+            Mesaj = basarili
+                ? "Bağlantı başarılı."
+                : "Bağlantı başarısız. Sunucu, veritabanı ve kimlik doğrulama bilgilerini kontrol edin."
         });
     }
 
@@ -156,6 +201,39 @@ public class VeritabaniSorguController(
         {
             logger.LogWarning(ex, "Aktivite logu yazılamadı.");
         }
+    }
+
+    private static bool TryMapBaglanti(
+        VeritabaniSorguBaglantiDto? dto,
+        string katmanKodu,
+        out TdConnectionParams parameters)
+    {
+        parameters = null!;
+        if (dto is null || string.IsNullOrWhiteSpace(dto.Sunucu) || string.IsNullOrWhiteSpace(dto.Veritabani))
+        {
+            return false;
+        }
+
+        parameters = new TdConnectionParams
+        {
+            KatmanKodu = katmanKodu,
+            Sunucu = dto.Sunucu.Trim(),
+            Veritabani = dto.Veritabani.Trim(),
+            Port = dto.Port > 0 ? dto.Port : 1433,
+            KimlikDogrulama = string.IsNullOrWhiteSpace(dto.KimlikDogrulama) ? "windows" : dto.KimlikDogrulama.Trim(),
+            KullaniciAdi = dto.KullaniciAdi
+        };
+        return true;
+    }
+
+    private static string FormatLogKatman(string katmanKodu, VeritabaniSorguBaglantiDto? baglanti)
+    {
+        if (baglanti is null || string.IsNullOrWhiteSpace(baglanti.Etiket))
+        {
+            return $"{katmanKodu} ({baglanti?.Sunucu}/{baglanti?.Veritabani})";
+        }
+
+        return baglanti.Etiket.Trim();
     }
 
     private static VeritabaniSorguSonucDto ToDto(TdQueryResult result, bool kisitlandi, int maxRows)

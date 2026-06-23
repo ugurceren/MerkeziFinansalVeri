@@ -104,7 +104,7 @@
         return matchedKey ? row[matchedKey] : undefined;
     }
 
-    function renderTable({ scrollEl, headEl, bodyEl, cols, rows, getColumnLabel }) {
+    function renderTable({ scrollEl, headEl, bodyEl, cols, rows, getColumnLabel, wrapCells }) {
         destroyActiveTable();
 
         if (!scrollEl || !headEl || !bodyEl || !cols?.length || !rows?.length) {
@@ -114,7 +114,21 @@
         }
 
         const labelFn = typeof getColumnLabel === 'function' ? getColumnLabel : col => col;
+        const table = bodyEl.closest('table');
+        table?.classList.toggle('vs-results-table--wrap', !!wrapCells);
         headEl.innerHTML = `<tr>${cols.map(col => `<th>${escapeHtmlFast(labelFn(col))}</th>`).join('')}</tr>`;
+
+        if (wrapCells) {
+            bodyEl.innerHTML = rows.map(row => {
+                const cells = cols.map(col =>
+                    `<td class="vs-cell-wrap">${escapeHtmlFast(getRowCell(row, col))}</td>`
+                ).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            scrollEl.scrollTop = 0;
+            activeTable = { destroy() {} };
+            return activeTable;
+        }
 
         let rafId = 0;
         let destroyed = false;

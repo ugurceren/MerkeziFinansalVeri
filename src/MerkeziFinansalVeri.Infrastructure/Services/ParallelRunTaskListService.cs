@@ -307,7 +307,7 @@ public sealed class ParallelRunTaskListService(
                     return byteValue;
                 case sbyte sbyteValue:
                     return sbyteValue;
-                case ushort ushortValue when ushortValue <= int.MaxValue:
+                case ushort ushortValue:
                     return ushortValue;
                 case short shortValue:
                     return shortValue;

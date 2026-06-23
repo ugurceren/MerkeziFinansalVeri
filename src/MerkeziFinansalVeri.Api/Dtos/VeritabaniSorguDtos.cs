@@ -1,9 +1,20 @@
 namespace MerkeziFinansalVeri.Api.Dtos;
 
+public sealed class VeritabaniSorguBaglantiDto
+{
+    public string? Etiket { get; set; }
+    public string Sunucu { get; set; } = string.Empty;
+    public string Veritabani { get; set; } = string.Empty;
+    public int Port { get; set; } = 1433;
+    public string KimlikDogrulama { get; set; } = "windows";
+    public string? KullaniciAdi { get; set; }
+}
+
 public sealed class VeritabaniSorguRequestDto
 {
     public string KatmanKodu { get; set; } = "TDSTG";
     public string Sql { get; set; } = string.Empty;
+    public VeritabaniSorguBaglantiDto? Baglanti { get; set; }
 }
 
 public sealed class VeritabaniSorguSonucDto

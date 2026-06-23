@@ -1,6 +1,10 @@
 (function () {
+    const CUSTOM_CONN_KEY = 'vs_custom_connections';
+    const CUSTOM_PREFIX = '__custom__:';
+
     let ayarlar = null;
     let selectedKatman = 'TDSTG';
+    let customConnections = [];
 
     function escapeHtml(str) {
         return String(str ?? '')
@@ -8,6 +12,58 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    function loadCustomConnections() {
+        try {
+            const raw = localStorage.getItem(CUSTOM_CONN_KEY);
+            const list = raw ? JSON.parse(raw) : [];
+            return Array.isArray(list) ? list : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveCustomConnections() {
+        localStorage.setItem(CUSTOM_CONN_KEY, JSON.stringify(customConnections));
+    }
+
+    function isCustomKatman(value) {
+        return String(value || '').startsWith(CUSTOM_PREFIX);
+    }
+
+    function getCustomId(katmanValue) {
+        return String(katmanValue || '').slice(CUSTOM_PREFIX.length);
+    }
+
+    function getCustomConnection(katmanValue) {
+        const id = getCustomId(katmanValue);
+        return customConnections.find(c => c.id === id) || null;
+    }
+
+    function toBaglantiDto(conn) {
+        if (!conn) return null;
+        return {
+            etiket: conn.etiket,
+            sunucu: conn.sunucu,
+            veritabani: conn.veritabani,
+            port: conn.port || 1433,
+            kimlikDogrulama: conn.kimlikDogrulama || 'windows',
+            kullaniciAdi: conn.kullaniciAdi || null
+        };
+    }
+
+    function getSelectedConnection() {
+        const katman = document.getElementById('vsKatmanSelect')?.value || selectedKatman;
+        if (isCustomKatman(katman)) {
+            const conn = getCustomConnection(katman);
+            return {
+                katmanKodu: conn?.etiket || conn?.veritabani || 'OZEL',
+                baglanti: toBaglantiDto(conn),
+                displayName: conn ? `${conn.etiket} — ${conn.veritabani}` : katman
+            };
+        }
+        return { katmanKodu: katman, baglanti: null, displayName: katman };
     }
 
     function setStatus(state, text) {
@@ -89,9 +145,21 @@
                 { katmanKodu: 'TDREPORT', veritabani: 'TDREPORT' }
             ];
 
-        sel.innerHTML = katmanlar.map(k =>
+        const configOptions = katmanlar.map(k =>
             `<option value="${escapeHtml(k.katmanKodu)}" ${k.katmanKodu === selectedKatman ? 'selected' : ''}>${escapeHtml(k.katmanKodu)} — ${escapeHtml(k.veritabani)}</option>`
-        ).join('');
+        );
+
+        const customOptions = customConnections.map(c => {
+            const value = `${CUSTOM_PREFIX}${c.id}`;
+            const label = `${c.etiket} — ${c.veritabani}`;
+            return `<option value="${escapeHtml(value)}" ${value === selectedKatman ? 'selected' : ''}>${escapeHtml(label)} (özel)</option>`;
+        });
+
+        const divider = customConnections.length
+            ? '<option disabled>──────────</option>'
+            : '';
+
+        sel.innerHTML = configOptions.join('') + divider + customOptions.join('');
     }
 
     function renderResults(payload) {
@@ -109,10 +177,13 @@
             const cells = cols.map(col => {
                 const val = getQueryRowValue(row, col);
                 const display = val === null || val === undefined ? '' : String(val);
-                return `<td title="${escapeHtml(display)}">${escapeHtml(display)}</td>`;
+                return `<td class="vs-cell-wrap" title="${escapeHtml(display)}">${escapeHtml(display)}</td>`;
             }).join('');
             return `<tr>${cells}</tr>`;
         }).join('');
+
+        const table = wrap.querySelector('.vs-results-table');
+        table?.classList.add('vs-results-table--wrap');
 
         if (empty) empty.hidden = rows.length > 0;
         wrap.classList.toggle('has-data', rows.length > 0);
@@ -129,16 +200,17 @@
     }
 
     async function loadAyarlar() {
+        customConnections = loadCustomConnections();
         try {
             ayarlar = await ApiClient.getVeritabaniSorguAyarlar();
-            selectedKatman = ayarlar.varsayilanKatman || 'TDSTG';
-
+            if (!isCustomKatman(selectedKatman)) {
+                selectedKatman = ayarlar.varsayilanKatman || 'TDSTG';
+            }
             renderKatmanSelect();
         } catch (err) {
             console.warn('Sorgu ayarları yüklenemedi:', err);
             ayarlar = null;
             renderKatmanSelect();
-
             setStatus('err', apiErrorMessage(err));
         }
     }
@@ -147,8 +219,13 @@
         setStatus('pending', 'Bağlantı test ediliyor…');
         setError('');
         try {
-            const katman = document.getElementById('vsKatmanSelect')?.value || selectedKatman;
-            const res = await ApiClient.testVeritabaniSorguKatman(katman);
+            const selected = getSelectedConnection();
+            let res;
+            if (selected.baglanti) {
+                res = await ApiClient.testVeritabaniSorguBaglanti(selected.baglanti);
+            } else {
+                res = await ApiClient.testVeritabaniSorguKatman(selected.katmanKodu);
+            }
             if (res.basarili) {
                 setStatus('ok', res.mesaj || 'Bağlantı başarılı.');
             } else {
@@ -161,7 +238,7 @@
 
     async function runQuery() {
         const sql = document.getElementById('vsQueryInput')?.value?.trim();
-        const katman = document.getElementById('vsKatmanSelect')?.value || selectedKatman;
+        const selected = getSelectedConnection();
         const runBtn = document.getElementById('vsRunBtn');
         const testBtn = document.getElementById('vsTestBtn');
 
@@ -170,25 +247,33 @@
             return;
         }
 
+        if (isCustomKatman(document.getElementById('vsKatmanSelect')?.value) && !selected.baglanti) {
+            setError('Seçili özel bağlantı bulunamadı.');
+            return;
+        }
+
         setError('');
         setMeta('Sorgu çalıştırılıyor…');
         if (runBtn) runBtn.disabled = true;
         if (testBtn) testBtn.disabled = true;
 
+        const payload = { katmanKodu: selected.katmanKodu, sql };
+        if (selected.baglanti) payload.baglanti = selected.baglanti;
+
         try {
-            const res = await ApiClient.calistirVeritabaniSorgu({ katmanKodu: katman, sql });
+            const res = await ApiClient.calistirVeritabaniSorgu(payload);
 
             if (!res.basarili) {
                 setMeta('');
                 setError(res.hata || 'Sorgu başarısız.');
                 const wrap = document.getElementById('vsResultsWrap');
                 if (wrap) wrap.classList.remove('has-data');
-                setStatus('err', `${katman} — sorgu hatası`);
+                setStatus('err', `${selected.displayName} — sorgu hatası`);
                 return;
             }
 
             renderResults(res);
-            setStatus('ok', `${katman} — sorgu tamamlandı`);
+            setStatus('ok', `${selected.displayName} — sorgu tamamlandı`);
         } catch (err) {
             setMeta('');
             setError(apiErrorMessage(err));
@@ -198,6 +283,142 @@
             if (runBtn) runBtn.disabled = false;
             if (testBtn) testBtn.disabled = false;
         }
+    }
+
+    function readConnForm(modal) {
+        const data = {};
+        modal.querySelectorAll('[data-conn-field]').forEach(el => {
+            const key = el.dataset.connField;
+            if (key === 'etiket') data.etiket = el.value.trim();
+            else if (key === 'sunucu') data.sunucu = el.value.trim();
+            else if (key === 'veritabani') data.veritabani = el.value.trim();
+            else if (key === 'port') data.port = parseInt(el.value.trim(), 10) || 1433;
+            else if (key === 'auth') data.kimlikDogrulama = el.value.trim();
+            else if (key === 'sqlUser') data.kullaniciAdi = el.value.trim() || null;
+        });
+        return data;
+    }
+
+    function clearConnForm(modal) {
+        modal.querySelector('[data-conn-field="etiket"]').value = '';
+        modal.querySelector('[data-conn-field="sunucu"]').value = '';
+        modal.querySelector('[data-conn-field="veritabani"]').value = '';
+        modal.querySelector('[data-conn-field="port"]').value = '1433';
+        modal.querySelector('[data-conn-field="auth"]').value = 'windows';
+        modal.querySelector('[data-conn-field="sqlUser"]').value = '';
+        toggleConnSqlUser(modal);
+        showConnTestMsg(modal, '', false);
+    }
+
+    function toggleConnSqlUser(modal) {
+        const auth = modal.querySelector('[data-conn-field="auth"]')?.value;
+        const wrap = modal.querySelector('[data-conn-sql-user-wrap]');
+        if (wrap) wrap.style.display = auth === 'sql' ? '' : 'none';
+    }
+
+    function showConnTestMsg(modal, message, isError) {
+        const el = modal.querySelector('[data-conn-test-msg]');
+        if (!el) return;
+        el.hidden = !message;
+        el.textContent = message || '';
+        el.classList.toggle('error', !!isError);
+        el.classList.toggle('success', !!message && !isError);
+    }
+
+    function openConnModal() {
+        const modal = document.getElementById('vsConnModal');
+        if (!modal) return;
+        clearConnForm(modal);
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('is-open');
+        modal.querySelector('[data-conn-field="sunucu"]')?.focus();
+    }
+
+    function closeConnModal() {
+        const modal = document.getElementById('vsConnModal');
+        if (!modal) return;
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        modal.classList.remove('is-open');
+    }
+
+    function bindConnModal() {
+        const modal = document.getElementById('vsConnModal');
+        if (!modal) return;
+
+        document.getElementById('vsNewConnBtn')?.addEventListener('click', openConnModal);
+
+        modal.querySelectorAll('[data-vs-modal-close]').forEach(el => {
+            el.addEventListener('click', closeConnModal);
+        });
+
+        modal.querySelector('[data-conn-field="auth"]')?.addEventListener('change', () => {
+            toggleConnSqlUser(modal);
+        });
+
+        modal.querySelector('[data-conn-test]')?.addEventListener('click', async (btn) => {
+            const formData = readConnForm(modal);
+            if (!formData.sunucu || !formData.veritabani) {
+                showConnTestMsg(modal, 'Sunucu ve veritabanı alanları zorunludur.', true);
+                return;
+            }
+
+            const button = btn.currentTarget;
+            button.disabled = true;
+            button.textContent = 'Test ediliyor…';
+            showConnTestMsg(modal, '', false);
+
+            try {
+                const result = await ApiClient.testVeritabaniSorguBaglanti(toBaglantiDto(formData));
+                showConnTestMsg(
+                    modal,
+                    result.mesaj || (result.basarili ? 'Bağlantı başarılı.' : 'Bağlantı başarısız.'),
+                    !result.basarili
+                );
+            } catch (err) {
+                showConnTestMsg(modal, 'Test isteği başarısız: ' + err.message, true);
+            }
+
+            button.disabled = false;
+            button.textContent = 'Bağlantıyı Test Et';
+        });
+
+        modal.querySelector('[data-conn-save]')?.addEventListener('click', () => {
+            const formData = readConnForm(modal);
+            if (!formData.sunucu || !formData.veritabani) {
+                showConnTestMsg(modal, 'Kaydetmeden önce sunucu ve veritabanı girin.', true);
+                return;
+            }
+
+            if (!formData.etiket) {
+                formData.etiket = `${formData.sunucu} — ${formData.veritabani}`;
+            }
+
+            const entry = {
+                id: `c${Date.now()}`,
+                etiket: formData.etiket,
+                sunucu: formData.sunucu,
+                veritabani: formData.veritabani,
+                port: formData.port,
+                kimlikDogrulama: formData.kimlikDogrulama,
+                kullaniciAdi: formData.kullaniciAdi
+            };
+
+            customConnections.push(entry);
+            saveCustomConnections();
+            selectedKatman = `${CUSTOM_PREFIX}${entry.id}`;
+            renderKatmanSelect();
+            closeConnModal();
+            setStatus('pending', 'Yeni bağlantı seçildi. Test ediliyor…');
+            testConnection();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+                closeConnModal();
+            }
+        });
     }
 
     function bindEvents() {
@@ -212,6 +433,7 @@
                 runQuery();
             }
         });
+        bindConnModal();
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

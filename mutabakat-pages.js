@@ -176,9 +176,9 @@
             const badge = STATUS_LABEL[r.durum] || { cls: '', label: r.durum };
             const diffClass = diff !== 0 ? 'mt-diff' : '';
             return `<tr>
-                <td>${r.hesapKodu}</td>
-                <td>${r.hesapAdi}</td>
-                <td>${r.ekipAdi || ''}</td>
+                <td class="mt-cell-nowrap">${r.hesapKodu}</td>
+                <td class="mt-cell-wrap">${r.hesapAdi}</td>
+                <td class="mt-cell-wrap">${r.ekipAdi || ''}</td>
                 <td class="mt-num">${formatMoney(r.mizanBakiye)}</td>
                 <td class="mt-num">${formatMoney(r.kartonBakiye)}</td>
                 <td class="mt-num ${diffClass}">${diff > 0 ? '+' : ''}${formatMoney(diff)}</td>
@@ -278,7 +278,7 @@
                     ${window.FilterBar?.clearAllButtonHtml('mtDiffClearAllBtn') || '<button type="button" class="filter-btn filter-btn-clear filter-clear-all-btn" id="mtDiffClearAllBtn"><span>Temizle</span></button>'}
                 </div>
                 <div class="mt-scroll">
-                    <table class="mt-table" id="mtDiffTable">
+                    <table class="mt-table mt-table--wrap" id="mtDiffTable">
                         <thead>
                             <tr>
                                 <th>Hesap Kodu</th>
@@ -328,7 +328,7 @@
                 const val = readCell(row, col);
                 const display = formatMatrixMapCell(col.key, val);
                 const title = val === null || val === undefined ? '' : String(val);
-                return `<td title="${escapeHtml(title)}">${display}</td>`;
+                return `<td class="mt-cell-wrap" title="${escapeHtml(title)}">${display}</td>`;
             }).join('');
             return `<tr>${cells}</tr>`;
         }).join('');
@@ -412,7 +412,7 @@
         return `<div class="mt-card mt-mm-card" id="mt-matrixmap">
             ${buildMatrixMapFilterBar()}
             <div class="mt-mm-scroll">
-                <table class="mt-table" id="mtMatrixTable">
+                <table class="mt-table mt-table--wrap" id="mtMatrixTable">
                     <thead>
                         <tr>${MATRIXMAP_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr>
                     </thead>

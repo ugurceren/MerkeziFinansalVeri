@@ -177,13 +177,6 @@
     opacity: 1;
 }
 
-.dbc-hint {
-    font-size: 11px;
-    color: var(--rb-text-muted);
-    margin: 0;
-    line-height: 1.4;
-}
-
 .dbc-test-msg {
     font-size: 12px;
     margin: 0;

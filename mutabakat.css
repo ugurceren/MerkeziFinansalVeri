@@ -150,6 +150,19 @@
     background: var(--rb-accent-soft);
 }
 
+.mt-table.mt-table--wrap tbody tr {
+    height: auto;
+}
+
+.mt-table td.mt-cell-wrap {
+    max-width: min(420px, 36vw);
+}
+
+.mt-table td.mt-cell-nowrap {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .mt-table .mt-num {
     text-align: right;
     font-variant-numeric: tabular-nums;

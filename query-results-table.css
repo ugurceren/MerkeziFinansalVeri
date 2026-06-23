@@ -68,6 +68,64 @@
     max-width: 260px;
 }
 
+/* Okunabilir çok satırlı hücreler — Günlük Akış hata kolonu ile aynı mantık */
+.vs-results-table.vs-results-table--wrap,
+.vs-results-table:has(td.vs-cell-wrap) {
+    table-layout: auto;
+}
+
+.vs-results-table.vs-results-table--wrap tbody tr:not(.virtual-spacer),
+.vs-results-table:has(td.vs-cell-wrap) tbody tr:not(.virtual-spacer) {
+    height: auto;
+}
+
+.vs-results-table td.vs-cell-wrap,
+.vk-table td.vk-cell-wrap,
+.mt-table td.mt-cell-wrap {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: top;
+    line-height: 1.45;
+    max-width: min(520px, 42vw);
+    min-width: 120px;
+}
+
+.vs-results-table.vs-results-table--wrap tbody tr:not(.virtual-spacer) td,
+.vs-results-table:has(td.vs-cell-wrap) tbody tr:not(.virtual-spacer) td {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    height: auto;
+}
+
+.vs-results-table td.vs-cell-nowrap,
+.vk-table td.vk-cell-nowrap,
+.mt-table td.mt-cell-nowrap {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#dsListTable td.vs-cell-wrap--kt-sp,
+#dsListTable th:nth-child(11) {
+    min-width: 220px;
+    max-width: min(380px, 30vw);
+}
+
+#dsListTable td.vs-cell-wrap--scope,
+#dsListTable th:nth-child(12) {
+    min-width: 200px;
+    max-width: min(420px, 34vw);
+}
+
+#dsListTable td.vs-cell-wrap--note,
+#dsListTable th:nth-child(13) {
+    min-width: 180px;
+    max-width: min(380px, 30vw);
+}
+
 .vs-empty {
     margin: 0;
     padding: 24px;

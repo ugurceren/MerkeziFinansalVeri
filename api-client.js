@@ -188,6 +188,9 @@
         testVeritabaniSorguKatman(katmanKodu) {
             return request(`/veritabani-sorgu/test/${encodeURIComponent(katmanKodu)}`, { method: 'POST' });
         },
+        testVeritabaniSorguBaglanti(data) {
+            return request('/veritabani-sorgu/test-baglanti', { method: 'POST', body: data });
+        },
 
         // Ters Bakiye Raporu
         getTersBakiyeAyarlar() { return request('/raporlar/ters-bakiye/ayarlar'); },
