@@ -4,6 +4,9 @@
     let activePeriodYilAy = '2026-06';
     let matrixMapData = null;
     let matrixMapFilters = {};
+    let diffSmartTable = null;
+    let periodSmartTable = null;
+    let matrixSmartTable = null;
 
     const MATRIXMAP_COLUMNS = [
         { key: 'systemDateTime', label: 'SystemDateTime' },
@@ -218,17 +221,9 @@
                     <h4><i class="ti ti-list" aria-hidden="true"></i> Dönem Listesi</h4>
                 </div>
                 <div class="mt-scroll">
-                    <table class="mt-table">
-                        <thead>
-                            <tr>
-                                <th>Dönem</th>
-                                <th>Durum</th>
-                                <th>Hesap Sayısı</th>
-                                <th>Fark Veren</th>
-                                <th>Kapanış Tarihi</th>
-                            </tr>
-                        </thead>
-                        <tbody>${buildPeriodRows(activeId)}</tbody>
+                    <table class="mt-table" id="mtPeriodTable">
+                        <thead></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -279,18 +274,8 @@
                 </div>
                 <div class="mt-scroll">
                     <table class="mt-table mt-table--wrap" id="mtDiffTable">
-                        <thead>
-                            <tr>
-                                <th>Hesap Kodu</th>
-                                <th>Hesap Adı</th>
-                                <th>Sorumlu Ekip</th>
-                                <th>Mizan Bakiye</th>
-                                <th>Karton Tablo Bakiye</th>
-                                <th>Fark</th>
-                                <th>Durum</th>
-                            </tr>
-                        </thead>
-                        <tbody>${buildDiffRows(diffAccounts)}</tbody>
+                        <thead></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -334,6 +319,145 @@
         }).join('');
     }
 
+    function mountPeriodSmartTable(root) {
+        if (!window.SmartTable) return;
+        const table = root.querySelector('#mtPeriodTable');
+        if (!table) return;
+        window.SmartTable.destroy(table);
+        const activeId = getActivePeriod();
+        periodSmartTable = window.SmartTable.mount({
+            scrollEl: table.closest('.mt-scroll'),
+            headEl: table.querySelector('thead'),
+            bodyEl: table.querySelector('tbody'),
+            cols: [
+                { key: 'etiket', label: 'Dönem' },
+                { key: 'durum', label: 'Durum' },
+                { key: 'hesapSayisi', label: 'Hesap Sayısı', type: 'number' },
+                { key: 'farkVerenSayisi', label: 'Fark Veren', type: 'number' },
+                { key: 'kapanisTarihi', label: 'Kapanış Tarihi' }
+            ],
+            rows: periods.map(p => ({ ...p, etiket: formatDonemEtiket(p) })),
+            wrapCells: true,
+            tableClass: 'mt-table',
+            getValue: (row, col) => {
+                if (col === 'etiket') return formatDonemEtiket(row);
+                return row[col];
+            },
+            formatCell: (col, row, value) => {
+                if (col === 'durum') {
+                    const badge = STATUS_LABEL[row.durum] || { cls: '', label: row.durum };
+                    return `<td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>`;
+                }
+                if (col === 'kapanisTarihi') return `<td>${formatKapanisTarihi(value)}</td>`;
+                if (col === 'hesapSayisi' || col === 'farkVerenSayisi') return `<td class="mt-num">${value}</td>`;
+                if (col === 'etiket') return `<td class="vs-cell-wrap">${escapeHtml(value)}</td>`;
+                return null;
+            },
+            rowClass: row => (row.yilAy === activeId ? 'mt-row-active' : ''),
+            rowAttrs: row => ({
+                'data-period': row.yilAy,
+                'data-donem-id': row.donemId
+            }),
+            onRowClick: async row => {
+                try {
+                    await setActivePeriod(row.donemId, row.yilAy);
+                    await initMutabakatPage(root);
+                } catch (err) {
+                    console.error('Dönem seçilemedi:', err);
+                }
+            }
+        });
+    }
+
+    function mountDiffSmartTable(root) {
+        if (!window.SmartTable) return;
+        const table = root.querySelector('#mtDiffTable');
+        if (!table) return;
+        window.SmartTable.destroy(table);
+        diffSmartTable = window.SmartTable.mount({
+            scrollEl: table.closest('.mt-scroll'),
+            headEl: table.querySelector('thead'),
+            bodyEl: table.querySelector('tbody'),
+            cols: [
+                { key: 'hesapKodu', label: 'Hesap Kodu' },
+                { key: 'hesapAdi', label: 'Hesap Adı' },
+                { key: 'ekipAdi', label: 'Sorumlu Ekip' },
+                { key: 'mizanBakiye', label: 'Mizan Bakiye', type: 'number' },
+                { key: 'kartonBakiye', label: 'Karton Tablo Bakiye', type: 'number' },
+                { key: 'fark', label: 'Fark', type: 'number' },
+                { key: 'durum', label: 'Durum' }
+            ],
+            rows: diffAccounts.map(r => ({
+                ...r,
+                fark: r.mizanBakiye - r.kartonBakiye
+            })),
+            wrapCells: true,
+            tableClass: 'mt-table mt-table--wrap',
+            getValue: (row, col) => {
+                if (col === 'fark') return row.mizanBakiye - row.kartonBakiye;
+                return row[col];
+            },
+            formatCell: (col, row, value) => {
+                if (col === 'hesapKodu') return `<td class="mt-cell-nowrap">${escapeHtml(value)}</td>`;
+                if (col === 'hesapAdi' || col === 'ekipAdi') return `<td class="mt-cell-wrap">${escapeHtml(value || '')}</td>`;
+                if (col === 'mizanBakiye' || col === 'kartonBakiye') {
+                    return `<td class="mt-num">${formatMoney(value)}</td>`;
+                }
+                if (col === 'fark') {
+                    const diff = Number(value) || 0;
+                    const diffClass = diff !== 0 ? 'mt-diff' : '';
+                    return `<td class="mt-num ${diffClass}">${diff > 0 ? '+' : ''}${formatMoney(diff)}</td>`;
+                }
+                if (col === 'durum') {
+                    const badge = STATUS_LABEL[row.durum] || { cls: '', label: row.durum };
+                    return `<td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>`;
+                }
+                return null;
+            }
+        });
+    }
+
+    function mountMatrixSmartTable(root, data) {
+        if (!window.SmartTable) return;
+        const table = root.querySelector('#mtMatrixTable');
+        if (!table) return;
+        window.SmartTable.destroy(table);
+        const rows = data?.satirlar || [];
+        const readCell = (row, col) => {
+            const dbKey = MATRIXMAP_COLUMN_KEYS[col.key];
+            return window.FilterBar?.getQueryRowValue(row, dbKey)
+                ?? window.FilterBar?.getQueryRowValue(row, col.key);
+        };
+
+        matrixSmartTable = window.SmartTable.mount({
+            scrollEl: table.closest('.mt-mm-scroll'),
+            headEl: table.querySelector('thead'),
+            bodyEl: table.querySelector('tbody'),
+            cols: MATRIXMAP_COLUMNS.map(c => ({ key: c.key, label: c.label })),
+            rows,
+            wrapCells: true,
+            tableClass: 'mt-table mt-table--wrap',
+            getValue: (row, col) => {
+                const column = MATRIXMAP_COLUMNS.find(c => c.key === col);
+                return column ? readCell(row, column) : row[col];
+            },
+            formatCell: (col, row, value) => {
+                const display = formatMatrixMapCell(col, value);
+                const title = value === null || value === undefined ? '' : String(value);
+                return `<td class="mt-cell-wrap" title="${escapeHtml(title)}">${display}</td>`;
+            },
+            onFilteredChange: (shown, total) => {
+                updateMatrixMapRecordCount(root, {
+                    basarili: true,
+                    satirlar: rows,
+                    satirSayisi: total,
+                    _shown: shown
+                });
+            }
+        });
+        updateMatrixMapRecordCount(root, data);
+    }
+
     function formatMatrixMapRecordCount(data) {
         if (!data?.basarili) return { shown: 0, total: 0 };
         const rows = data.satirlar || [];
@@ -346,7 +470,8 @@
     function updateMatrixMapRecordCount(root, data) {
         if (!data?.basarili) return;
         const { shown, total } = formatMatrixMapRecordCount(data);
-        window.TableCount?.set(root, shown, total, { wrapId: 'mtMatrixRecordCount' });
+        const displayShown = data._shown ?? shown;
+        window.TableCount?.set(root, displayShown, total, { wrapId: 'mtMatrixRecordCount' });
     }
 
     function buildMatrixMapHead(data) {
@@ -413,10 +538,8 @@
             ${buildMatrixMapFilterBar()}
             <div class="mt-mm-scroll">
                 <table class="mt-table mt-table--wrap" id="mtMatrixTable">
-                    <thead>
-                        <tr>${MATRIXMAP_COLUMNS.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}</tr>
-                    </thead>
-                    <tbody>${buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`}</tbody>
+                    <thead></thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>`;
@@ -455,9 +578,10 @@
             return;
         }
         const tbody = root.querySelector('#mtMatrixTable tbody');
-        if (tbody) {
-            const rows = matrixMapData.satirlar || [];
-            tbody.innerHTML = buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`;
+        if (matrixSmartTable) {
+            matrixSmartTable.setRows(matrixMapData.satirlar || []);
+        } else if (tbody) {
+            mountMatrixSmartTable(root, matrixMapData);
         }
         updateMatrixMapRecordCount(root, matrixMapData);
     }
@@ -474,9 +598,10 @@
             return;
         }
         const tbody = root.querySelector('#mtMatrixTable tbody');
-        if (tbody) {
-            const rows = matrixMapData.satirlar || [];
-            tbody.innerHTML = buildMatrixMapRows(rows) || `<tr><td colspan="${MATRIXMAP_COLUMNS.length}">Kayıt bulunamadı.</td></tr>`;
+        if (matrixSmartTable) {
+            matrixSmartTable.setRows(matrixMapData.satirlar || []);
+        } else if (tbody) {
+            mountMatrixSmartTable(root, matrixMapData);
         }
         updateMatrixMapRecordCount(root, matrixMapData);
     }
@@ -513,8 +638,14 @@
                     (r.ekipAdi || '').toLowerCase().includes(team.toLowerCase())
                 );
             }
-            const tbody = root.querySelector('#mtDiffTable tbody');
-            if (tbody) tbody.innerHTML = buildDiffRows(diffAccounts);
+            if (diffSmartTable) {
+                diffSmartTable.setRows(diffAccounts.map(r => ({
+                    ...r,
+                    fark: r.mizanBakiye - r.kartonBakiye
+                })));
+            } else {
+                mountDiffSmartTable(root);
+            }
         } catch (err) {
             console.error('Filtreleme başarısız:', err);
         }
@@ -556,18 +687,6 @@
             onFilter: () => applyDiffFilter(root),
             onClearAll: () => clearDiffFilters(root)
         });
-
-        root.querySelectorAll('[data-period]').forEach(row => {
-            row.addEventListener('click', async () => {
-                const donemId = parseInt(row.dataset.donemId, 10);
-                try {
-                    await setActivePeriod(donemId, row.dataset.period);
-                    await initMutabakatPage(root);
-                } catch (err) {
-                    console.error('Dönem seçilemedi:', err);
-                }
-            });
-        });
     }
 
     function getFocusView() {
@@ -590,9 +709,12 @@
         el.innerHTML = buildMutabakatHTML(view);
         if (view === 'matrixmap') {
             bindMatrixMapPage(el);
+            mountMatrixSmartTable(el, matrixMapData);
         } else {
             document.getElementById('pageBody')?.classList.remove('page-body-matrixmap');
             bindMutabakatPage(el);
+            if (view === 'donem') mountPeriodSmartTable(el);
+            if (view === 'fark-veren') mountDiffSmartTable(el);
         }
     }
 

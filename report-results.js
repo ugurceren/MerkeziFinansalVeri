@@ -92,6 +92,10 @@
         }
     }
 
+    function getActiveTable() {
+        return activeTable;
+    }
+
     function getRowCell(row, column) {
         if (window.FilterBar?.getQueryRowValue) {
             return window.FilterBar.getQueryRowValue(row, column);
@@ -104,13 +108,46 @@
         return matchedKey ? row[matchedKey] : undefined;
     }
 
-    function renderTable({ scrollEl, headEl, bodyEl, cols, rows, getColumnLabel, wrapCells }) {
+    function renderTable(options) {
         destroyActiveTable();
 
-        if (!scrollEl || !headEl || !bodyEl || !cols?.length || !rows?.length) {
-            if (headEl) headEl.innerHTML = '';
-            if (bodyEl) bodyEl.innerHTML = '';
+        const {
+            scrollEl,
+            headEl,
+            bodyEl,
+            cols,
+            rows,
+            getColumnLabel,
+            wrapCells,
+            getValue,
+            formatCell,
+            onFilteredChange,
+            virtualScroll
+        } = options || {};
+
+        if (!headEl || !bodyEl) return null;
+
+        if (!cols?.length || !rows?.length) {
+            headEl.innerHTML = '';
+            bodyEl.innerHTML = '';
             return null;
+        }
+
+        if (window.SmartTable?.mount) {
+            activeTable = window.SmartTable.mount({
+                scrollEl,
+                headEl,
+                bodyEl,
+                cols,
+                rows,
+                getColumnLabel,
+                getValue,
+                formatCell,
+                wrapCells,
+                virtualScroll,
+                onFilteredChange
+            });
+            return activeTable;
         }
 
         const labelFn = typeof getColumnLabel === 'function' ? getColumnLabel : col => col;
@@ -125,7 +162,7 @@
                 ).join('');
                 return `<tr>${cells}</tr>`;
             }).join('');
-            scrollEl.scrollTop = 0;
+            scrollEl && (scrollEl.scrollTop = 0);
             activeTable = { destroy() {} };
             return activeTable;
         }
@@ -252,6 +289,7 @@
         escapeHtmlFast,
         renderTable,
         destroyActiveTable,
+        getActiveTable,
         exportToExcel,
         defaultFileName,
         mountExportButtons

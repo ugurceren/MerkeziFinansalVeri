@@ -424,19 +424,8 @@ function buildFlowLayerDetail(col) {
             </header>
             <div class="vs-results-wrap is-fill has-data flow-layer-detail-table-wrap">
                 <table class="vs-results-table vs-results-table--wrap flow-layer-detail-table">
-                    <thead>
-                        <tr>
-                            <th>Hedef Tablo</th>
-                            <th>Statü</th>
-                            <th>Veri Tarihi</th>
-                            <th>Başlangıç</th>
-                            <th>Bitiş</th>
-                            <th>Süre (dk)</th>
-                            <th>Kayıt</th>
-                            <th>Hata</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows || `<tr><td colspan="8" class="flow-layer-empty">${emptyMessage}</td></tr>`}</tbody>
+                    <thead></thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>`;
@@ -629,6 +618,9 @@ async function loadSurecData(options = {}) {
 }
 
 let DATASET_LIST_ROWS = [];
+let dsListSmartTable = null;
+let tlSmartTable = null;
+let flowDetailSmartTable = null;
 let DATASET_STATUS_OZET = [];
 let DATASET_STATUS_MODEL_ROWS = [];
 const DATASET_STATUS_OZET_MOCK = [
@@ -1013,24 +1005,8 @@ function buildDatasetListeContent() {
             </div>
             <div class="vs-results-wrap is-fill has-data">
                 <table class="vs-results-table vs-results-table--wrap" id="dsListTable">
-                    <thead>
-                        <tr>
-                            <th>Dataset</th>
-                            <th>Data Model</th>
-                            <th>Staging Tablo</th>
-                            <th>Layer</th>
-                            <th>Statü</th>
-                            <th>Statü Tarihi</th>
-                            <th>Statü Sorumlusu</th>
-                            <th>TD Analist</th>
-                            <th>Tester</th>
-                            <th>KT IT Birimi</th>
-                            <th>KT SP</th>
-                            <th>Kapsam</th>
-                            <th>Not</th>
-                        </tr>
-                    </thead>
-                    <tbody>${buildDatasetListRows(DATASET_LIST_ROWS)}</tbody>
+                    <thead></thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>`;
@@ -1125,14 +1101,9 @@ function buildDatasetStatusContent() {
                     </div>
                 </div>
                 <div class="vs-results-wrap has-data">
-                    <table class="vs-results-table ds-status-compact-table">
-                        <thead>
-                            <tr>
-                                <th>Statü</th>
-                                <th class="ds-num-col">Adet</th>
-                            </tr>
-                        </thead>
-                        <tbody>${buildDatasetStatusOzetRows(ozetRows)}</tbody>
+                    <table class="vs-results-table ds-status-compact-table" id="dsStatusOzetTable">
+                        <thead></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -1143,15 +1114,9 @@ function buildDatasetStatusContent() {
                     </div>
                 </div>
                 <div class="vs-results-wrap has-data">
-                    <table class="vs-results-table vs-results-table--wrap ds-status-compact-table">
-                        <thead>
-                            <tr>
-                                <th>Model</th>
-                                <th>Statü</th>
-                                <th class="ds-num-col">Adet</th>
-                            </tr>
-                        </thead>
-                        <tbody>${buildDatasetStatusModelRows(modelRows)}</tbody>
+                    <table class="vs-results-table vs-results-table--wrap ds-status-compact-table" id="dsStatusModelTable">
+                        <thead></thead>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -1294,10 +1259,201 @@ function refreshDatasetCatalogContent(shell) {
     }
 }
 
+function mountDatasetListTable(root, rows) {
+    if (!window.SmartTable) return;
+    const table = root.querySelector('#dsListTable');
+    if (!table) return;
+    window.SmartTable.destroy(table);
+    dsListSmartTable = window.SmartTable.mount({
+        scrollEl: table.closest('.vs-results-wrap'),
+        headEl: table.querySelector('thead'),
+        bodyEl: table.querySelector('tbody'),
+        cols: [
+            { key: 'datasetName', label: 'Dataset' },
+            { key: 'dataModel', label: 'Data Model' },
+            { key: 'stagingTableName', label: 'Staging Tablo' },
+            { key: 'layer', label: 'Layer' },
+            { key: 'status', label: 'Statü' },
+            { key: 'statusChangeDate', label: 'Statü Tarihi' },
+            { key: 'statusResponsible', label: 'Statü Sorumlusu' },
+            { key: 'tdAnalyst', label: 'TD Analist' },
+            { key: 'tester', label: 'Tester' },
+            { key: 'ktResponsibleItUnit', label: 'KT IT Birimi' },
+            { key: 'ktSpName', label: 'KT SP' },
+            { key: 'descriptionScope', label: 'Kapsam' },
+            { key: 'note', label: 'Not' }
+        ],
+        rows,
+        wrapCells: true,
+        tableClass: 'vs-results-table vs-results-table--wrap',
+        getValue: (row, col) => row[col],
+        formatCell: (col, row, value) => {
+            if (col === 'status') {
+                return `<td class="vs-cell-nowrap"><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>`;
+            }
+            if (col === 'statusChangeDate') {
+                return `<td class="vs-cell-nowrap">${formatDatasetDate(value)}</td>`;
+            }
+            const nowrapCols = ['datasetName', 'layer'];
+            const wrapClass = nowrapCols.includes(col) ? 'vs-cell-nowrap' : 'vs-cell-wrap';
+            const extraClass = col === 'ktSpName' ? ' vs-cell-wrap--kt-sp'
+                : col === 'descriptionScope' ? ' vs-cell-wrap--scope'
+                    : col === 'note' ? ' vs-cell-wrap--note' : '';
+            return `<td class="${wrapClass}${extraClass}">${escapeDatasetHtml(value || (col === 'ktSpName' || col === 'descriptionScope' ? '—' : ''))}</td>`;
+        },
+        onFilteredChange: shown => updateTableCount(root, shown, DATASET_LIST_ROWS.length, { wrapId: 'dsListCountWrap' })
+    });
+}
+
+function mountDatasetStatusTables(shell) {
+    if (!window.SmartTable) return;
+    const ozetRows = resolveDatasetStatusOzet();
+    const modelRows = resolveDatasetStatusModelRows();
+
+    const ozetTable = shell.querySelector('#dsStatusOzetTable');
+    if (ozetTable) {
+        window.SmartTable.destroy(ozetTable);
+        window.SmartTable.mount({
+            scrollEl: ozetTable.closest('.vs-results-wrap'),
+            headEl: ozetTable.querySelector('thead'),
+            bodyEl: ozetTable.querySelector('tbody'),
+            cols: [
+                { key: 'status', label: 'Statü' },
+                { key: 'adet', label: 'Adet', type: 'number' }
+            ],
+            rows: ozetRows,
+            wrapCells: true,
+            tableClass: 'vs-results-table ds-status-compact-table',
+            formatCell: (col, row, value) => {
+                if (col === 'status') {
+                    return `<td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>`;
+                }
+                if (col === 'adet') return `<td class="ds-num-col"><strong>${value}</strong></td>`;
+                return null;
+            }
+        });
+    }
+
+    const modelTable = shell.querySelector('#dsStatusModelTable');
+    if (modelTable) {
+        window.SmartTable.destroy(modelTable);
+        window.SmartTable.mount({
+            scrollEl: modelTable.closest('.vs-results-wrap'),
+            headEl: modelTable.querySelector('thead'),
+            bodyEl: modelTable.querySelector('tbody'),
+            cols: [
+                { key: 'dataModel', label: 'Model' },
+                { key: 'status', label: 'Statü' },
+                { key: 'adet', label: 'Adet', type: 'number' }
+            ],
+            rows: modelRows,
+            wrapCells: true,
+            tableClass: 'vs-results-table vs-results-table--wrap ds-status-compact-table',
+            formatCell: (col, row, value) => {
+                if (col === 'dataModel') return `<td class="vs-cell-wrap ds-model-name-col">${escapeDatasetHtml(value)}</td>`;
+                if (col === 'status') {
+                    return `<td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>`;
+                }
+                if (col === 'adet') return `<td class="ds-num-col"><strong>${value}</strong></td>`;
+                return null;
+            }
+        });
+    }
+}
+
+function mountFlowDetailTable() {
+    if (!window.SmartTable) return;
+    const detail = document.querySelector('.flow-layer-detail');
+    if (!detail) return;
+    const layerName = detail.getAttribute('data-flow-detail');
+    const col = COCKPIT_COLUMNS.find(item => item.name === layerName);
+    if (!col) return;
+    const table = detail.querySelector('.flow-layer-detail-table');
+    if (!table) return;
+    window.SmartTable.destroy(table);
+    const kayitlar = getVisibleKayitlar(col);
+    flowDetailSmartTable = window.SmartTable.mount({
+        scrollEl: detail.querySelector('.flow-layer-detail-table-wrap'),
+        headEl: table.querySelector('thead'),
+        bodyEl: table.querySelector('tbody'),
+        cols: [
+            { key: 'targetTableName', label: 'Hedef Tablo' },
+            { key: 'durumMetni', label: 'Statü' },
+            { key: 'dataDate', label: 'Veri Tarihi' },
+            { key: 'executionStartTime', label: 'Başlangıç' },
+            { key: 'executionEndTime', label: 'Bitiş' },
+            { key: 'sureDakika', label: 'Süre (dk)', type: 'number' },
+            { key: 'executionRecordCount', label: 'Kayıt', type: 'number' },
+            { key: 'errorMessageText', label: 'Hata' }
+        ],
+        rows: kayitlar,
+        wrapCells: true,
+        tableClass: 'vs-results-table vs-results-table--wrap flow-layer-detail-table',
+        getValue: (row, colKey) => {
+            if (colKey === 'dataDate') return formatDatasetDate(resolveFlowKayitDataDate(row));
+            return row[colKey];
+        },
+        formatCell: (colKey, row, value) => {
+            if (colKey === 'targetTableName') {
+                return `<td class="flow-detail-target" title="${escapeDatasetHtml(value)}">${escapeDatasetHtml(value)}</td>`;
+            }
+            if (colKey === 'durumMetni') {
+                return `<td class="flow-detail-statu"><span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni || 'Not Started')}</span></td>`;
+            }
+            if (colKey === 'errorMessageText') {
+                return `<td class="flow-detail-error vs-cell-wrap" title="${escapeDatasetHtml(value || '')}">${escapeDatasetHtml(value || '—')}</td>`;
+            }
+            if (colKey === 'executionStartTime' || colKey === 'executionEndTime') {
+                return `<td class="flow-detail-nowrap">${formatGunlukAkisDateTime(value)}</td>`;
+            }
+            if (colKey === 'sureDakika') {
+                return `<td class="flow-detail-nowrap">${formatGunlukAkisMinutes(value)}</td>`;
+            }
+            if (colKey === 'executionRecordCount') {
+                const text = value != null ? Number(value).toLocaleString('tr-TR') : '—';
+                return `<td class="flow-detail-nowrap">${text}</td>`;
+            }
+            return `<td class="flow-detail-nowrap">${escapeDatasetHtml(value)}</td>`;
+        }
+    });
+}
+
+function mountTaskListTable(root, rows) {
+    if (!window.SmartTable) return;
+    const table = root.querySelector('#tlResultsTable');
+    if (!table) return;
+    window.SmartTable.destroy(table);
+    tlSmartTable = window.SmartTable.mount({
+        scrollEl: root.querySelector('#tlResultsWrap'),
+        headEl: table.querySelector('thead'),
+        bodyEl: table.querySelector('#tlBody') || table.querySelector('tbody'),
+        cols: [
+            { key: 'layer', label: 'Katman' },
+            { key: 'task', label: 'Paket Adı' },
+            { key: 'datasetCode', label: 'Hedef Tablo' },
+            { key: 'active', label: 'Aktiflik' },
+            { key: 'lastExecution', label: 'Son Çalıştırma Tarihi' },
+            { key: 'transferType', label: 'Transfer Tipi' },
+            { key: 'loadPeriodType', label: 'Yükleme Periyodu' },
+            { key: 'datasetLabel', label: 'Dataset' }
+        ],
+        rows,
+        wrapCells: true,
+        tableClass: 'vs-results-table vs-results-table--wrap',
+        formatCell: (col, row, value) => {
+            if (col === 'active') return `<td class="vs-cell-nowrap">${formatAktiflikCell(row.active)}</td>`;
+            if (col === 'lastExecution') return `<td class="vs-cell-nowrap">${formatDatasetDate(value)}</td>`;
+            if (col === 'transferType') return `<td class="vs-cell-wrap">${formatTransferTypeCell(row)}</td>`;
+            const nowrap = ['layer', 'active', 'lastExecution'].includes(col);
+            return `<td class="${nowrap ? 'vs-cell-nowrap' : 'vs-cell-wrap'}">${col === 'task' || col === 'datasetCode' || col === 'loadPeriodType' ? escapeDatasetHtml(value) : value}</td>`;
+        },
+        onFilteredChange: shown => updateTaskListCount(root, shown, getTaskListRows().length)
+    });
+}
+
 function bindDatasetListSearch(root) {
     const input = root.querySelector('#dsListSearch');
-    const tbody = root.querySelector('#dsListTable tbody');
-    if (!input || !tbody) return;
+    if (!input) return;
 
     const applySearch = () => {
         const term = input.value.trim().toLowerCase();
@@ -1320,11 +1476,15 @@ function bindDatasetListSearch(root) {
                 ].some(value => String(value || '').toLowerCase().includes(term))
             );
 
-        tbody.innerHTML = buildDatasetListRows(filtered);
-        updateTableCount(root, filtered.length, DATASET_LIST_ROWS.length, { wrapId: 'dsListCountWrap' });
+        if (dsListSmartTable) {
+            dsListSmartTable.setRows(filtered);
+        } else {
+            mountDatasetListTable(root, filtered);
+        }
     };
 
     window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
+    mountDatasetListTable(root, DATASET_LIST_ROWS);
 }
 
 function bindDatasetViewToolbar(root) {
@@ -1411,6 +1571,8 @@ async function renderDatasetPage(container) {
 
     if (datasetPageView === 'liste') {
         bindDatasetListSearch(shell);
+    } else if (datasetPageView === 'statu') {
+        mountDatasetStatusTables(shell);
     } else if (datasetPageView === 'katalog') {
         shell.classList.toggle('is-domain-focused', !!datasetCatalogFocusId);
         bindDatasetCatalogInteractions(el);
@@ -1643,6 +1805,7 @@ function bindSurecCockpit() {
 
     bindGlobalCockpitStatusFilters();
     bindFlowLayerTiles();
+    mountFlowDetailTable();
 }
 
 async function initSurecCockpit(container) {
@@ -1817,20 +1980,9 @@ function buildTaskListesiHTML() {
                 ${formatTaskListCountHtml(total, total)}
             </div>
             <div class="vs-results-wrap is-fill has-data" id="tlResultsWrap">
-                <table class="vs-results-table vs-results-table--wrap">
-                    <thead>
-                        <tr>
-                            <th>Katman</th>
-                            <th>Paket Adı</th>
-                            <th>Hedef Tablo</th>
-                            <th>Aktiflik</th>
-                            <th>Son Çalıştırma Tarihi</th>
-                            <th>Transfer Tipi</th>
-                            <th>Yükleme Periyodu</th>
-                            <th>Dataset</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tlBody">${renderTaskListesiRows(rows)}</tbody>
+                <table class="vs-results-table vs-results-table--wrap" id="tlResultsTable">
+                    <thead></thead>
+                    <tbody id="tlBody"></tbody>
                 </table>
             </div>
         </div>
@@ -1841,8 +1993,7 @@ function bindTaskListesiSearch(container) {
     const root = container || document.getElementById('pageBody');
     if (!root) return;
     const input = root.querySelector('#tlSearch');
-    const body = root.querySelector('#tlBody');
-    if (!input || !body) return;
+    if (!input) return;
 
     const allRows = getTaskListRows();
 
@@ -1851,11 +2002,15 @@ function bindTaskListesiSearch(container) {
         const filtered = q
             ? allRows.filter(row => taskRowSearchKey(row).includes(q))
             : allRows;
-        body.innerHTML = renderTaskListesiRows(filtered);
-        updateTaskListCount(root, filtered.length, allRows.length);
+        if (tlSmartTable) {
+            tlSmartTable.setRows(filtered);
+        } else {
+            mountTaskListTable(root, filtered);
+        }
     }
 
     input.addEventListener('input', applyFilter);
+    mountTaskListTable(root, allRows);
 }
 
 async function initTaskListesi(container) {

@@ -112,12 +112,13 @@
 
         const rows = textOrPayload.satirlar || [];
         const total = textOrPayload.satirSayisi ?? rows.length;
+        const shown = textOrPayload._shown ?? rows.length;
         const notes = [];
         if (textOrPayload.sureMs != null) notes.push(`${textOrPayload.sureMs} ms`);
         if (textOrPayload.kisitlandi) notes.push(`ilk ${textOrPayload.maxSatir} satır gösterildi`);
 
         if (window.TableCount?.set) {
-            window.TableCount.set(meta, rows.length, total, {
+            window.TableCount.set(meta, shown, total, {
                 wrapId: 'vsQueryMeta',
                 footnote: notes.join(' · ') || undefined
             });
@@ -181,23 +182,36 @@
         const cols = payload.kolonlar || [];
         const rows = payload.satirlar || [];
 
-        head.innerHTML = `<tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
-        body.innerHTML = rows.map(row => {
-            const cells = cols.map(col => {
-                const val = getQueryRowValue(row, col);
-                const display = val === null || val === undefined ? '' : String(val);
-                return `<td class="vs-cell-wrap" title="${escapeHtml(display)}">${escapeHtml(display)}</td>`;
-            }).join('');
-            return `<tr>${cells}</tr>`;
-        }).join('');
+        window.ReportResults.destroyActiveTable();
 
-        const table = wrap.querySelector('.vs-results-table');
-        table?.classList.add('vs-results-table--wrap');
+        if (!cols.length || !rows.length) {
+            head.innerHTML = '';
+            body.innerHTML = '';
+            if (empty) empty.hidden = rows.length > 0;
+            wrap.classList.toggle('has-data', rows.length > 0);
+            setMeta(payload);
+            return;
+        }
 
-        if (empty) empty.hidden = rows.length > 0;
-        wrap.classList.toggle('has-data', rows.length > 0);
+        const displayRows = window.ReportResults.sliceForDisplay(rows);
+        const metaPayload = { ...payload };
 
-        setMeta(payload);
+        window.ReportResults.renderTable({
+            scrollEl: wrap,
+            headEl: head,
+            bodyEl: body,
+            cols,
+            rows: displayRows,
+            getValue: getQueryRowValue,
+            wrapCells: true,
+            onFilteredChange: shown => {
+                setMeta({ ...metaPayload, _shown: shown });
+            }
+        });
+
+        if (empty) empty.hidden = true;
+        wrap.classList.add('has-data');
+        setMeta(metaPayload);
     }
 
     function apiErrorMessage(err) {

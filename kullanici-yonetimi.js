@@ -12,6 +12,8 @@
     let roleMap = {};
     let selectedRoleId = 'admin';
     let selectedUserId = 5124;
+    let usersSmartTable = null;
+    let usersTableActionsBound = false;
 
     async function loadData() {
         try {
@@ -102,15 +104,71 @@
         }).join('');
     }
 
-    function renderUsersTable() {
-        usersBody.innerHTML = USERS.map(user => {
-            const role = roleMap[user.rolId];
-            const lastLogin = user.sonGiris
-                ? new Date(user.sonGiris).toLocaleString('tr-TR')
-                : '—';
-            return `
-                <tr data-user-id="${user.kullaniciId}" data-role-id="${user.rolId}" class="${user.kullaniciId === selectedUserId ? 'selected' : ''}">
-                    <td>
+    function bindUsersTableActions() {
+        if (!usersBody || usersTableActionsBound) return;
+        usersTableActionsBound = true;
+        usersBody.addEventListener('click', e => {
+            const editBtn = e.target.closest('.um-edit-btn');
+            if (!editBtn) return;
+            e.stopPropagation();
+        });
+    }
+
+    function mountUsersSmartTable() {
+        if (!usersBody) return;
+
+        if (!window.SmartTable) {
+            usersBody.innerHTML = USERS.map(user => {
+                const role = roleMap[user.rolId];
+                const lastLogin = user.sonGiris
+                    ? new Date(user.sonGiris).toLocaleString('tr-TR')
+                    : '—';
+                return `
+                    <tr data-user-id="${user.kullaniciId}" data-role-id="${user.rolId}" class="${user.kullaniciId === selectedUserId ? 'selected' : ''}">
+                        <td>${user.ad}</td>
+                        <td>${role?.name || user.rolId}</td>
+                        <td>${user.durum}</td>
+                        <td>${lastLogin}</td>
+                        <td><button class="edit-btn um-edit-btn" type="button">Düzenle</button></td>
+                    </tr>`;
+            }).join('');
+            return;
+        }
+
+        const table = document.getElementById('usersTable');
+        if (!table) return;
+        window.SmartTable.destroy(table);
+
+        usersSmartTable = window.SmartTable.mount({
+            scrollEl: table.closest('.table-scroll'),
+            headEl: table.querySelector('thead'),
+            bodyEl: usersBody,
+            cols: [
+                { key: 'user', label: 'Kullanıcı' },
+                { key: 'rolId', label: 'Rol' },
+                { key: 'durum', label: 'Durum' },
+                { key: 'sonGiris', label: 'Son Giriş' },
+                { key: 'actions', label: 'İşlemler' }
+            ],
+            rows: USERS,
+            wrapCells: true,
+            tableClass: 'vs-results-table vs-results-table--wrap',
+            getValue: (user, col) => {
+                if (col === 'user') return user.ad;
+                if (col === 'rolId') return roleMap[user.rolId]?.name || user.rolId;
+                if (col === 'durum') return user.durum === 'active' ? 'Aktif' : 'Pasif';
+                if (col === 'sonGiris') {
+                    return user.sonGiris ? new Date(user.sonGiris).toLocaleString('tr-TR') : '—';
+                }
+                return '';
+            },
+            formatCell: (col, user) => {
+                const role = roleMap[user.rolId];
+                const lastLogin = user.sonGiris
+                    ? new Date(user.sonGiris).toLocaleString('tr-TR')
+                    : '—';
+                if (col === 'user') {
+                    return `<td>
                         <div class="um-user-cell">
                             <div class="um-user-avatar">${userInitials(user.ad)}</div>
                             <div>
@@ -118,27 +176,40 @@
                                 <span class="um-user-email">${user.eposta}</span>
                             </div>
                         </div>
-                    </td>
-                    <td><span class="um-badge ${role?.badgeClass || ''}">${role?.name || user.rolId}</span></td>
-                    <td><span class="um-badge status-${user.durum}">${user.durum === 'active' ? 'Aktif' : 'Pasif'}</span></td>
-                    <td>${lastLogin}</td>
-                    <td>
-                        <button class="edit-btn um-edit-btn" type="button" data-user-id="${user.kullaniciId}">Düzenle</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        usersBody.querySelectorAll('tr[data-user-id]').forEach(row => {
-            row.addEventListener('click', e => {
-                if (e.target.closest('.um-edit-btn')) return;
-                selectedUserId = Number(row.dataset.userId);
-                selectedRoleId = row.dataset.roleId;
-                renderUsersTable();
+                    </td>`;
+                }
+                if (col === 'rolId') {
+                    return `<td><span class="um-badge ${role?.badgeClass || ''}">${role?.name || user.rolId}</span></td>`;
+                }
+                if (col === 'durum') {
+                    return `<td><span class="um-badge status-${user.durum}">${user.durum === 'active' ? 'Aktif' : 'Pasif'}</span></td>`;
+                }
+                if (col === 'sonGiris') return `<td>${lastLogin}</td>`;
+                if (col === 'actions') {
+                    return `<td><button class="edit-btn um-edit-btn" type="button" data-user-id="${user.kullaniciId}">Düzenle</button></td>`;
+                }
+                return null;
+            },
+            rowClass: user => (user.kullaniciId === selectedUserId ? 'selected' : ''),
+            rowAttrs: user => ({
+                'data-user-id': user.kullaniciId,
+                'data-role-id': user.rolId
+            }),
+            onRowClick: (user, rowEl, event) => {
+                if (event.target.closest('.um-edit-btn')) return;
+                selectedUserId = user.kullaniciId;
+                selectedRoleId = user.rolId;
+                mountUsersSmartTable();
                 renderRoleCards();
                 renderAccessPanel();
-            });
+            }
         });
+
+        bindUsersTableActions();
+    }
+
+    function renderUsersTable() {
+        mountUsersSmartTable();
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

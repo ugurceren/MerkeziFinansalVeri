@@ -2,6 +2,8 @@
     let vkKurallarSorgu = null;
     let vkGunlukSorgu = null;
     let vkKurallarFilters = {};
+    let vkKurallarSmartTable = null;
+    let vkGunlukSmartTable = null;
 
     const VK_KURALLAR_FILTER_FIELDS = [
         { key: 'qualityLevel', label: 'Seviye', column: 'QualityLevel', type: 'text', maxLength: 20 },
@@ -195,9 +197,51 @@
         };
     }
 
-    function renderVkKurallarCount(root, data, rows) {
+    function renderVkKurallarCount(root, data, rowsInfo) {
+        const rows = rowsInfo?.allRows || rowsInfo || [];
         const { shown, total, footnote } = buildVkKurallarCountOptions(data, rows);
-        window.TableCount?.set(root, shown, total, { wrapId: 'vkKurallarMeta', footnote });
+        const displayShown = rowsInfo?.length ?? shown;
+        window.TableCount?.set(root, displayShown, total, { wrapId: 'vkKurallarMeta', footnote });
+    }
+
+    function mountVkKurallarTable(root) {
+        const data = vkKurallarSorgu;
+        if (!data?.basarili) return;
+        const scroll = root.querySelector('.vk-kurallar-scroll');
+        if (!scroll) return;
+        const cols = data.kolonlar || [];
+        const allRows = data.satirlar || [];
+        const filtered = filterVkKurallarRows(allRows, vkKurallarFilters);
+        vkKurallarSmartTable = mountVkResultTable(
+            scroll,
+            cols,
+            filtered,
+            formatKurallarCell,
+            VK_COLUMN_LABELS,
+            shown => renderVkKurallarCount(root, data, { length: shown, allRows: filtered })
+        );
+        renderVkKurallarCount(root, data, { length: filtered.length, allRows: filtered });
+    }
+
+    function mountVkGunlukTable(root) {
+        const data = vkGunlukSorgu;
+        if (!data?.basarili) return;
+        const scroll = root.querySelector('.vk-scroll');
+        if (!scroll) return;
+        const cols = data.kolonlar || [];
+        const rows = data.satirlar || [];
+        vkGunlukSmartTable = mountVkResultTable(
+            scroll,
+            cols,
+            rows,
+            formatGunlukCell,
+            GUNLUK_COLUMN_LABELS,
+            shown => {
+                const total = data.satirSayisi ?? rows.length;
+                const footnote = data.kisitlandi ? `ilk ${data.maxSatir} satır gösterildi` : '';
+                window.TableCount?.set(root, shown, total, { wrapId: 'vkGunlukMeta', footnote });
+            }
+        );
     }
 
     function applyVkKurallarFilter(root) {
@@ -208,16 +252,22 @@
         const cols = data.kolonlar || [];
         const allRows = data.satirlar || [];
         const filtered = filterVkKurallarRows(allRows, vkKurallarFilters);
-
         const scroll = root.querySelector('.vk-kurallar-scroll');
-        if (scroll) {
-            scroll.innerHTML = buildResultTable(cols, filtered, formatKurallarCell, VK_COLUMN_LABELS);
+
+        if (vkKurallarSmartTable) {
+            vkKurallarSmartTable.setRows(filtered);
+        } else if (scroll) {
+            vkKurallarSmartTable = mountVkResultTable(
+                scroll,
+                cols,
+                filtered,
+                formatKurallarCell,
+                VK_COLUMN_LABELS,
+                shown => renderVkKurallarCount(root, data, { length: shown, allRows: filtered })
+            );
         }
 
-        const metaEl = root.querySelector('#vkKurallarMeta');
-        if (metaEl) {
-            renderVkKurallarCount(root, data, filtered);
-        }
+        renderVkKurallarCount(root, data, { length: filtered.length, allRows: filtered });
     }
 
     function clearVkKurallarFilters(root) {
@@ -283,6 +333,32 @@
         if (/flag$/i.test(key) || key === 'ActiveFlag') return false;
         if (/^(ruleid|qualitylevel|rulecode)$/i.test(key)) return false;
         return true;
+    }
+
+    function mountVkResultTable(scrollEl, cols, rows, formatCell, columnLabels, onFilteredChange) {
+        if (!scrollEl || !window.SmartTable) return null;
+        const existing = scrollEl.querySelector('table');
+        if (existing) window.SmartTable.destroy(existing);
+        scrollEl.innerHTML = '<table class="vk-table vk-table--wrap"><thead></thead><tbody></tbody></table>';
+        const table = scrollEl.querySelector('table');
+        return window.SmartTable.mount({
+            scrollEl,
+            headEl: table.querySelector('thead'),
+            bodyEl: table.querySelector('tbody'),
+            cols,
+            rows,
+            wrapCells: true,
+            tableClass: 'vk-table vk-table--wrap',
+            getColumnLabel: col => columnLabels[col] || col,
+            getValue: (row, col) => getVkRowValue(row, col),
+            formatCell: (col, row, val) => {
+                const formatted = formatCell(col, val);
+                const title = val === null || val === undefined ? '' : String(val);
+                const cellClass = isVkWrapColumn(col) ? 'vk-cell-wrap' : 'vk-cell-nowrap';
+                return `<td class="${cellClass}" title="${escapeHtml(title)}">${formatted}</td>`;
+            },
+            onFilteredChange
+        });
     }
 
     function buildResultTable(cols, rows, formatCell, columnLabels) {
@@ -373,9 +449,7 @@
                     ${countHtml}
                 </div>
                 ${buildVkKurallarFilterBar()}
-                <div class="vk-scroll vk-kurallar-scroll">
-                    ${buildResultTable(cols, rows, formatKurallarCell, VK_COLUMN_LABELS)}
-                </div>
+                <div class="vk-scroll vk-kurallar-scroll"></div>
             </div>
         </section>`;
     }
@@ -425,9 +499,7 @@
                     <h4>Başarısız Sonuçlar</h4>
                     ${countHtml}
                 </div>
-                <div class="vk-scroll">
-                    ${buildResultTable(cols, rows, formatGunlukCell, GUNLUK_COLUMN_LABELS)}
-                </div>
+                <div class="vk-scroll"></div>
             </div>
         </section>`;
     }
@@ -440,6 +512,7 @@
             el.innerHTML = buildGunlukSonuclarHTML();
             await loadVkGunlukSorgu();
             el.innerHTML = buildGunlukSonuclarHTML();
+            mountVkGunlukTable(el);
             return;
         }
 
@@ -447,6 +520,7 @@
         await loadVkKurallarSorgu();
         el.innerHTML = buildKurallarHTML();
         bindVkKurallarPage(el);
+        mountVkKurallarTable(el);
         return;
     }
 

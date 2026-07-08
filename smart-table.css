@@ -1,0 +1,148 @@
+.smart-table {
+    table-layout: fixed;
+    width: max(100%, var(--st-min-width, 100%));
+}
+
+.smart-table thead .st-label-row th,
+.smart-table thead .st-filter-row th {
+    position: sticky;
+    z-index: 2;
+    background: var(--rb-filter-bg);
+    vertical-align: middle;
+    padding: 0;
+}
+
+.smart-table thead .st-label-row th {
+    top: 0;
+    height: 34px;
+}
+
+.smart-table thead .st-filter-row th {
+    top: 34px;
+    height: 36px;
+    border-bottom: 0.5px solid var(--rb-border);
+}
+
+.smart-table .st-label-cell {
+    position: relative;
+    overflow: hidden;
+}
+
+.smart-table .st-sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0 24px 0 10px;
+    border: 0;
+    background: transparent;
+    color: var(--rb-text-secondary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.smart-table .st-sort-btn:hover {
+    color: var(--rb-text);
+    background: var(--rb-accent-soft);
+}
+
+.smart-table .st-sort-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.smart-table .st-sort-icon {
+    font-size: 14px;
+    opacity: 0.45;
+    flex-shrink: 0;
+}
+
+.smart-table .st-label-cell.is-sorted-asc .st-sort-icon,
+.smart-table .st-label-cell.is-sorted-desc .st-sort-icon {
+    opacity: 1;
+    color: var(--rb-accent, #3cb371);
+}
+
+.smart-table .st-col-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    touch-action: none;
+}
+
+.smart-table .st-col-resizer::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: 3px;
+    width: 1px;
+    height: 60%;
+    background: var(--rb-border);
+}
+
+.smart-table .st-col-resizer:hover::after,
+body.st-col-resizing .smart-table .st-col-resizer::after {
+    background: var(--rb-accent, #3cb371);
+}
+
+.smart-table .st-filter-cell {
+    padding: 4px 6px;
+}
+
+.smart-table .st-filter-input {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 8px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 6px;
+    background: var(--rb-card);
+    color: var(--rb-text);
+    font: inherit;
+    font-size: 11px;
+}
+
+.smart-table .st-filter-input:focus {
+    outline: none;
+    border-color: rgba(60, 179, 113, 0.55);
+    box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.12);
+}
+
+.smart-table tbody td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.smart-table.vs-results-table--wrap tbody td.vs-cell-wrap,
+.smart-table.vs-results-table--wrap tbody td {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: top;
+    line-height: 1.45;
+}
+
+.smart-table .st-empty-row {
+    text-align: center;
+    color: var(--rb-text-muted);
+    padding: 18px 12px !important;
+}
+
+body.st-col-resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+.smart-table thead .st-filter-row .st-filter-input::-webkit-search-cancel-button {
+    cursor: pointer;
+}

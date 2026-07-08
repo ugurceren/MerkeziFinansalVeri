@@ -49,6 +49,12 @@
     z-index: 1;
 }
 
+.smart-table.vs-results-table > thead > tr:not(.st-label-row):not(.st-filter-row) th,
+.smart-table.vs-results-table > thead .st-label-row th,
+.smart-table.vs-results-table > thead .st-filter-row th {
+    position: sticky;
+}
+
 .vs-results-table tbody tr:not(.virtual-spacer):hover {
     background: var(--rb-accent-soft);
 }

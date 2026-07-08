@@ -143,6 +143,18 @@
     }
 
     function exportCurrentResults() {
+        const smart = window.ReportResults.getActiveTable?.();
+        if (smart?.getExportData) {
+            const { columns, rows } = smart.getExportData();
+            if (!rows.length) return;
+            window.ReportResults.exportToExcel({
+                columns,
+                rows,
+                getHeaderLabel: columnLabel,
+                fileName: window.ReportResults.defaultFileName('nazim-hesaplari')
+            });
+            return;
+        }
         if (!exportContext) return;
         window.ReportResults.exportToExcel(exportContext);
     }

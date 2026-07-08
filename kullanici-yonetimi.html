@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="ribbon.css">
     <link rel="stylesheet" href="homepage.css">
-    <link rel="stylesheet" href="theme-menu.css">
+    <link rel="stylesheet" href="query-results-table.css">
     <link rel="stylesheet" href="kullanici-yonetimi.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
@@ -70,16 +70,8 @@
                         <button class="add-btn" type="button">+ Yeni Kullanıcı</button>
                     </div>
                     <div class="table-scroll">
-                        <table id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th>Kullanıcı</th>
-                                    <th>Rol</th>
-                                    <th>Durum</th>
-                                    <th>Son Giriş</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
+                        <table id="usersTable" class="vs-results-table vs-results-table--wrap">
+                            <thead></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -120,6 +112,7 @@
 <script src="theme-toggle.js"></script>
 <script src="ribbon-shell.js"></script>
 <script src="kullanici-shared.js"></script>
+<script src="smart-table.js"></script>
 <script src="kullanici-yonetimi.js"></script>
 </body>
 </html>
