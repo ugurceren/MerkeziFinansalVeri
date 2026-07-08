@@ -519,8 +519,8 @@
         el.innerHTML = buildKurallarHTML();
         await loadVkKurallarSorgu();
         el.innerHTML = buildKurallarHTML();
-        bindVkKurallarPage(el);
         mountVkKurallarTable(el);
+        bindVkKurallarPage(el);
         return;
     }
 

@@ -69,6 +69,57 @@
     color: var(--rb-accent, #3cb371);
 }
 
+.smart-table .st-label-cell:has(.st-filter-toggle) .st-sort-btn {
+    padding-right: 40px;
+}
+
+.smart-table .st-filter-toggle {
+    position: absolute;
+    top: 50%;
+    right: 13px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--rb-text-muted);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.smart-table .st-filter-toggle-icon {
+    font-size: 13px;
+}
+
+.smart-table .st-label-cell:hover .st-filter-toggle,
+.smart-table .st-filter-toggle.is-active,
+.smart-table.st-filters-open .st-filter-toggle {
+    opacity: 1;
+}
+
+.smart-table .st-filter-toggle:hover {
+    color: var(--rb-text);
+    background: var(--rb-accent-soft);
+}
+
+.smart-table .st-filter-toggle.is-active {
+    color: var(--rb-accent, #3cb371);
+}
+
+.smart-table .st-filter-row {
+    display: none;
+}
+
+.smart-table.st-filters-open .st-filter-row {
+    display: table-row;
+}
+
 .smart-table .st-col-resizer {
     position: absolute;
     top: 0;

@@ -119,7 +119,9 @@
         if (!bar) return;
 
         const bindKey = options.bindKey || 'default';
-        const stateKey = `filterBarBound_${bindKey}`;
+        // dataset (DOMStringMap) hyphenli anahtar adlarını reddeder; güvenli hale getir.
+        const safeBindKey = String(bindKey).replace(/[^a-zA-Z0-9]/g, '_');
+        const stateKey = `filterBarBound_${safeBindKey}`;
         if (bar.dataset[stateKey] === '1') return;
         bar.dataset[stateKey] = '1';
 

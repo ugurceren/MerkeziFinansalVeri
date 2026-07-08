@@ -146,6 +146,7 @@
             });
             this.virtualCleanup = null;
             this.resizeCleanup = null;
+            this.filtersVisible = false;
             this.filterDebounced = debounce(() => this.refresh(), 200);
         }
 
@@ -184,6 +185,7 @@
         }
 
         renderHeader() {
+            const filterable = this.options.filterable !== false;
             const labelCells = this.cols.map(col => {
                 const isSorted = this.sortCol === col.key;
                 const sortIcon = !isSorted
@@ -192,24 +194,32 @@
                 const sortClass = isSorted
                     ? (this.sortDir === 'asc' ? ' is-sorted-asc' : ' is-sorted-desc')
                     : '';
+                const funnelBtn = filterable
+                    ? `<button type="button" class="st-filter-toggle" data-filter-toggle title="Filtreleri göster/gizle" aria-pressed="${this.filtersVisible}">
+                        <i class="ti ti-filter st-filter-toggle-icon" aria-hidden="true"></i>
+                    </button>`
+                    : '';
                 return `<th scope="col" data-col="${escapeHtml(col.key)}" class="st-label-cell${sortClass}">
                     <button type="button" class="st-sort-btn" data-sort-col="${escapeHtml(col.key)}" title="Sırala">
                         <span class="st-sort-label">${escapeHtml(this.getLabel(col))}</span>
                         <i class="ti ${sortIcon} st-sort-icon" aria-hidden="true"></i>
                     </button>
+                    ${funnelBtn}
                     <span class="st-col-resizer" data-resize-col="${escapeHtml(col.key)}" title="Genişliği ayarla"></span>
                 </th>`;
             }).join('');
 
-            const filterCells = this.cols.map(col => `
+            const filterRow = !filterable
+                ? ''
+                : `<tr class="st-filter-row">${this.cols.map(col => `
                 <th scope="col" class="st-filter-cell">
                     <input type="search" class="st-filter-input" data-filter-col="${escapeHtml(col.key)}"
                         placeholder="Filtrele…" value="${escapeHtml(this.columnFilters[col.key] || '')}" autocomplete="off">
-                </th>`).join('');
+                </th>`).join('')}</tr>`;
 
             this.thead.innerHTML = `
                 <tr class="st-label-row">${labelCells}</tr>
-                <tr class="st-filter-row">${filterCells}</tr>`;
+                ${filterRow}`;
 
             this.thead.querySelectorAll('.st-sort-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -226,16 +236,25 @@
                         this.sortDir = 'asc';
                     }
                     this.renderHeader();
-                    this.bindHeaderEvents();
                     this.refresh();
                 });
             });
 
-            this.thead.querySelectorAll('.st-filter-input').forEach(input => {
-                input.addEventListener('input', () => {
-                    this.columnFilters[input.dataset.filterCol] = input.value;
-                    this.filterDebounced();
-                });
+            this.bindHeaderEvents();
+            this.updateFilterUI();
+        }
+
+        hasActiveFilters() {
+            return Object.values(this.columnFilters).some(v => String(v || '').trim());
+        }
+
+        updateFilterUI() {
+            if (!this.table) return;
+            this.table.classList.toggle('st-filters-open', this.filtersVisible);
+            const active = this.hasActiveFilters();
+            this.thead.querySelectorAll('[data-filter-toggle]').forEach(btn => {
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-pressed', String(this.filtersVisible));
             });
         }
 
@@ -284,9 +303,20 @@
         }
 
         bindHeaderEvents() {
+            this.thead.querySelectorAll('[data-filter-toggle]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    this.filtersVisible = !this.filtersVisible;
+                    this.updateFilterUI();
+                    if (this.filtersVisible) {
+                        this.thead.querySelector('.st-filter-input')?.focus();
+                    }
+                });
+            });
+
             this.thead.querySelectorAll('.st-filter-input').forEach(input => {
                 input.addEventListener('input', () => {
                     this.columnFilters[input.dataset.filterCol] = input.value;
+                    this.updateFilterUI();
                     this.filterDebounced();
                 });
             });

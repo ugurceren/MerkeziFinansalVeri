@@ -1323,6 +1323,7 @@ function mountDatasetStatusTables(shell) {
             ],
             rows: ozetRows,
             wrapCells: true,
+            filterable: false,
             tableClass: 'vs-results-table ds-status-compact-table',
             formatCell: (col, row, value) => {
                 if (col === 'status') {
@@ -1348,6 +1349,7 @@ function mountDatasetStatusTables(shell) {
             ],
             rows: modelRows,
             wrapCells: true,
+            filterable: false,
             tableClass: 'vs-results-table vs-results-table--wrap ds-status-compact-table',
             formatCell: (col, row, value) => {
                 if (col === 'dataModel') return `<td class="vs-cell-wrap ds-model-name-col">${escapeDatasetHtml(value)}</td>`;
