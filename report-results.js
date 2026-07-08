@@ -147,9 +147,12 @@
                 virtualScroll,
                 onFilteredChange
             });
+            if (scrollEl) scrollEl.scrollTop = 0;
             return activeTable;
         }
 
+        const readCell = (row, col) =>
+            (typeof getValue === 'function' ? getValue(row, col) : getRowCell(row, col));
         const labelFn = typeof getColumnLabel === 'function' ? getColumnLabel : col => col;
         const table = bodyEl.closest('table');
         table?.classList.toggle('vs-results-table--wrap', !!wrapCells);
@@ -158,7 +161,7 @@
         if (wrapCells) {
             bodyEl.innerHTML = rows.map(row => {
                 const cells = cols.map(col =>
-                    `<td class="vs-cell-wrap">${escapeHtmlFast(getRowCell(row, col))}</td>`
+                    `<td class="vs-cell-wrap">${escapeHtmlFast(readCell(row, col))}</td>`
                 ).join('');
                 return `<tr>${cells}</tr>`;
             }).join('');
@@ -193,7 +196,7 @@
                 const row = rows[i];
                 let rowHtml = '<tr>';
                 for (let c = 0; c < cols.length; c++) {
-                    rowHtml += `<td>${escapeHtmlFast(getRowCell(row, cols[c]))}</td>`;
+                    rowHtml += `<td>${escapeHtmlFast(readCell(row, cols[c]))}</td>`;
                 }
                 parts[partIndex++] = `${rowHtml}</tr>`;
             }

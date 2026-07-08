@@ -428,6 +428,9 @@
             }
 
             if (typeof this.options.onFilteredChange === 'function') {
+                // Primary argument is the shown (post-filter) count. The second argument
+                // is the current source length; consumers should derive the original total
+                // from their own state, since setRows() can replace the source dataset.
                 this.options.onFilteredChange(this.displayRows.length, this.sourceRows.length);
             }
         }
@@ -472,6 +475,7 @@
             this.renderHeader();
             this.bindResize();
             this.refresh();
+            if (this.wrap) this.wrap.scrollTop = 0;
 
             instances.set(this.table, this);
             return this;

@@ -446,13 +446,8 @@
                 const title = value === null || value === undefined ? '' : String(value);
                 return `<td class="mt-cell-wrap" title="${escapeHtml(title)}">${display}</td>`;
             },
-            onFilteredChange: (shown, total) => {
-                updateMatrixMapRecordCount(root, {
-                    basarili: true,
-                    satirlar: rows,
-                    satirSayisi: total,
-                    _shown: shown
-                });
+            onFilteredChange: shown => {
+                updateMatrixMapRecordCount(root, matrixMapData, shown);
             }
         });
         updateMatrixMapRecordCount(root, data);
@@ -467,10 +462,10 @@
         };
     }
 
-    function updateMatrixMapRecordCount(root, data) {
+    function updateMatrixMapRecordCount(root, data, shownOverride) {
         if (!data?.basarili) return;
         const { shown, total } = formatMatrixMapRecordCount(data);
-        const displayShown = data._shown ?? shown;
+        const displayShown = shownOverride ?? shown;
         window.TableCount?.set(root, displayShown, total, { wrapId: 'mtMatrixRecordCount' });
     }
 
