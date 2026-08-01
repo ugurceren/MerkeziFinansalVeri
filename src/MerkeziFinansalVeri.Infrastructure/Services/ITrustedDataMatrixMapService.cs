@@ -23,7 +23,7 @@ public sealed class TrustedDataMatrixMapFilter
     public string? MatrixTableDescription { get; init; }
     public string? MatrixColumnName { get; init; }
     public string? MatrixColumnDescription { get; init; }
-    public int? TdInscopeFlag { get; init; }
+    public int? ReconciliationInScopeFlag { get; init; }
     public string? BalanceTypeName { get; init; }
 }
 

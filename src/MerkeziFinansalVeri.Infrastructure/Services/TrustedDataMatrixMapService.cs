@@ -18,7 +18,7 @@ public sealed class TrustedDataMatrixMapService(
         "ValidFrom",
         "ValidUntil",
         "SCDActiveFlag",
-        "TrustedDataMatrixMapId",
+        "MatrixMapId",
         "SourceName",
         "MatrixTableId",
         "MatrixTableName",
@@ -26,7 +26,7 @@ public sealed class TrustedDataMatrixMapService(
         "MatrixColumnId",
         "MatrixColumnName",
         "MatrixColumnDescription",
-        "TDInscopeFlag",
+        "ReconciliationInScopeFlag",
         "BalanceTypeId",
         "BalanceTypeName",
         "InsertUserCode",
@@ -105,7 +105,7 @@ public sealed class TrustedDataMatrixMapService(
     {
         if (filter is null)
         {
-            return $"{baseSql}\nORDER BY TrustedDataMatrixMapId";
+            return $"{baseSql}\nORDER BY MatrixMapId";
         }
 
         var where = new StringBuilder();
@@ -113,15 +113,18 @@ public sealed class TrustedDataMatrixMapService(
         AppendStringFilter(where, "MatrixTableDescription", filter.MatrixTableDescription, 250);
         AppendStringFilter(where, "MatrixColumnName", filter.MatrixColumnName, 120);
         AppendStringFilter(where, "MatrixColumnDescription", filter.MatrixColumnDescription, 250);
-        AppendTinyIntFilter(where, "TDInscopeFlag", filter.TdInscopeFlag is 0 or 1 ? filter.TdInscopeFlag : null);
+        AppendTinyIntFilter(
+            where,
+            "ReconciliationInScopeFlag",
+            filter.ReconciliationInScopeFlag is 0 or 1 ? filter.ReconciliationInScopeFlag : null);
         AppendStringFilter(where, "BalanceTypeName", filter.BalanceTypeName, 120);
 
         if (where.Length == 0)
         {
-            return $"{baseSql}\nORDER BY TrustedDataMatrixMapId";
+            return $"{baseSql}\nORDER BY MatrixMapId";
         }
 
-        return $"{baseSql}\nWHERE 1=1{where}\nORDER BY TrustedDataMatrixMapId";
+        return $"{baseSql}\nWHERE 1=1{where}\nORDER BY MatrixMapId";
     }
 
     private static void AppendStringFilter(StringBuilder where, string column, string? value, int maxLength)

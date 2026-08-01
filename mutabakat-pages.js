@@ -8,9 +8,13 @@
     let matrixSmartTable = null;
 
     const MATRIXMAP_COLUMNS = [
+        { key: 'loadId', label: 'LoadId' },
+        { key: 'updateLoadId', label: 'UpdateLoadId' },
         { key: 'systemDateTime', label: 'SystemDateTime' },
+        { key: 'validFrom', label: 'ValidFrom' },
+        { key: 'validUntil', label: 'ValidUntil' },
         { key: 'scdActiveFlag', label: 'SCDActiveFlag' },
-        { key: 'trustedDataMatrixMapId', label: 'TrustedDataMatrixMapId' },
+        { key: 'matrixMapId', label: 'MatrixMapId' },
         { key: 'sourceName', label: 'SourceName' },
         { key: 'matrixTableId', label: 'MatrixTableId' },
         { key: 'matrixTableName', label: 'MatrixTableName' },
@@ -18,33 +22,34 @@
         { key: 'matrixColumnId', label: 'MatrixColumnId' },
         { key: 'matrixColumnName', label: 'MatrixColumnName' },
         { key: 'matrixColumnDescription', label: 'MatrixColumnDescription' },
-        { key: 'tdInscopeFlag', label: 'TDInscopeFlag' },
+        { key: 'reconciliationInScopeFlag', label: 'ReconciliationInScopeFlag' },
+        { key: 'balanceTypeId', label: 'BalanceTypeId' },
         { key: 'balanceTypeName', label: 'BalanceTypeName' },
         { key: 'insertUserCode', label: 'InsertUserCode' },
-        { key: 'updateUserCode', label: 'UpdateUserCode' },
-        { key: 'validFrom', label: 'ValidFrom' },
-        { key: 'validUntil', label: 'ValidUntil' }
+        { key: 'updateUserCode', label: 'UpdateUserCode' }
     ];
 
-    const MATRIXMAP_COLUMN_KEYS = Object.fromEntries(
-        MATRIXMAP_COLUMNS.map(c => [c.key, c.key.replace(/^[a-z]/, ch => ch.toUpperCase())])
-    );
-    MATRIXMAP_COLUMN_KEYS.systemDateTime = 'SystemDateTime';
-    MATRIXMAP_COLUMN_KEYS.validFrom = 'ValidFrom';
-    MATRIXMAP_COLUMN_KEYS.validUntil = 'ValidUntil';
-    MATRIXMAP_COLUMN_KEYS.scdActiveFlag = 'SCDActiveFlag';
-    MATRIXMAP_COLUMN_KEYS.trustedDataMatrixMapId = 'TrustedDataMatrixMapId';
-    MATRIXMAP_COLUMN_KEYS.sourceName = 'SourceName';
-    MATRIXMAP_COLUMN_KEYS.matrixTableId = 'MatrixTableId';
-    MATRIXMAP_COLUMN_KEYS.matrixTableName = 'MatrixTableName';
-    MATRIXMAP_COLUMN_KEYS.matrixTableDescription = 'MatrixTableDescription';
-    MATRIXMAP_COLUMN_KEYS.matrixColumnId = 'MatrixColumnId';
-    MATRIXMAP_COLUMN_KEYS.matrixColumnName = 'MatrixColumnName';
-    MATRIXMAP_COLUMN_KEYS.matrixColumnDescription = 'MatrixColumnDescription';
-    MATRIXMAP_COLUMN_KEYS.tdInscopeFlag = 'TDInscopeFlag';
-    MATRIXMAP_COLUMN_KEYS.balanceTypeName = 'BalanceTypeName';
-    MATRIXMAP_COLUMN_KEYS.insertUserCode = 'InsertUserCode';
-    MATRIXMAP_COLUMN_KEYS.updateUserCode = 'UpdateUserCode';
+    const MATRIXMAP_COLUMN_KEYS = {
+        loadId: 'LoadId',
+        updateLoadId: 'UpdateLoadId',
+        systemDateTime: 'SystemDateTime',
+        validFrom: 'ValidFrom',
+        validUntil: 'ValidUntil',
+        scdActiveFlag: 'SCDActiveFlag',
+        matrixMapId: 'MatrixMapId',
+        sourceName: 'SourceName',
+        matrixTableId: 'MatrixTableId',
+        matrixTableName: 'MatrixTableName',
+        matrixTableDescription: 'MatrixTableDescription',
+        matrixColumnId: 'MatrixColumnId',
+        matrixColumnName: 'MatrixColumnName',
+        matrixColumnDescription: 'MatrixColumnDescription',
+        reconciliationInScopeFlag: 'ReconciliationInScopeFlag',
+        balanceTypeId: 'BalanceTypeId',
+        balanceTypeName: 'BalanceTypeName',
+        insertUserCode: 'InsertUserCode',
+        updateUserCode: 'UpdateUserCode'
+    };
 
     const STATUS_LABEL = {
         aktif: { cls: 'aktif', label: 'Aktif' },
@@ -283,7 +288,7 @@
 
     function formatMatrixMapCell(colKey, val) {
         if (val === null || val === undefined) return '';
-        if (colKey === 'scdActiveFlag' || colKey === 'tdInscopeFlag') {
+        if (colKey === 'scdActiveFlag' || colKey === 'reconciliationInScopeFlag') {
             const active = val === 1 || val === '1';
             return `<span class="mt-badge ${active ? 'aktif' : 'kapali'}">${active ? '1' : '0'}</span>`;
         }

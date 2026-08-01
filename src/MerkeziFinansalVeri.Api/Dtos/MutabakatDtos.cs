@@ -52,7 +52,7 @@ public sealed class TrustedDataMatrixMapFilterDto
     public string? MatrixTableDescription { get; set; }
     public string? MatrixColumnName { get; set; }
     public string? MatrixColumnDescription { get; set; }
-    public int? TdInscopeFlag { get; set; }
+    public int? ReconciliationInScopeFlag { get; set; }
     public string? BalanceTypeName { get; set; }
 }
 

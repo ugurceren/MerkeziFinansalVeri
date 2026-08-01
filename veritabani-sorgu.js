@@ -109,29 +109,16 @@
         }
 
         if (!textOrPayload) {
-            meta.innerHTML = '';
+            meta.textContent = '';
             return;
         }
 
         const rows = textOrPayload.satirlar || [];
         const total = textOrPayload.satirSayisi ?? rows.length;
-        const shown = textOrPayload._shown ?? rows.length;
-        const notes = [];
-        if (textOrPayload.sureMs != null) notes.push(`${textOrPayload.sureMs} ms`);
-        if (textOrPayload.kisitlandi) notes.push(`ilk ${textOrPayload.maxSatir} satır gösterildi`);
-
-        if (window.TableCount?.set) {
-            window.TableCount.set(meta, shown, total, {
-                wrapId: 'vsQueryMeta',
-                footnote: notes.join(' · ') || undefined
-            });
-            return;
-        }
-
-        let metaText = `${total} satır`;
-        if (textOrPayload.sureMs != null) metaText += ` · ${textOrPayload.sureMs} ms`;
-        if (textOrPayload.kisitlandi) metaText += ` · ilk ${textOrPayload.maxSatir} satır gösterildi`;
-        meta.textContent = metaText;
+        const count = Number(total || 0).toLocaleString('tr-TR');
+        const parts = [`${count} kayıt`];
+        if (textOrPayload.sureMs != null) parts.push(`${textOrPayload.sureMs} ms`);
+        meta.textContent = parts.join(' · ');
     }
 
     function getQueryRowValue(row, column) {
@@ -218,7 +205,6 @@
         }
 
         const displayRows = window.ReportResults.sliceForDisplay(rows);
-        const metaPayload = { ...payload };
 
         window.ReportResults.renderTable({
             scrollEl: wrap,
@@ -227,15 +213,12 @@
             cols,
             rows: displayRows,
             getValue: getQueryRowValue,
-            wrapCells: true,
-            onFilteredChange: shown => {
-                setMeta({ ...metaPayload, _shown: shown });
-            }
+            wrapCells: true
         });
 
         if (empty) empty.hidden = true;
         wrap.classList.add('has-data');
-        setMeta(metaPayload);
+        setMeta(payload);
     }
 
     function apiErrorMessage(err) {

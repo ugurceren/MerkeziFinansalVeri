@@ -196,7 +196,7 @@ SELECT TOP 20
     MatrixTableName,
     MatrixColumnName,
     BalanceTypeName,
-    TDInscopeFlag
+    ReconciliationInScopeFlag
 FROM [TDMAIN].[PRM].[TDMatrixMap]
 ORDER BY MatrixTableName, MatrixColumnName;
 

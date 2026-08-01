@@ -11,9 +11,9 @@
 .tl-count {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    border-radius: 10px;
+    gap: 7px;
+    padding: 5px 9px;
+    border-radius: 8px;
     background: var(--rb-filter-bg);
     border: 0.5px solid var(--rb-border);
 }
@@ -29,13 +29,13 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    min-width: 52px;
+    gap: 1px;
+    min-width: 35px;
 }
 
 .table-count-label,
 .tl-count-label {
-    font-size: 10px;
+    font-size: 7px;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -45,7 +45,7 @@
 
 .table-count-value,
 .tl-count-value {
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 800;
     line-height: 1;
     color: var(--rb-text);
@@ -59,15 +59,15 @@
 
 .table-count-divider,
 .tl-count-divider {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 300;
     color: var(--rb-text-muted);
     line-height: 1;
-    padding-bottom: 2px;
+    padding-bottom: 1px;
 }
 
 .table-count-note {
-    font-size: 10px;
+    font-size: 7px;
     font-weight: 600;
     color: var(--rb-text-muted);
     line-height: 1.2;
@@ -77,12 +77,12 @@
 
 .page-ribbon .table-count-value,
 .page-ribbon .tl-count-value {
-    font-size: 22px;
+    font-size: 15px;
 }
 
 .page-ribbon .table-count-label,
 .page-ribbon .tl-count-label {
-    font-size: 11px;
+    font-size: 7px;
 }
 
 .vk-card-head .table-count-wrap,

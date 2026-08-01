@@ -188,7 +188,7 @@ public class MutabakatController(
         MatrixTableDescription = dto.MatrixTableDescription,
         MatrixColumnName = dto.MatrixColumnName,
         MatrixColumnDescription = dto.MatrixColumnDescription,
-        TdInscopeFlag = dto.TdInscopeFlag is 0 or 1 ? dto.TdInscopeFlag : null,
+        ReconciliationInScopeFlag = dto.ReconciliationInScopeFlag is 0 or 1 ? dto.ReconciliationInScopeFlag : null,
         BalanceTypeName = dto.BalanceTypeName
     };
 

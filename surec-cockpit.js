@@ -872,15 +872,16 @@ function buildDatasetViewToolbar(activeView) {
             ${tab.label}
         </button>`).join('');
 
-    const searchValue = escapeDatasetHtml(datasetPageSearchTerm);
+    const searchHtml = activeView === 'statu' ? '' : `
+            <label class="ds-page-search">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="search" id="dsPageSearch" placeholder="Dataset ara…" value="${escapeDatasetHtml(datasetPageSearchTerm)}" autocomplete="off" aria-label="Dataset ara">
+            </label>`;
 
     return `
         <div class="ds-view-toolbar-wrap">
             <div class="ds-view-toolbar" role="tablist" aria-label="Dataset görünümü">${buttons}</div>
-            <label class="ds-page-search">
-                <i class="ti ti-search" aria-hidden="true"></i>
-                <input type="search" id="dsPageSearch" placeholder="Dataset ara…" value="${searchValue}" autocomplete="off" aria-label="Dataset ara">
-            </label>
+            ${searchHtml}
         </div>`;
 }
 
@@ -1465,13 +1466,9 @@ function buildDatasetStatusModelRows(rows) {
 }
 
 function buildDatasetStatusContent() {
-    const term = datasetPageSearchTerm.trim().toLowerCase();
-    const ozetRows = resolveDatasetStatusOzet().filter(row =>
-        !term || String(row.status || '').toLowerCase().includes(term)
-    );
-    const modelRows = resolveDatasetStatusModelRows().filter(row =>
-        !term || [row.dataModel, row.status].some(value => String(value || '').toLowerCase().includes(term))
-    );
+    // Statü görünümünde sayfa araması yok; özet tablolar her zaman tam veri gösterir.
+    const ozetRows = resolveDatasetStatusOzet();
+    const modelRows = resolveDatasetStatusModelRows();
     const mockBadge = buildDatasetStatusMockBadge();
 
     return `
@@ -1647,13 +1644,8 @@ function mountDatasetListTable(root, rows) {
 
 function mountDatasetStatusTables(shell) {
     if (!window.SmartTable) return;
-    const term = datasetPageSearchTerm.trim().toLowerCase();
-    const ozetRows = resolveDatasetStatusOzet().filter(row =>
-        !term || String(row.status || '').toLowerCase().includes(term)
-    );
-    const modelRows = resolveDatasetStatusModelRows().filter(row =>
-        !term || [row.dataModel, row.status].some(value => String(value || '').toLowerCase().includes(term))
-    );
+    const ozetRows = resolveDatasetStatusOzet();
+    const modelRows = resolveDatasetStatusModelRows();
 
     const ozetTable = shell.querySelector('#dsStatusOzetTable');
     if (ozetTable) {
@@ -1821,12 +1813,6 @@ function applyDatasetPageSearch(shell) {
     }
 
     if (datasetPageView === 'statu') {
-        const contentEl = shell.querySelector('.ds-page-content');
-        if (contentEl) {
-            contentEl.innerHTML = buildDatasetStatusContent();
-            animateDatasetStage(contentEl);
-        }
-        mountDatasetStatusTables(shell);
         return;
     }
 
