@@ -18,4 +18,4 @@ SELECT
     BalanceTypeName,
     InsertUserCode,
     UpdateUserCode
-FROM PRM.TrustedDataMatrixMap
+FROM PRM.TDMatrixMap

@@ -3,7 +3,6 @@
     let diffAccounts = [];
     let activePeriodYilAy = '2026-06';
     let matrixMapData = null;
-    let matrixMapFilters = {};
     let diffSmartTable = null;
     let periodSmartTable = null;
     let matrixSmartTable = null;
@@ -25,15 +24,6 @@
         { key: 'updateUserCode', label: 'UpdateUserCode' },
         { key: 'validFrom', label: 'ValidFrom' },
         { key: 'validUntil', label: 'ValidUntil' }
-    ];
-
-    const MATRIXMAP_FILTER_FIELDS = [
-        { apiKey: 'matrixTableName', label: 'MatrixTableName', maxLength: 120, type: 'text' },
-        { apiKey: 'matrixTableDescription', label: 'MatrixTableDescription', maxLength: 250, type: 'text' },
-        { apiKey: 'matrixColumnName', label: 'MatrixColumnName', maxLength: 120, type: 'text' },
-        { apiKey: 'matrixColumnDescription', label: 'MatrixColumnDescription', maxLength: 250, type: 'text' },
-        { apiKey: 'tdInscopeFlag', label: 'TDInscopeFlag', type: 'tinyint' },
-        { apiKey: 'balanceTypeName', label: 'BalanceTypeName', maxLength: 120, type: 'text' }
     ];
 
     const MATRIXMAP_COLUMN_KEYS = Object.fromEntries(
@@ -282,10 +272,9 @@
         </section>`;
     }
 
-    async function loadMatrixMapData(filters = {}) {
-        matrixMapFilters = { ...filters };
+    async function loadMatrixMapData() {
         try {
-            matrixMapData = await ApiClient.getMatrixMap(filters);
+            matrixMapData = await ApiClient.getMatrixMap();
         } catch (err) {
             console.error('MatrixMap verisi yüklenemedi:', err);
             matrixMapData = { basarili: false, hata: apiErrorMessage(err) };
@@ -477,60 +466,28 @@
             || '<span>—</span>';
 
         return `<div class="mt-head mt-mm-head">
-            <h3>Matrix Map</h3>
+            <div class="mt-mm-head-text">
+                <h3>Matrix Map</h3>
+                <span class="mt-mm-head-subtitle">TDMAIN.PRM.TDMatrixMap</span>
+            </div>
             ${countHtml}
-        </div>`;
-    }
-
-    function buildMatrixMapFilterBar() {
-        const wrap = html => (window.FilterBar?.wrapControlHtml(html)) || html;
-        const clearBtn = window.FilterBar?.clearAllButtonHtml('mtMatrixClearAllBtn')
-            || '<button type="button" class="filter-btn filter-btn-clear filter-clear-all-btn" id="mtMatrixClearAllBtn"><span>Temizle</span></button>';
-
-        const fields = MATRIXMAP_FILTER_FIELDS.map(field => {
-            const value = escapeHtml(matrixMapFilters[field.apiKey] ?? '');
-            if (field.type === 'tinyint') {
-                const selected = value === '' ? '' : value;
-                return `<div class="fg">
-                    <label for="mmf-${field.apiKey}">${field.label}</label>
-                    ${wrap(`<select id="mmf-${field.apiKey}" class="mt-mm-filter-input filter-input-with-clear" data-filter="${field.apiKey}">
-                        <option value=""${selected === '' ? ' selected' : ''}>Tümü</option>
-                        <option value="1"${selected === '1' ? ' selected' : ''}>1</option>
-                        <option value="0"${selected === '0' ? ' selected' : ''}>0</option>
-                    </select>`)}
-                </div>`;
-            }
-            return `<div class="fg">
-                <label for="mmf-${field.apiKey}">${field.label}</label>
-                ${wrap(`<input type="text" id="mmf-${field.apiKey}" class="mt-mm-filter-input filter-input-with-clear" data-filter="${field.apiKey}"
-                    value="${value}" maxlength="${field.maxLength}" placeholder="${field.label} ara...">`)}
-            </div>`;
-        }).join('');
-
-        return `<div class="filter-bar mt-mm-filter-bar" id="mtMatrixFilterPanel">
-            ${fields}
-            ${clearBtn}
         </div>`;
     }
 
     function buildMatrixMapTableSection(data) {
         if (!data) {
             return `<div class="mt-card mt-mm-card">
-                ${buildMatrixMapFilterBar()}
                 <div class="mt-mm-loading">Veri getiriliyor…</div>
             </div>`;
         }
 
         if (!data.basarili) {
             return `<div class="mt-card mt-mm-card">
-                ${buildMatrixMapFilterBar()}
                 <div class="mt-error" role="alert">${escapeHtml(data.hata || 'Veri yüklenemedi.')}</div>
             </div>`;
         }
 
-        const rows = data.satirlar || [];
         return `<div class="mt-card mt-mm-card" id="mt-matrixmap">
-            ${buildMatrixMapFilterBar()}
             <div class="mt-mm-scroll">
                 <table class="mt-table mt-table--wrap" id="mtMatrixTable">
                     <thead></thead>
@@ -549,70 +506,8 @@
         </section>`;
     }
 
-    function collectMatrixMapFilters(root) {
-        const filters = {};
-        root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
-            const key = input.dataset.filter;
-            const val = (input.value || '').trim();
-            if (!val) return;
-            if (key === 'tdInscopeFlag') {
-                if (val === '0' || val === '1') filters[key] = parseInt(val, 10);
-                return;
-            }
-            const field = MATRIXMAP_FILTER_FIELDS.find(f => f.apiKey === key);
-            filters[key] = field?.maxLength ? val.slice(0, field.maxLength) : val;
-        });
-        return filters;
-    }
-
-    async function applyMatrixMapFilter(root) {
-        matrixMapFilters = collectMatrixMapFilters(root);
-        await loadMatrixMapData(matrixMapFilters);
-        if (!matrixMapData?.basarili) {
-            await initMutabakatPage(root);
-            return;
-        }
-        const tbody = root.querySelector('#mtMatrixTable tbody');
-        if (matrixSmartTable) {
-            matrixSmartTable.setRows(matrixMapData.satirlar || []);
-        } else if (tbody) {
-            mountMatrixSmartTable(root, matrixMapData);
-        }
-        updateMatrixMapRecordCount(root, matrixMapData);
-    }
-
-    async function clearMatrixMapFilters(root) {
-        matrixMapFilters = {};
-        root.querySelectorAll('.mt-mm-filter-input').forEach(input => {
-            input.value = '';
-        });
-        window.FilterBar?.syncFieldsInBar(root.querySelector('#mtMatrixFilterPanel'), '.mt-mm-filter-input');
-        await loadMatrixMapData({});
-        if (!matrixMapData?.basarili) {
-            await initMutabakatPage(root);
-            return;
-        }
-        const tbody = root.querySelector('#mtMatrixTable tbody');
-        if (matrixSmartTable) {
-            matrixSmartTable.setRows(matrixMapData.satirlar || []);
-        } else if (tbody) {
-            mountMatrixSmartTable(root, matrixMapData);
-        }
-        updateMatrixMapRecordCount(root, matrixMapData);
-    }
-
-    function bindMatrixMapPage(root) {
-        const pageBody = document.getElementById('pageBody');
-        pageBody?.classList.add('page-body-matrixmap');
-
-        window.FilterBar?.bind(root.querySelector('#mtMatrixFilterPanel'), {
-            bindKey: 'matrixmap',
-            fieldSelector: '.mt-mm-filter-input',
-            debounceMs: 300,
-            clearAllId: 'mtMatrixClearAllBtn',
-            onFilter: () => applyMatrixMapFilter(root),
-            onClearAll: () => clearMatrixMapFilters(root)
-        });
+    function bindMatrixMapPage() {
+        document.getElementById('pageBody')?.classList.add('page-body-matrixmap');
     }
 
     function buildMutabakatHTML(view) {
@@ -697,13 +592,13 @@
 
         const view = getFocusView();
         if (view === 'matrixmap') {
-            await loadMatrixMapData(matrixMapFilters);
+            await loadMatrixMapData();
         } else {
             await loadData();
         }
         el.innerHTML = buildMutabakatHTML(view);
         if (view === 'matrixmap') {
-            bindMatrixMapPage(el);
+            bindMatrixMapPage();
             mountMatrixSmartTable(el, matrixMapData);
         } else {
             document.getElementById('pageBody')?.classList.remove('page-body-matrixmap');

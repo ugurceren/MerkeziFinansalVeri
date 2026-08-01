@@ -197,7 +197,7 @@ SELECT TOP 20
     MatrixColumnName,
     BalanceTypeName,
     TDInscopeFlag
-FROM [TDMAIN].[PRM].[TrustedDataMatrixMap]
+FROM [TDMAIN].[PRM].[TDMatrixMap]
 ORDER BY MatrixTableName, MatrixColumnName;
 
 
