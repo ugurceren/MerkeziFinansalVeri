@@ -549,15 +549,12 @@ function updateGlobalFilterCounts() {
 }
 
 function refreshAllCockpitColumns() {
-    if (cockpitFocusLayer) {
-        rerenderSurecCockpit();
-    } else {
-        const grid = document.getElementById('cockpitFlowGrid');
-        if (grid) {
-            grid.innerHTML = buildFlowLayerGridHtml();
-        }
+    const grid = document.getElementById('cockpitFlowGrid');
+    if (grid) {
+        grid.innerHTML = buildFlowLayerGridHtml();
     }
     updateGlobalFilterCounts();
+    refreshOpenFlowLayerDrawer();
 }
 
 function getDefaultGunlukAkisDate() {
@@ -646,6 +643,179 @@ const DATASET_STATUS_MODEL_MOCK = [
 ];
 let datasetPageView = 'katalog';
 let datasetCatalogFocusId = null;
+let datasetPageSearchTerm = '';
+let surecDrawerCloser = null;
+let surecDrawerKeyHandler = null;
+
+function getPageBodyEl() {
+    return document.getElementById('pageBody') || document.querySelector('.page-body');
+}
+
+function ensureSurecDrawerHost() {
+    let host = document.getElementById('surecDrawerHost');
+    if (!host) {
+        host = document.createElement('div');
+        host.id = 'surecDrawerHost';
+        document.body.appendChild(host);
+    }
+    return host;
+}
+
+function closeSurecDrawer(options = {}) {
+    const immediate = !!options.immediate;
+    const host = document.getElementById('surecDrawerHost');
+    const pageBody = getPageBodyEl();
+    pageBody?.classList.remove('sc-drawer-dim');
+
+    if (surecDrawerKeyHandler) {
+        document.removeEventListener('keydown', surecDrawerKeyHandler);
+        surecDrawerKeyHandler = null;
+    }
+
+    const onClose = surecDrawerCloser;
+    surecDrawerCloser = null;
+
+    if (!host) {
+        onClose?.();
+        return;
+    }
+
+    const drawer = host.querySelector('.sc-drawer');
+    if (!drawer || immediate) {
+        host.innerHTML = '';
+        onClose?.();
+        return;
+    }
+
+    drawer.classList.remove('is-open');
+    const finish = () => {
+        if (host.contains(drawer)) host.innerHTML = '';
+        onClose?.();
+    };
+    drawer.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 480);
+}
+
+function openSurecDrawer({ title, subtitle, theme, bodyHtml, onMounted, onClose }) {
+    closeSurecDrawer({ immediate: true });
+
+    const host = ensureSurecDrawerHost();
+    const themeClass = theme ? ` theme-${theme}` : '';
+    host.innerHTML = `
+        <div class="sc-drawer" aria-hidden="true">
+            <div class="sc-drawer-backdrop" data-drawer-close tabindex="-1"></div>
+            <aside class="sc-drawer-panel${themeClass}" role="dialog" aria-modal="true" aria-label="${escapeDatasetHtml(title || 'Detay')}">
+                <div class="sc-drawer-accent" aria-hidden="true"></div>
+                <header class="sc-drawer-head">
+                    <button type="button" class="sc-drawer-close" data-drawer-close title="Kapat" aria-label="Kapat">
+                        <i class="ti ti-x" aria-hidden="true"></i>
+                    </button>
+                    <div class="sc-drawer-titles">
+                        <h2>${escapeDatasetHtml(title || '')}</h2>
+                        <p>${escapeDatasetHtml(subtitle || '')}</p>
+                    </div>
+                </header>
+                <div class="sc-drawer-body">${bodyHtml || ''}</div>
+            </aside>
+        </div>`;
+
+    const drawer = host.querySelector('.sc-drawer');
+    const pageBody = getPageBodyEl();
+    surecDrawerCloser = typeof onClose === 'function' ? onClose : null;
+
+    host.querySelectorAll('[data-drawer-close]').forEach(el => {
+        el.addEventListener('click', () => closeSurecDrawer());
+    });
+    host.querySelectorAll('[data-flow-back], [data-domain-back]').forEach(el => {
+        el.addEventListener('click', event => {
+            event.preventDefault();
+            closeSurecDrawer();
+        });
+    });
+
+    surecDrawerKeyHandler = event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeSurecDrawer();
+        }
+    };
+    document.addEventListener('keydown', surecDrawerKeyHandler);
+
+    requestAnimationFrame(() => {
+        drawer?.classList.add('is-open');
+        drawer?.setAttribute('aria-hidden', 'false');
+        pageBody?.classList.add('sc-drawer-dim');
+        host.querySelector('.sc-drawer-close')?.focus();
+        onMounted?.(host.querySelector('.sc-drawer-body'));
+    });
+}
+
+function openFlowLayerDrawer(layerName) {
+    const col = COCKPIT_COLUMNS.find(column => column.name === layerName);
+    if (!col) return;
+
+    cockpitFocusLayer = layerName;
+    const kayitlar = getVisibleKayitlar(col);
+    openSurecDrawer({
+        title: col.name,
+        subtitle: `${col.role} · ${kayitlar.length} kayıt`,
+        theme: col.theme,
+        bodyHtml: buildFlowLayerDetail(col),
+        onMounted: () => mountFlowDetailTable(),
+        onClose: () => {
+            cockpitFocusLayer = null;
+        }
+    });
+}
+
+function refreshOpenFlowLayerDrawer() {
+    if (!cockpitFocusLayer || !document.querySelector('#surecDrawerHost .sc-drawer.is-open')) return;
+    const col = COCKPIT_COLUMNS.find(column => column.name === cockpitFocusLayer);
+    if (!col) return;
+    const body = document.querySelector('#surecDrawerHost .sc-drawer-body');
+    const titles = document.querySelector('#surecDrawerHost .sc-drawer-titles');
+    if (!body) return;
+    const kayitlar = getVisibleKayitlar(col);
+    if (titles) {
+        titles.innerHTML = `<h2>${escapeDatasetHtml(col.name)}</h2><p>${escapeDatasetHtml(`${col.role} · ${kayitlar.length} kayıt`)}</p>`;
+    }
+    body.innerHTML = buildFlowLayerDetail(col);
+    mountFlowDetailTable();
+}
+
+function openDomainDrawer(domainId) {
+    const { sortedDomains, maxCount, rank, domain, totalDatasets, domainCount } = getDomainCatalogContext(domainId || '');
+    if (!domain) return;
+
+    setDatasetCatalogFocus(domain.id);
+    openSurecDrawer({
+        title: domain.name,
+        subtitle: `Domain detayı · ${domain.datasets.length} dataset · sıra #${rank}`,
+        theme: domain.theme,
+        bodyHtml: buildDomainDetailView(domain, rank, maxCount, domainCount, totalDatasets),
+        onMounted: () => {},
+        onClose: () => {
+            setDatasetCatalogFocus(null);
+            const shell = document.querySelector('.dataset-catalog');
+            if (shell) {
+                shell.classList.remove('is-domain-focused');
+                const textEl = shell.querySelector('.ds-page-head-text');
+                const meta = getDatasetPageMeta('katalog');
+                if (textEl) {
+                    textEl.innerHTML = `<h3>${meta[0]}</h3><span class="ds-page-head-subtitle">${meta[1]}</span>`;
+                }
+            }
+        }
+    });
+}
+
+function animateDatasetStage(contentEl) {
+    if (!contentEl) return;
+    contentEl.classList.remove('is-stage-enter');
+    // force reflow for replay
+    void contentEl.offsetWidth;
+    contentEl.classList.add('is-stage-enter');
+}
 
 function getDatasetCatalogFocusId() {
     const params = new URLSearchParams(window.location.search);
@@ -667,7 +837,7 @@ function setDatasetCatalogFocus(domainId) {
 function getDatasetPageView() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('dsView');
-    return view === 'liste' || view === 'statu' ? view : 'katalog';
+    return view === 'liste' || view === 'kartlar' || view === 'statu' ? view : 'katalog';
 }
 
 function setDatasetPageView(view) {
@@ -688,6 +858,7 @@ function buildDatasetViewToolbar(activeView) {
     const tabs = [
         { id: 'katalog', label: 'Katalog', icon: 'ti-layout-grid' },
         { id: 'liste', label: 'Liste', icon: 'ti-list' },
+        { id: 'kartlar', label: 'Kartlar', icon: 'ti-cards' },
         { id: 'statu', label: 'Statü', icon: 'ti-chart-dots' }
     ];
 
@@ -699,7 +870,16 @@ function buildDatasetViewToolbar(activeView) {
             ${tab.label}
         </button>`).join('');
 
-    return `<div class="ds-view-toolbar" role="tablist" aria-label="Dataset görünümü">${buttons}</div>`;
+    const searchValue = escapeDatasetHtml(datasetPageSearchTerm);
+
+    return `
+        <div class="ds-view-toolbar-wrap">
+            <div class="ds-view-toolbar" role="tablist" aria-label="Dataset görünümü">${buttons}</div>
+            <label class="ds-page-search">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="search" id="dsPageSearch" placeholder="Dataset ara…" value="${searchValue}" autocomplete="off" aria-label="Dataset ara">
+            </label>
+        </div>`;
 }
 
 function formatDatasetDate(value) {
@@ -800,6 +980,14 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
     const sharePct = totalDatasets > 0 ? Math.round((count / totalDatasets) * 100) : 0;
     const safeName = escapeDatasetHtml(domain.name);
     const safeId = escapeDatasetHtml(domain.id);
+    const term = datasetPageSearchTerm.trim().toLowerCase();
+    const filteredDatasets = !term
+        ? domain.datasets
+        : domain.datasets.filter(ds =>
+            [ds.label, ds.descriptionScope, ds.stagingTable].some(value =>
+                String(value || '').toLowerCase().includes(term)
+            )
+        );
 
     return `
         <div class="domain-detail theme-${domain.theme}" data-domain-id="${safeId}">
@@ -831,10 +1019,7 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
             <div class="domain-detail-panel">
                 <div class="domain-detail-panel-head">
                     <h3>Dataset listesi</h3>
-                    <label class="domain-detail-search">
-                        <i class="ti ti-search" aria-hidden="true"></i>
-                        <input type="search" id="dsDomainSearch" placeholder="Dataset, kapsam veya staging tablo ara…" autocomplete="off">
-                    </label>
+                    <span class="domain-detail-count">${filteredDatasets.length}${term ? ` / ${count}` : ''} kayıt</span>
                 </div>
                 <div class="vs-results-wrap is-fill has-data">
                     <table class="vs-results-table vs-results-table--wrap">
@@ -847,7 +1032,9 @@ function buildDomainDetailView(domain, rank, maxCount, domainCount, totalDataset
                             </tr>
                         </thead>
                         <tbody id="dsDomainTableBody">
-                            ${buildDomainDetailRows(domain.datasets)}
+                            ${filteredDatasets.length
+                                ? buildDomainDetailRows(filteredDatasets)
+                                : '<tr><td colspan="4" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>'}
                         </tbody>
                     </table>
                 </div>
@@ -874,6 +1061,7 @@ function getDatasetPageMeta(activeView) {
     const meta = {
         katalog: ['Dataset Kataloğu', 'Domain bazında tanımlı dataset envanteri'],
         liste: ['Dataset Listesi', 'DOC.TDDataset tablosunun tam listesi'],
+        kartlar: ['Dataset Kartları', 'Her dataset için özet kart görünümü'],
         statu: ['Dataset Statü Özeti', 'DOC.TDDataset Status ve Data Model bazında dataset dağılımı']
     };
     return meta[activeView] || meta.katalog;
@@ -904,6 +1092,11 @@ function updateDatasetPageChrome(shell, activeView) {
         textEl.innerHTML = `<h3>${title}</h3><span class="ds-page-head-subtitle">${subtitle}</span>`;
     }
 
+    const toolbarEl = shell.querySelector('.ds-page-head-toolbar');
+    if (toolbarEl) {
+        toolbarEl.innerHTML = buildDatasetViewToolbar(activeView);
+    }
+
     const summaryEl = shell.querySelector('.ds-page-head-summary');
     if (summaryEl) {
         summaryEl.innerHTML = buildDatasetSummaryBlocks();
@@ -918,6 +1111,9 @@ function buildDatasetContentOnly(activeView) {
     if (activeView === 'liste') {
         return buildDatasetListeContent();
     }
+    if (activeView === 'kartlar') {
+        return buildDatasetKartlarContent();
+    }
     if (activeView === 'statu') {
         return buildDatasetStatusContent();
     }
@@ -929,24 +1125,38 @@ function buildDatasetCatalogContent() {
         return '<div class="ds-empty">DOC.TDDataset kaydı bulunamadı.</div>';
     }
 
-    const focusId = datasetCatalogFocusId || getDatasetCatalogFocusId();
-    const { sortedDomains, maxCount, rank, domain, totalDatasets, domainCount } = getDomainCatalogContext(focusId || '');
+    const { sortedDomains, maxCount } = getDomainCatalogContext('');
+    const term = datasetPageSearchTerm.trim().toLowerCase();
+    const filteredDomains = !term
+        ? sortedDomains
+        : sortedDomains.filter(entry => {
+            if (String(entry.name || '').toLowerCase().includes(term)) return true;
+            return (entry.datasets || []).some(ds =>
+                [ds.label, ds.descriptionScope, ds.stagingTable].some(value =>
+                    String(value || '').toLowerCase().includes(term)
+                )
+            );
+        });
 
-    if (focusId && !domain) {
-        datasetCatalogFocusId = null;
+    if (!filteredDomains.length) {
+        return `
+            <div class="domain-mosaic-wrap">
+                <div class="ds-empty">Aramayla eşleşen domain veya dataset bulunamadı.</div>
+            </div>`;
     }
 
-    if (focusId && domain) {
-        return buildDomainDetailView(domain, rank, maxCount, domainCount, totalDatasets);
-    }
-
-    const tiles = sortedDomains.map((entry, index) => buildDomainTile(entry, index + 1, maxCount)).join('');
+    const tiles = filteredDomains.map((entry, index) => {
+        const originalRank = sortedDomains.findIndex(d => d.id === entry.id) + 1;
+        return buildDomainTile(entry, originalRank || (index + 1), maxCount);
+    }).join('');
 
     return `
         <div class="domain-mosaic-wrap">
             <p class="domain-mosaic-hint">
                 <i class="ti ti-sort-descending" aria-hidden="true"></i>
-                Domainler dataset sayısına göre sıralı · detay için karta tıklayın
+                ${term
+                    ? `${filteredDomains.length} domain · arama: “${escapeDatasetHtml(datasetPageSearchTerm.trim())}”`
+                    : 'Domainler dataset sayısına göre sıralı · detay için karta tıklayın'}
             </p>
             <div class="domain-mosaic">${tiles}</div>
         </div>`;
@@ -991,17 +1201,35 @@ function buildDatasetListRows(rows) {
         </tr>`).join('');
 }
 
+function filterDatasetListRows(rows, term) {
+    const needle = String(term || '').trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter(row =>
+        [
+            row.datasetName,
+            row.descriptionScope,
+            row.dataModel,
+            row.stagingTableName,
+            row.status,
+            row.statusResponsible,
+            row.layer,
+            row.tdAnalyst,
+            row.tester,
+            row.ktResponsibleItUnit,
+            row.ktSpName,
+            row.note
+        ].some(value => String(value || '').toLowerCase().includes(needle))
+    );
+}
+
 function buildDatasetListeContent() {
+    const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
     const count = DATASET_LIST_ROWS.length;
 
     return `
         <div class="ds-table-card">
-            <div class="ds-table-toolbar">
-                <label class="ds-table-search">
-                    <i class="ti ti-search" aria-hidden="true"></i>
-                    <input type="search" id="dsListSearch" placeholder="Dataset, model, staging, statü ara…">
-                </label>
-                ${tableCountHtml(count, count, { wrapId: 'dsListCountWrap' })}
+            <div class="ds-table-toolbar ds-table-toolbar--count-only">
+                ${tableCountHtml(filtered.length, count, { wrapId: 'dsListCountWrap' })}
             </div>
             <div class="vs-results-wrap is-fill has-data">
                 <table class="vs-results-table vs-results-table--wrap" id="dsListTable">
@@ -1010,6 +1238,154 @@ function buildDatasetListeContent() {
                 </table>
             </div>
         </div>`;
+}
+
+function datasetCardMetaValue(value) {
+    const text = String(value ?? '').trim();
+    return text ? escapeDatasetHtml(text) : '—';
+}
+
+function buildDatasetCard(row, index) {
+    const statusClass = statusBadgeClass(row.status);
+    const name = escapeDatasetHtml(row.datasetName || '—');
+    const status = escapeDatasetHtml(row.status || '—');
+
+    return `
+        <article class="ds-dataset-card ${statusClass}"
+            data-ds-card-index="${index}"
+            role="button"
+            tabindex="0"
+            aria-label="${name} dataset detayı">
+            <div class="ds-dataset-card-accent" aria-hidden="true"></div>
+            <header class="ds-dataset-card-head">
+                <h4 class="ds-dataset-card-title" title="${name}">${name}</h4>
+                <span class="ds-status-badge ${statusClass}">${status}</span>
+            </header>
+            <dl class="ds-dataset-card-meta">
+                <div><dt>Model</dt><dd title="${datasetCardMetaValue(row.dataModel)}">${datasetCardMetaValue(row.dataModel)}</dd></div>
+                <div><dt>Layer</dt><dd title="${datasetCardMetaValue(row.layer)}">${datasetCardMetaValue(row.layer)}</dd></div>
+                <div class="is-wide"><dt>Staging</dt><dd title="${datasetCardMetaValue(row.stagingTableName)}">${datasetCardMetaValue(row.stagingTableName)}</dd></div>
+            </dl>
+            <div class="ds-dataset-card-people">
+                <span><i class="ti ti-user" aria-hidden="true"></i>${datasetCardMetaValue(row.tdAnalyst)}</span>
+                <span><i class="ti ti-test-pipe" aria-hidden="true"></i>${datasetCardMetaValue(row.tester)}</span>
+                <span><i class="ti ti-user-check" aria-hidden="true"></i>${datasetCardMetaValue(row.statusResponsible)}</span>
+            </div>
+            <p class="ds-dataset-card-scope" title="${datasetCardMetaValue(row.descriptionScope)}">${datasetCardMetaValue(row.descriptionScope)}</p>
+            <footer class="ds-dataset-card-foot">
+                <span>Statü tarihi</span>
+                <strong>${formatDatasetDate(row.statusChangeDate)}</strong>
+            </footer>
+        </article>`;
+}
+
+function buildDatasetKartlarContent() {
+    const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
+    const count = DATASET_LIST_ROWS.length;
+    const term = datasetPageSearchTerm.trim();
+
+    if (!filtered.length) {
+        return `
+            <div class="ds-cards-wrap">
+                <div class="ds-cards-toolbar">
+                    ${tableCountHtml(0, count, { wrapId: 'dsCardsCountWrap' })}
+                </div>
+                <div class="ds-empty">${term ? 'Aramayla eşleşen dataset bulunamadı.' : 'Dataset kaydı bulunamadı.'}</div>
+            </div>`;
+    }
+
+    const cards = filtered.map((row, index) => buildDatasetCard(row, index)).join('');
+
+    return `
+        <div class="ds-cards-wrap">
+            <div class="ds-cards-toolbar">
+                <p class="ds-cards-hint">
+                    <i class="ti ti-click" aria-hidden="true"></i>
+                    ${term
+                        ? `${filtered.length} kart · arama: “${escapeDatasetHtml(term)}”`
+                        : 'Detay için karta tıklayın'}
+                </p>
+                ${tableCountHtml(filtered.length, count, { wrapId: 'dsCardsCountWrap' })}
+            </div>
+            <div class="ds-cards-grid" id="dsCardsGrid">${cards}</div>
+        </div>`;
+}
+
+function buildDatasetCardDrawerBody(row) {
+    const fields = [
+        ['Dataset', row.datasetName],
+        ['Statü', row.status],
+        ['Data Model', row.dataModel],
+        ['Layer', row.layer],
+        ['Staging Tablo', row.stagingTableName],
+        ['TD Analist', row.tdAnalyst],
+        ['Tester', row.tester],
+        ['Statü Sorumlusu', row.statusResponsible],
+        ['Statü Tarihi', formatDatasetDate(row.statusChangeDate)],
+        ['KT IT Birimi', row.ktResponsibleItUnit],
+        ['KT SP', row.ktSpName],
+        ['Kapsam', row.descriptionScope],
+        ['Not', row.note]
+    ];
+
+    const rows = fields.map(([label, value]) => `
+        <div class="ds-card-detail-row">
+            <dt>${escapeDatasetHtml(label)}</dt>
+            <dd>${datasetCardMetaValue(value)}</dd>
+        </div>`).join('');
+
+    return `
+        <div class="ds-card-detail">
+            <div class="ds-card-detail-status">
+                <span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status || '—')}</span>
+            </div>
+            <dl class="ds-card-detail-list">${rows}</dl>
+        </div>`;
+}
+
+function openDatasetCardDrawer(row) {
+    if (!row) return;
+    openSurecDrawer({
+        title: row.datasetName || 'Dataset',
+        subtitle: [row.dataModel, row.layer].filter(Boolean).join(' · ') || 'Dataset detayı',
+        theme: 'teal',
+        bodyHtml: buildDatasetCardDrawerBody(row)
+    });
+}
+
+function bindDatasetKartlarInteractions(root) {
+    const shell = root.querySelector?.('.dataset-catalog') || root;
+    const grid = shell.querySelector('#dsCardsGrid');
+    if (!grid || grid.dataset.bound === '1') return;
+    grid.dataset.bound = '1';
+
+    const openFromCard = card => {
+        const index = Number(card.getAttribute('data-ds-card-index'));
+        const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
+        openDatasetCardDrawer(filtered[index]);
+    };
+
+    grid.addEventListener('click', event => {
+        const card = event.target.closest('.ds-dataset-card[data-ds-card-index]');
+        if (!card || !grid.contains(card)) return;
+        openFromCard(card);
+    });
+
+    grid.addEventListener('keydown', event => {
+        const card = event.target.closest('.ds-dataset-card[data-ds-card-index]');
+        if (!card || !grid.contains(card)) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        openFromCard(card);
+    });
+}
+
+function refreshDatasetKartlarContent(shell) {
+    const contentEl = shell.querySelector('.ds-page-content');
+    if (!contentEl) return;
+    contentEl.innerHTML = buildDatasetKartlarContent();
+    animateDatasetStage(contentEl);
+    bindDatasetKartlarInteractions(shell);
 }
 
 function buildDatasetListeHTML() {
@@ -1087,12 +1463,17 @@ function buildDatasetStatusModelRows(rows) {
 }
 
 function buildDatasetStatusContent() {
-    const ozetRows = resolveDatasetStatusOzet();
-    const modelRows = resolveDatasetStatusModelRows();
+    const term = datasetPageSearchTerm.trim().toLowerCase();
+    const ozetRows = resolveDatasetStatusOzet().filter(row =>
+        !term || String(row.status || '').toLowerCase().includes(term)
+    );
+    const modelRows = resolveDatasetStatusModelRows().filter(row =>
+        !term || [row.dataModel, row.status].some(value => String(value || '').toLowerCase().includes(term))
+    );
     const mockBadge = buildDatasetStatusMockBadge();
 
     return `
-        <div class="ds-status-split">
+        <div class="ds-status-split" data-ozet-count="${ozetRows.length}" data-model-count="${modelRows.length}">
             ${mockBadge ? `<div class="ds-status-mock-bar">${mockBadge}</div>` : ''}
             <div class="ds-table-card ds-status-ozet-card">
                 <div class="ds-table-toolbar">
@@ -1182,21 +1563,12 @@ function bindDatasetCatalogInteractions(root) {
     shell.dataset.catalogBound = '1';
 
     shell.addEventListener('click', event => {
-        const backBtn = event.target.closest('[data-domain-back]');
-        if (backBtn) {
-            setDatasetCatalogFocus(null);
-            refreshDatasetCatalogContent(shell);
-            return;
-        }
-
         const tile = event.target.closest('.domain-tile[data-domain-id]');
         if (!tile) return;
 
         const domainId = tile.getAttribute('data-domain-id');
         if (!domainId) return;
-
-        setDatasetCatalogFocus(domainId);
-        refreshDatasetCatalogContent(shell);
+        openDomainDrawer(domainId);
     });
 
     shell.addEventListener('keydown', event => {
@@ -1206,57 +1578,23 @@ function bindDatasetCatalogInteractions(root) {
         event.preventDefault();
         const domainId = tile.getAttribute('data-domain-id');
         if (!domainId) return;
-        setDatasetCatalogFocus(domainId);
-        refreshDatasetCatalogContent(shell);
+        openDomainDrawer(domainId);
     });
-}
-
-function bindDatasetDetailSearch(root, domain) {
-    const input = root.querySelector('#dsDomainSearch');
-    const tbody = root.querySelector('#dsDomainTableBody');
-    if (!input || !tbody || !domain) return;
-
-    const applySearch = () => {
-        const term = input.value.trim().toLowerCase();
-        const filtered = !term
-            ? domain.datasets
-            : domain.datasets.filter(ds =>
-                [ds.label, ds.descriptionScope, ds.stagingTable].some(value => String(value || '').toLowerCase().includes(term))
-            );
-        tbody.innerHTML = filtered.length
-            ? buildDomainDetailRows(filtered)
-            : '<tr><td colspan="4" class="ds-empty-cell">Eşleşen dataset bulunamadı.</td></tr>';
-    };
-
-    window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
 }
 
 function refreshDatasetCatalogContent(shell) {
     const contentEl = shell.querySelector('.ds-page-content');
     if (!contentEl) return;
 
-    shell.classList.toggle('is-domain-focused', !!datasetCatalogFocusId);
-
+    shell.classList.remove('is-domain-focused');
     const meta = getDatasetPageMeta('katalog');
     const textEl = shell.querySelector('.ds-page-head-text');
-    if (textEl && datasetCatalogFocusId) {
-        const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
-        if (domain) {
-            textEl.innerHTML = `
-                <h3>${escapeDatasetHtml(domain.name)}</h3>
-                <span class="ds-page-head-subtitle">Domain detayı · ${domain.datasets.length} dataset</span>`;
-        }
-    } else if (textEl) {
+    if (textEl) {
         textEl.innerHTML = `<h3>${meta[0]}</h3><span class="ds-page-head-subtitle">${meta[1]}</span>`;
     }
 
     contentEl.innerHTML = buildDatasetCatalogContent();
-
-    if (datasetCatalogFocusId) {
-        const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
-        bindDatasetDetailSearch(shell, domain);
-        shell.querySelector('.domain-detail-back')?.focus();
-    }
+    animateDatasetStage(contentEl);
 }
 
 function mountDatasetListTable(root, rows) {
@@ -1307,8 +1645,13 @@ function mountDatasetListTable(root, rows) {
 
 function mountDatasetStatusTables(shell) {
     if (!window.SmartTable) return;
-    const ozetRows = resolveDatasetStatusOzet();
-    const modelRows = resolveDatasetStatusModelRows();
+    const term = datasetPageSearchTerm.trim().toLowerCase();
+    const ozetRows = resolveDatasetStatusOzet().filter(row =>
+        !term || String(row.status || '').toLowerCase().includes(term)
+    );
+    const modelRows = resolveDatasetStatusModelRows().filter(row =>
+        !term || [row.dataModel, row.status].some(value => String(value || '').toLowerCase().includes(term))
+    );
 
     const ozetTable = shell.querySelector('#dsStatusOzetTable');
     if (ozetTable) {
@@ -1454,39 +1797,64 @@ function mountTaskListTable(root, rows) {
 }
 
 function bindDatasetListSearch(root) {
-    const input = root.querySelector('#dsListSearch');
-    if (!input) return;
+    const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
+    if (dsListSmartTable) {
+        dsListSmartTable.setRows(filtered);
+    } else {
+        mountDatasetListTable(root, filtered);
+    }
+}
 
-    const applySearch = () => {
-        const term = input.value.trim().toLowerCase();
-        const filtered = !term
-            ? DATASET_LIST_ROWS
-            : DATASET_LIST_ROWS.filter(row =>
-                [
-                    row.datasetName,
-                    row.descriptionScope,
-                    row.dataModel,
-                    row.stagingTableName,
-                    row.status,
-                    row.statusResponsible,
-                    row.layer,
-                    row.tdAnalyst,
-                    row.tester,
-                    row.ktResponsibleItUnit,
-                    row.ktSpName,
-                    row.note
-                ].some(value => String(value || '').toLowerCase().includes(term))
-            );
+function applyDatasetPageSearch(shell) {
+    if (!shell) return;
 
-        if (dsListSmartTable) {
-            dsListSmartTable.setRows(filtered);
-        } else {
-            mountDatasetListTable(root, filtered);
+    if (datasetPageView === 'liste') {
+        bindDatasetListSearch(shell);
+        return;
+    }
+
+    if (datasetPageView === 'kartlar') {
+        refreshDatasetKartlarContent(shell);
+        return;
+    }
+
+    if (datasetPageView === 'statu') {
+        const contentEl = shell.querySelector('.ds-page-content');
+        if (contentEl) {
+            contentEl.innerHTML = buildDatasetStatusContent();
+            animateDatasetStage(contentEl);
         }
+        mountDatasetStatusTables(shell);
+        return;
+    }
+
+    refreshDatasetCatalogContent(shell);
+    if (datasetCatalogFocusId && document.querySelector('#surecDrawerHost .sc-drawer.is-open')) {
+        openDomainDrawer(datasetCatalogFocusId);
+    }
+}
+
+function bindDatasetPageSearch(root) {
+    const shell = root.querySelector('.dataset-catalog') || root.closest?.('.dataset-catalog') || root;
+    if (!shell) return;
+
+    const input = shell.querySelector('#dsPageSearch');
+    if (!input || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+
+    const apply = () => {
+        datasetPageSearchTerm = input.value || '';
+        applyDatasetPageSearch(shell);
     };
 
-    window.FilterBar?.bindField(input, { debounceMs: 200, onFilter: applySearch });
-    mountDatasetListTable(root, DATASET_LIST_ROWS);
+    if (window.FilterBar?.bindField) {
+        window.FilterBar.bindField(input, { debounceMs: 200, onFilter: apply });
+    } else {
+        input.addEventListener('input', () => {
+            clearTimeout(input._dsSearchTimer);
+            input._dsSearchTimer = setTimeout(apply, 200);
+        });
+    }
 }
 
 function bindDatasetViewToolbar(root) {
@@ -1501,6 +1869,7 @@ function bindDatasetViewToolbar(root) {
         const nextView = btn.getAttribute('data-ds-view');
         if (!nextView || nextView === datasetPageView) return;
 
+        closeSurecDrawer({ immediate: true });
         setDatasetPageView(nextView);
         await renderDatasetPage(root);
     });
@@ -1536,7 +1905,7 @@ async function renderDatasetPage(container) {
         DATASET_DOMAINS = [];
     }
 
-    if (datasetPageView === 'liste') {
+    if (datasetPageView === 'liste' || datasetPageView === 'kartlar') {
         try {
             await loadDatasetListData();
         } catch (err) {
@@ -1564,25 +1933,29 @@ async function renderDatasetPage(container) {
     if (contentEl) {
         if (loadError && datasetPageView === 'katalog') {
             contentEl.innerHTML = buildDatasetErrorContent(loadError);
-        } else if (loadError && datasetPageView === 'liste') {
+        } else if (loadError && (datasetPageView === 'liste' || datasetPageView === 'kartlar')) {
             contentEl.innerHTML = buildDatasetErrorContent(loadError) + buildDatasetContentOnly(datasetPageView);
         } else {
             contentEl.innerHTML = buildDatasetContentOnly(datasetPageView);
         }
+        animateDatasetStage(contentEl);
     }
 
     if (datasetPageView === 'liste') {
         bindDatasetListSearch(shell);
+    } else if (datasetPageView === 'kartlar') {
+        bindDatasetKartlarInteractions(shell);
     } else if (datasetPageView === 'statu') {
         mountDatasetStatusTables(shell);
     } else if (datasetPageView === 'katalog') {
-        shell.classList.toggle('is-domain-focused', !!datasetCatalogFocusId);
+        shell.classList.remove('is-domain-focused');
         bindDatasetCatalogInteractions(el);
         if (datasetCatalogFocusId) {
-            const { domain } = getDomainCatalogContext(datasetCatalogFocusId);
-            bindDatasetDetailSearch(shell, domain);
+            openDomainDrawer(datasetCatalogFocusId);
         }
     }
+
+    bindDatasetPageSearch(shell);
 }
 
 function shouldShowFlowStepLabel(layerName, task) {
@@ -1677,14 +2050,8 @@ function buildCockpitColumn(col) {
 function buildSurecHTML() {
     const now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const dataDate = getGunlukAkisDate();
-    const focusCol = cockpitFocusLayer
-        ? COCKPIT_COLUMNS.find(col => col.name === cockpitFocusLayer)
-        : null;
-    const bodyHtml = focusCol
-        ? buildFlowLayerDetail(focusCol)
-        : `<div class="cockpit-grid cockpit-grid-flow" id="cockpitFlowGrid">${buildFlowLayerGridHtml()}</div>`;
 
-    return `<section class="cockpit${focusCol ? ' is-layer-focused' : ''}">
+    return `<section class="cockpit">
         <div class="cockpit-head">
             <div class="cockpit-head-main">
                 <div class="cockpit-head-title-row">
@@ -1704,7 +2071,9 @@ function buildSurecHTML() {
                 </div>
             </div>
         </div>
-        <div class="cockpit-body">${bodyHtml}</div>
+        <div class="cockpit-body">
+            <div class="cockpit-grid cockpit-grid-flow" id="cockpitFlowGrid">${buildFlowLayerGridHtml()}</div>
+        </div>
     </section>`;
 }
 
@@ -1726,6 +2095,7 @@ function bindSurecCockpitDateFilter(container) {
     input.addEventListener('change', async () => {
         if (!input.value) return;
         gunlukAkisDataDate = input.value;
+        closeSurecDrawer({ immediate: true });
         cockpitFocusLayer = null;
         root.innerHTML = '<div class="cockpit-loading">Yükleniyor…</div>';
         await loadSurecData({ dataDate: input.value, kokpitOnly: true });
@@ -1751,11 +2121,7 @@ function bindGlobalCockpitStatusFilters() {
         } else {
             COCKPIT_GLOBAL_STATUS_FILTERS.delete(status);
         }
-        if (cockpitFocusLayer) {
-            rerenderSurecCockpit();
-        } else {
-            refreshAllCockpitColumns();
-        }
+        refreshAllCockpitColumns();
     });
 }
 
@@ -1765,18 +2131,11 @@ function bindFlowLayerTiles() {
     cockpit.dataset.flowLayerBound = '1';
 
     cockpit.addEventListener('click', event => {
-        const backBtn = event.target.closest('[data-flow-back]');
-        if (backBtn) {
-            cockpitFocusLayer = null;
-            rerenderSurecCockpit();
-            return;
-        }
-
         const tile = event.target.closest('.flow-layer-tile[data-flow-layer]');
         if (!tile) return;
-        cockpitFocusLayer = tile.getAttribute('data-flow-layer');
-        rerenderSurecCockpit();
-        cockpit.querySelector('.flow-layer-detail-back')?.focus();
+        const layer = tile.getAttribute('data-flow-layer');
+        if (!layer) return;
+        openFlowLayerDrawer(layer);
     });
 
     cockpit.addEventListener('keydown', event => {
@@ -1784,9 +2143,9 @@ function bindFlowLayerTiles() {
         if (!tile) return;
         if (event.key !== 'Enter' && event.key !== ' ') return;
         event.preventDefault();
-        cockpitFocusLayer = tile.getAttribute('data-flow-layer');
-        rerenderSurecCockpit();
-        cockpit.querySelector('.flow-layer-detail-back')?.focus();
+        const layer = tile.getAttribute('data-flow-layer');
+        if (!layer) return;
+        openFlowLayerDrawer(layer);
     });
 }
 
@@ -1807,12 +2166,15 @@ function bindSurecCockpit() {
 
     bindGlobalCockpitStatusFilters();
     bindFlowLayerTiles();
-    mountFlowDetailTable();
+    if (cockpitFocusLayer) {
+        openFlowLayerDrawer(cockpitFocusLayer);
+    }
 }
 
 async function initSurecCockpit(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
+    closeSurecDrawer({ immediate: true });
     if (!gunlukAkisDataDate) {
         gunlukAkisDataDate = getDefaultGunlukAkisDate();
     }
@@ -1824,6 +2186,7 @@ async function initSurecCockpit(container) {
 async function initDatasetCatalog(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
+    closeSurecDrawer({ immediate: true });
     if (window._cockpitTimer) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
@@ -1922,13 +2285,6 @@ function getTaskListRows() {
     return TASK_LIST_ROWS;
 }
 
-function taskRowSearchKey(row) {
-    const activeLabel = row.active === true ? 'aktif' : row.active === false ? 'pasif' : '';
-    return [row.layer, row.task, row.datasetCode, row.active, row.lastExecution, row.transferType, row.loadPeriodType, row.datasetLabel, activeLabel]
-        .join(' ')
-        .toLocaleLowerCase('tr-TR');
-}
-
 function renderTaskListesiRows(rows) {
     if (!rows.length) {
         return '<tr><td colspan="8" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
@@ -1971,16 +2327,10 @@ function buildTaskListesiHTML() {
     return `<div class="tl-layout">
         <div class="tl-head">
             <h3>Paket Listesi</h3>
-            <p>ParallelRun paket envanteri — arama ile filtreleyin.</p>
+            <p>ParallelRun paket envanteri</p>
+            ${formatTaskListCountHtml(total, total)}
         </div>
         <div class="tl-card">
-            <div class="tl-toolbar">
-                <label class="tl-search">
-                    <i class="ti ti-search" aria-hidden="true"></i>
-                    <input type="search" id="tlSearch" placeholder="Paket, dataset, katman, aktiflik, transfer tipi veya yükleme periyodu ara…" autocomplete="off">
-                </label>
-                ${formatTaskListCountHtml(total, total)}
-            </div>
             <div class="vs-results-wrap is-fill has-data" id="tlResultsWrap">
                 <table class="vs-results-table vs-results-table--wrap" id="tlResultsTable">
                     <thead></thead>
@@ -1991,40 +2341,23 @@ function buildTaskListesiHTML() {
     </div>`;
 }
 
-function bindTaskListesiSearch(container) {
+function mountTaskListesi(container) {
     const root = container || document.getElementById('pageBody');
     if (!root) return;
-    const input = root.querySelector('#tlSearch');
-    if (!input) return;
-
-    const allRows = getTaskListRows();
-
-    function applyFilter() {
-        const q = input.value.trim().toLocaleLowerCase('tr-TR');
-        const filtered = q
-            ? allRows.filter(row => taskRowSearchKey(row).includes(q))
-            : allRows;
-        if (tlSmartTable) {
-            tlSmartTable.setRows(filtered);
-        } else {
-            mountTaskListTable(root, filtered);
-        }
-    }
-
-    input.addEventListener('input', applyFilter);
-    mountTaskListTable(root, allRows);
+    mountTaskListTable(root, getTaskListRows());
 }
 
 async function initTaskListesi(container) {
     const el = container || document.getElementById('pageBody');
     if (!el) return;
+    closeSurecDrawer({ immediate: true });
     if (window._cockpitTimer) {
         clearInterval(window._cockpitTimer);
         window._cockpitTimer = null;
     }
     await loadTaskListesiData();
     el.innerHTML = buildTaskListesiHTML();
-    bindTaskListesiSearch(el);
+    mountTaskListesi(el);
 }
 
 function getLayerProgress(col) {

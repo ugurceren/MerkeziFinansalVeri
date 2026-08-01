@@ -1820,6 +1820,62 @@
     flex-shrink: 0;
 }
 
+.ds-view-toolbar-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ds-page-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 280px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: var(--rb-card);
+    border: 0.5px solid var(--rb-border);
+    box-sizing: border-box;
+}
+
+.ds-page-search i {
+    color: var(--rb-text-muted);
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.ds-page-search .filter-input-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.ds-page-search input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--rb-text);
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.ds-page-search input::placeholder {
+    color: var(--rb-text-muted);
+}
+
+.domain-detail-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+}
+
 .ds-page-head-summary {
     grid-column: 3;
     justify-self: end;
@@ -1844,8 +1900,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    width: 112px;
+    gap: 6px;
+    width: 96px;
     height: 38px;
     padding: 0;
     box-sizing: border-box;
@@ -1853,7 +1909,7 @@
     border-radius: 8px;
     background: transparent;
     color: var(--rb-text-muted);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
@@ -2203,6 +2259,10 @@
     flex-shrink: 0;
 }
 
+.ds-table-toolbar--count-only {
+    justify-content: flex-end;
+}
+
 .ds-table-toolbar h4 {
     margin: 0;
     font-size: 13px;
@@ -2369,4 +2429,454 @@
 
 .ds-error-hint code {
     font-size: 11px;
+}
+
+/* -- Surec Drawer (futuristic page transitions) -- */
+
+.sc-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    pointer-events: none;
+}
+
+.sc-drawer.is-open {
+    pointer-events: auto;
+}
+
+.sc-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(120% 80% at 85% 20%, rgba(34, 211, 238, 0.08), transparent 55%),
+        rgba(6, 10, 18, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.32s ease;
+}
+
+.sc-drawer.is-open .sc-drawer-backdrop {
+    opacity: 1;
+}
+
+.sc-drawer-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(960px, 94vw);
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(165deg, color-mix(in srgb, var(--sc-drawer-accent, #22d3ee) 7%, var(--rb-card)) 0%, var(--rb-card) 38%, var(--rb-surface) 100%);
+    border-left: 0.5px solid color-mix(in srgb, var(--sc-drawer-accent, #22d3ee) 35%, var(--rb-border));
+    box-shadow:
+        -24px 0 60px rgba(0, 0, 0, 0.35),
+        inset 1px 0 0 color-mix(in srgb, var(--sc-drawer-accent, #22d3ee) 22%, transparent);
+    transform: translateX(108%);
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    --sc-drawer-accent: var(--rb-accent, #22d3ee);
+}
+
+.sc-drawer.is-open .sc-drawer-panel {
+    transform: translateX(0);
+}
+
+.sc-drawer-panel.theme-cyan { --sc-drawer-accent: #22d3ee; }
+.sc-drawer-panel.theme-teal { --sc-drawer-accent: #2dd4bf; }
+.sc-drawer-panel.theme-blue { --sc-drawer-accent: #7c9aff; }
+.sc-drawer-panel.theme-purple { --sc-drawer-accent: #a855f7; }
+.sc-drawer-panel.theme-amber { --sc-drawer-accent: #f59e0b; }
+.sc-drawer-panel.theme-rose { --sc-drawer-accent: #f472b6; }
+
+.sc-drawer-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--sc-drawer-accent), transparent 78%);
+    opacity: 0.9;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s;
+}
+
+.sc-drawer.is-open .sc-drawer-accent {
+    transform: scaleY(1);
+}
+
+.sc-drawer-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--rb-card) 88%, transparent);
+}
+
+.sc-drawer-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-top: 2px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 10px;
+    background: var(--rb-surface);
+    color: var(--rb-text);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.sc-drawer-close:hover {
+    border-color: color-mix(in srgb, var(--sc-drawer-accent) 45%, var(--rb-border));
+    background: color-mix(in srgb, var(--sc-drawer-accent) 12%, var(--rb-surface));
+    transform: translateX(-1px);
+}
+
+.sc-drawer-titles {
+    min-width: 0;
+    flex: 1;
+}
+
+.sc-drawer-titles h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 750;
+    color: var(--rb-text);
+    letter-spacing: -0.01em;
+}
+
+.sc-drawer-titles p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.sc-drawer-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    animation: sc-drawer-body-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
+}
+
+@keyframes sc-drawer-body-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sc-drawer-body .flow-layer-detail,
+.sc-drawer-body .domain-detail {
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.sc-drawer-body .flow-layer-detail-toolbar,
+.sc-drawer-body .domain-detail-toolbar {
+    display: none;
+}
+
+.sc-drawer-body .flow-layer-detail-hero,
+.sc-drawer-body .domain-detail-hero {
+    margin: 14px 16px 0;
+}
+
+.sc-drawer-body .flow-layer-detail-table-wrap,
+.sc-drawer-body .domain-detail-panel {
+    flex: 1;
+    min-height: 0;
+    margin: 12px 16px 16px;
+}
+
+.page-body.sc-drawer-dim .cockpit,
+.page-body.sc-drawer-dim .dataset-catalog {
+    transform: scale(0.985);
+    filter: saturate(0.92) brightness(0.92);
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), filter 0.42s ease;
+}
+
+.page-body:not(.sc-drawer-dim) .cockpit,
+.page-body:not(.sc-drawer-dim) .dataset-catalog {
+    transform: none;
+    filter: none;
+    transition: transform 0.32s ease, filter 0.32s ease;
+}
+
+.ds-page-content.is-stage-enter {
+    animation: sc-stage-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sc-stage-enter {
+    from {
+        opacity: 0;
+        transform: translateX(28px);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: none;
+    }
+}
+
+@media (max-width: 720px) {
+    .sc-drawer-panel {
+        width: 100vw;
+    }
+}
+
+/* -- Dataset Kartlar görünümü -- */
+
+.dataset-view-kartlar .ds-page-content {
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.ds-cards-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.ds-cards-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.ds-cards-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.ds-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    padding-bottom: 8px;
+}
+
+.ds-dataset-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 220px;
+    padding: 14px 14px 12px;
+    border-radius: 14px;
+    border: 0.5px solid var(--rb-border);
+    background: var(--rb-card);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.ds-dataset-card:hover,
+.ds-dataset-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--rb-accent) 40%, var(--rb-border));
+    box-shadow: 0 14px 28px var(--rb-shadow);
+    outline: none;
+}
+
+.ds-dataset-card-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--rb-accent);
+    opacity: 0.75;
+}
+
+.ds-dataset-card.is-done { border-color: rgba(34, 197, 94, 0.35); }
+.ds-dataset-card.is-done .ds-dataset-card-accent { background: #22c55e; }
+.ds-dataset-card.is-running { border-color: rgba(59, 130, 246, 0.35); }
+.ds-dataset-card.is-running .ds-dataset-card-accent { background: #3b82f6; }
+.ds-dataset-card.is-pending { border-color: rgba(245, 158, 11, 0.4); }
+.ds-dataset-card.is-pending .ds-dataset-card-accent { background: #f59e0b; }
+.ds-dataset-card.is-failed { border-color: rgba(239, 68, 68, 0.4); }
+.ds-dataset-card.is-failed .ds-dataset-card-accent { background: #ef4444; }
+
+.ds-dataset-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ds-dataset-card-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--rb-text);
+    line-height: 1.35;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.ds-dataset-card-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+    margin: 0;
+}
+
+.ds-dataset-card-meta .is-wide {
+    grid-column: 1 / -1;
+}
+
+.ds-dataset-card-meta dt {
+    font-size: 10px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-meta dd {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--rb-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ds-dataset-card-people {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-people span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ds-dataset-card-people i {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.ds-dataset-card-scope {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--rb-text-secondary);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    flex: 1;
+}
+
+.ds-dataset-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 0.5px solid var(--rb-border);
+    font-size: 11px;
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-foot strong {
+    font-weight: 650;
+    color: var(--rb-text-secondary);
+}
+
+.ds-card-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    min-height: 0;
+    padding: 16px 18px 20px;
+    overflow: auto;
+}
+
+.ds-card-detail-status {
+    display: flex;
+    align-items: center;
+}
+
+.ds-card-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--rb-surface);
+}
+
+.ds-card-detail-row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--rb-border);
+}
+
+.ds-card-detail-row:last-child {
+    border-bottom: 0;
+}
+
+.ds-card-detail-row dt {
+    font-size: 11px;
+    font-weight: 650;
+    color: var(--rb-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ds-card-detail-row dd {
+    margin: 0;
+    font-size: 13px;
+    color: var(--rb-text);
+    word-break: break-word;
+}
+
+@media (max-width: 720px) {
+    .ds-card-detail-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
 }
