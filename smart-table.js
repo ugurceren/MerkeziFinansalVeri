@@ -199,7 +199,8 @@
                         <i class="ti ti-filter st-filter-toggle-icon" aria-hidden="true"></i>
                     </button>`
                     : '';
-                return `<th scope="col" data-col="${escapeHtml(col.key)}" class="st-label-cell${sortClass}">
+                const numClass = col.type === 'number' ? ' st-col-num' : '';
+                return `<th scope="col" data-col="${escapeHtml(col.key)}" class="st-label-cell${sortClass}${numClass}">
                     <button type="button" class="st-sort-btn" data-sort-col="${escapeHtml(col.key)}" title="Sırala">
                         <span class="st-sort-label">${escapeHtml(this.getLabel(col))}</span>
                         <i class="ti ${sortIcon} st-sort-icon" aria-hidden="true"></i>
@@ -323,21 +324,24 @@
         }
 
         formatCell(col, row, value) {
+            const cellClasses = [
+                this.options.wrapCells ? 'vs-cell-wrap' : '',
+                col.type === 'number' ? 'st-num' : ''
+            ].filter(Boolean).join(' ');
+
             if (typeof this.options.formatCell === 'function') {
                 const formatted = this.options.formatCell(col.key, row, value);
                 if (formatted && String(formatted).trim().startsWith('<td')) {
                     return formatted;
                 }
-                const wrapClass = this.options.wrapCells ? 'vs-cell-wrap' : '';
-                return `<td class="${wrapClass}">${formatted ?? ''}</td>`;
+                return `<td class="${cellClasses}">${formatted ?? ''}</td>`;
             }
-            const wrapClass = this.options.wrapCells ? 'vs-cell-wrap' : '';
-            return `<td class="${wrapClass}">${escapeHtml(value)}</td>`;
+            return `<td class="${cellClasses}">${escapeHtml(value)}</td>`;
         }
 
-        buildRowHtml(row) {
+        buildRowHtml(row, absIndex) {
             if (typeof this.options.renderRow === 'function') {
-                return this.options.renderRow(row);
+                return this.options.renderRow(row, absIndex);
             }
 
             const attrs = typeof this.options.rowAttrs === 'function' ? this.options.rowAttrs(row) : {};
@@ -345,16 +349,19 @@
                 .filter(([key]) => key !== 'class')
                 .map(([key, val]) => ` ${key}="${escapeHtml(val)}"`)
                 .join('');
-            const rowClass = [attrs.class, typeof this.options.rowClass === 'function' ? this.options.rowClass(row) : '']
-                .filter(Boolean)
-                .join(' ');
+            // Zebra sınıfı mutlak indeksten üretilir; sanal kaydırmadaki dolgu satırları düzeni bozmaz.
+            const rowClass = [
+                absIndex % 2 === 1 ? 'tbl-row-odd' : 'tbl-row-even',
+                attrs.class,
+                typeof this.options.rowClass === 'function' ? this.options.rowClass(row) : ''
+            ].filter(Boolean).join(' ');
 
             const cells = this.cols.map(col => {
                 const value = getRowCell(row, col.key, this.options.getValue);
                 return this.formatCell(col, row, value);
             }).join('');
 
-            return `<tr${rowClass ? ` class="${escapeHtml(rowClass)}"` : ''}${attrText}>${cells}</tr>`;
+            return `<tr class="${escapeHtml(rowClass)}" data-row-index="${absIndex}"${attrText}>${cells}</tr>`;
         }
 
         destroyVirtual() {
@@ -370,7 +377,7 @@
                 this.tbody.innerHTML = `<tr><td colspan="${this.cols.length}" class="st-empty-row">Kayıt bulunamadı.</td></tr>`;
                 return;
             }
-            this.tbody.innerHTML = rows.map(row => this.buildRowHtml(row)).join('');
+            this.tbody.innerHTML = rows.map((row, index) => this.buildRowHtml(row, index)).join('');
             this.bindRowEvents();
         }
 
@@ -383,7 +390,7 @@
 
             const scrollEl = this.wrap;
             const cols = this.cols;
-            const buildRowHtml = row => this.buildRowHtml(row);
+            const buildRowHtml = (row, index) => this.buildRowHtml(row, index);
             let rafId = 0;
             let destroyed = false;
 
@@ -403,7 +410,7 @@
                     parts.push(`<tr class="virtual-spacer" aria-hidden="true"><td colspan="${cols.length}" style="height:${topPad}px"></td></tr>`);
                 }
                 for (let i = start; i < end; i++) {
-                    parts.push(buildRowHtml(rows[i]));
+                    parts.push(buildRowHtml(rows[i], i));
                 }
                 if (bottomPad > 0) {
                     parts.push(`<tr class="virtual-spacer" aria-hidden="true"><td colspan="${cols.length}" style="height:${bottomPad}px"></td></tr>`);

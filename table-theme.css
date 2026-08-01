@@ -1,0 +1,211 @@
+/* Ortak tablo görsel katmanı
+   .vs-results-table · .vk-table · .mt-table · .smart-table · Kebir (.table-scroll > table)
+   Sayfa CSS'lerinden SONRA yüklenir; renk/derinlik/tipografi buradan yönetilir.
+   Satır yüksekliği smart-table.js ROW_HEIGHT sabitine bağlı olduğu için dikey padding değiştirilmez. */
+
+/* ── Başlık ── */
+
+.vs-results-table > thead > tr > th,
+.vk-table > thead > tr > th,
+.mt-table > thead > tr > th,
+.smart-table > thead > tr > th,
+.table-scroll > table > thead > tr > th {
+    background: var(--tbl-head-bg);
+    background-clip: padding-box;
+    color: var(--tbl-head-text);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-bottom: 0;
+}
+
+.vs-results-table > thead > tr:last-child > th,
+.vk-table > thead > tr:last-child > th,
+.mt-table > thead > tr:last-child > th,
+.smart-table > thead > tr:last-child > th,
+.table-scroll > table > thead > tr:last-child > th {
+    border-bottom: 1px solid var(--tbl-head-border);
+    box-shadow: var(--tbl-head-shadow);
+}
+
+/* SmartTable dışındaki aileler yapışkan başlık kazanır (mutabakat, veri kalitesi, Kebir) */
+.vk-table:not(.smart-table) > thead > tr > th,
+.mt-table:not(.smart-table) > thead > tr > th,
+.table-scroll > table:not(.smart-table) > thead > tr > th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* ── Gövde ── */
+
+.vs-results-table > tbody > tr > td,
+.vk-table > tbody > tr > td,
+.mt-table > tbody > tr > td,
+.smart-table > tbody > tr > td,
+.table-scroll > table > tbody > tr > td {
+    border-bottom: 1px solid var(--tbl-divider);
+    font-variant-numeric: tabular-nums;
+}
+
+.vs-results-table > tbody > tr:last-child > td,
+.vk-table > tbody > tr:last-child > td,
+.mt-table > tbody > tr:last-child > td,
+.smart-table > tbody > tr:last-child > td,
+.table-scroll > table > tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+/* Zebra — SmartTable satır sınıfını mutlak indeksten üretir, sanal kaydırma bozulmaz */
+.vs-results-table > tbody > tr.tbl-row-odd,
+.vk-table > tbody > tr.tbl-row-odd,
+.mt-table > tbody > tr.tbl-row-odd,
+.smart-table > tbody > tr.tbl-row-odd {
+    background: var(--tbl-row-alt);
+}
+
+/* Statik tablolar (Kebir gibi) için indeks tabanlı zebra */
+.vk-table:not(.smart-table) > tbody > tr:nth-child(even),
+.mt-table:not(.smart-table) > tbody > tr:nth-child(even),
+.table-scroll > table:not(.smart-table) > tbody > tr:nth-child(even) {
+    background: var(--tbl-row-alt);
+}
+
+/* ── Hover ── */
+
+.vs-results-table > tbody > tr:not(.virtual-spacer):hover,
+.vk-table > tbody > tr:hover,
+.mt-table > tbody > tr:hover,
+.smart-table > tbody > tr:not(.virtual-spacer):hover,
+.table-scroll > table > tbody > tr:hover {
+    background: var(--tbl-row-hover);
+}
+
+.vs-results-table > tbody > tr:not(.virtual-spacer):hover > td:first-child,
+.vk-table > tbody > tr:hover > td:first-child,
+.mt-table > tbody > tr:hover > td:first-child,
+.smart-table > tbody > tr:not(.virtual-spacer):hover > td:first-child,
+.table-scroll > table > tbody > tr:hover > td:first-child {
+    box-shadow: inset 3px 0 0 var(--tbl-row-accent);
+}
+
+/* Boş durum ve sanal kaydırma dolgu satırları hover almaz */
+.vs-results-table > tbody > tr:hover > td.st-empty-row,
+.vk-table > tbody > tr:hover > td.st-empty-row,
+.mt-table > tbody > tr:hover > td.st-empty-row,
+.smart-table > tbody > tr:hover > td.st-empty-row,
+.vs-results-table > tbody > tr:hover > td.tl-empty-cell {
+    box-shadow: none;
+}
+
+.vs-results-table > tbody > tr:has(> .st-empty-row):hover,
+.vk-table > tbody > tr:has(> .st-empty-row):hover,
+.mt-table > tbody > tr:has(> .st-empty-row):hover,
+.smart-table > tbody > tr:has(> .st-empty-row):hover,
+.vs-results-table > tbody > tr:has(> .tl-empty-cell):hover {
+    background: none;
+}
+
+/* ── Seçili / aktif / düzenlenen satır — tek dil ── */
+
+.mt-table > tbody > tr.mt-row-active,
+.smart-table > tbody > tr.mt-row-active,
+#usersTable > tbody > tr.selected,
+.table-scroll > table > tbody > tr.row-editing,
+.vs-results-table > tbody > tr.row-editing {
+    background: var(--tbl-row-selected);
+}
+
+.mt-table > tbody > tr.mt-row-active > td:first-child,
+.smart-table > tbody > tr.mt-row-active > td:first-child,
+#usersTable > tbody > tr.selected > td:first-child,
+.table-scroll > table > tbody > tr.row-editing > td:first-child,
+.vs-results-table > tbody > tr.row-editing > td:first-child {
+    box-shadow: inset 3px 0 0 var(--tbl-row-accent);
+}
+
+/* ── Sayısal hizalama ── */
+
+.vs-results-table td.st-num,
+.vk-table td.st-num,
+.mt-table td.st-num,
+.smart-table td.st-num,
+.mt-table td.mt-num,
+.smart-table td.mt-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.smart-table th.st-col-num .st-sort-btn {
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+/* ── Kaydırma gölgeleri (JS'siz; kenara yaklaşınca kaybolur) ── */
+
+.vs-results-wrap,
+.table-scroll,
+.mt-scroll,
+.mt-mm-scroll,
+.vk-scroll,
+.flow-layer-detail-table-wrap {
+    --tbl-scroll-bg: var(--rb-surface);
+    background:
+        linear-gradient(to right, var(--tbl-scroll-bg) 40%, rgba(0, 0, 0, 0)) left center / 34px 100% no-repeat local,
+        linear-gradient(to left, var(--tbl-scroll-bg) 40%, rgba(0, 0, 0, 0)) right center / 34px 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, var(--tbl-edge-shadow), rgba(0, 0, 0, 0)) left center / 12px 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, var(--tbl-edge-shadow), rgba(0, 0, 0, 0)) right center / 12px 100% no-repeat scroll,
+        var(--tbl-scroll-bg);
+}
+
+.vs-results-wrap {
+    --tbl-scroll-bg: var(--rb-card);
+}
+
+/* ── Boş durum ── */
+
+.smart-table td.st-empty-row,
+.vs-results-table td.tl-empty-cell {
+    padding: 28px 16px !important;
+    text-align: center;
+    color: var(--rb-text-muted);
+    font-size: 12px;
+    letter-spacing: 0.01em;
+}
+
+/* ── İskelet (skeleton) yükleme ── */
+
+.tbl-skeleton-row > td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.tbl-skeleton-cell {
+    display: block;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--tbl-skeleton-base) 0%,
+        var(--tbl-skeleton-shine) 50%,
+        var(--tbl-skeleton-base) 100%
+    );
+    background-size: 240px 100%;
+    animation: tbl-shimmer 1.15s linear infinite;
+}
+
+.tbl-skeleton-cell.is-short { width: 44%; }
+.tbl-skeleton-cell.is-mid { width: 68%; }
+.tbl-skeleton-cell.is-long { width: 88%; }
+
+@keyframes tbl-shimmer {
+    from { background-position: -240px 0; }
+    to { background-position: 240px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tbl-skeleton-cell {
+        animation: none;
+        background: var(--tbl-skeleton-base);
+    }
+}

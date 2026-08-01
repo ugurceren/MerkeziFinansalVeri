@@ -125,29 +125,17 @@
     font-size: 12px;
 }
 
+/* Renk, kenarlık, hover, zebra ve aktif satır görünümü table-theme.css içinde yönetilir. */
 .mt-table th {
     padding: 8px 12px;
     text-align: left;
     font-size: 11px;
-    font-weight: 600;
-    color: var(--rb-text-muted);
-    background: var(--rb-filter-bg);
-    border-bottom: 0.5px solid var(--rb-border);
     white-space: nowrap;
 }
 
 .mt-table td {
     padding: 8px 12px;
-    border-bottom: 0.5px solid var(--rb-border);
     color: var(--rb-text);
-}
-
-.mt-table tr:hover td {
-    background: var(--rb-row-hover);
-}
-
-.mt-table tr.mt-row-active td {
-    background: var(--rb-accent-soft);
 }
 
 .mt-table.mt-table--wrap tbody tr {
@@ -323,6 +311,21 @@
     margin: 0;
 }
 
+.mt-mm-head-text {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.mt-mm-head-subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--rb-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 .mt-mm-filter-bar {
     background: color-mix(in srgb, var(--rb-accent) 7%, var(--rb-filter-bg));
     border-bottom-color: color-mix(in srgb, var(--rb-accent) 12%, var(--rb-border));
@@ -390,8 +393,3 @@
     overflow: auto;
 }
 
-.mt-mm-scroll .mt-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}

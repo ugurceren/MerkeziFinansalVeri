@@ -111,6 +111,103 @@ public class VeritabaniSorguController(
         return Ok(ToDto(result, kisitlandi, maxRows));
     }
 
+    /// <summary>
+    /// SQL editöründeki IntelliSense için katmandaki tablo/görünüm ve kolon listesini döndürür.
+    /// Sorgu logu yazmaz; sonuç istemci tarafında önbelleklenir.
+    /// </summary>
+    [HttpPost("sema")]
+    public async Task<ActionResult<VeritabaniSorguSemaDto>> Sema(
+        [FromBody] VeritabaniSorguSemaRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "veritabani-sorgu", cancellationToken);
+        if (denied is not null) return denied;
+
+        var katman = string.IsNullOrWhiteSpace(dto.KatmanKodu) ? "TDSTG" : dto.KatmanKodu.Trim();
+        const int maxRows = SemaMaxSatir;
+
+        var result = TryMapBaglanti(dto.Baglanti, katman, out var baglantiParams)
+            ? await tdConnectionService.ExecuteReadOnlyQueryAsync(
+                baglantiParams, SemaSql, SemaTimeoutSaniye, maxRows, cancellationToken)
+            : await tdConnectionService.ExecuteReadOnlyQueryAsync(
+                katman, SemaSql, SemaTimeoutSaniye, maxRows, cancellationToken);
+
+        if (!result.Basarili)
+        {
+            return Ok(new VeritabaniSorguSemaDto
+            {
+                Basarili = false,
+                Hata = result.Hata,
+                KatmanKodu = katman
+            });
+        }
+
+        return Ok(new VeritabaniSorguSemaDto
+        {
+            Basarili = true,
+            KatmanKodu = katman,
+            Kisitlandi = result.SatirSayisi >= maxRows,
+            Tablolar = GroupSemaRows(result.Satirlar)
+        });
+    }
+
+    private const int SemaMaxSatir = 60000;
+    private const int SemaTimeoutSaniye = 60;
+
+    private const string SemaSql = """
+        SELECT t.TABLE_SCHEMA, t.TABLE_NAME, t.TABLE_TYPE, c.COLUMN_NAME, c.DATA_TYPE
+        FROM INFORMATION_SCHEMA.TABLES t
+        INNER JOIN INFORMATION_SCHEMA.COLUMNS c
+            ON c.TABLE_SCHEMA = t.TABLE_SCHEMA AND c.TABLE_NAME = t.TABLE_NAME
+        ORDER BY t.TABLE_SCHEMA, t.TABLE_NAME, c.ORDINAL_POSITION
+        """;
+
+    private static List<VeritabaniSorguSemaTabloDto> GroupSemaRows(
+        IReadOnlyList<Dictionary<string, object?>> satirlar)
+    {
+        var tablolar = new List<VeritabaniSorguSemaTabloDto>();
+        var index = new Dictionary<string, List<VeritabaniSorguSemaKolonDto>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var satir in satirlar)
+        {
+            var sema = Text(satir, "TABLE_SCHEMA");
+            var ad = Text(satir, "TABLE_NAME");
+            if (ad.Length == 0) continue;
+
+            var key = $"{sema}.{ad}";
+            if (!index.TryGetValue(key, out var hedef))
+            {
+                hedef = [];
+                index[key] = hedef;
+                tablolar.Add(new VeritabaniSorguSemaTabloDto
+                {
+                    Sema = sema,
+                    Ad = ad,
+                    Tip = Text(satir, "TABLE_TYPE").Contains("VIEW", StringComparison.OrdinalIgnoreCase)
+                        ? "VIEW"
+                        : "TABLE",
+                    Kolonlar = hedef
+                });
+            }
+
+            var kolonAdi = Text(satir, "COLUMN_NAME");
+            if (kolonAdi.Length > 0)
+            {
+                hedef.Add(new VeritabaniSorguSemaKolonDto
+                {
+                    Ad = kolonAdi,
+                    VeriTipi = Text(satir, "DATA_TYPE")
+                });
+            }
+        }
+
+        return tablolar;
+    }
+
+    private static string Text(Dictionary<string, object?> satir, string key) =>
+        satir.TryGetValue(key, out var value) ? value?.ToString() ?? string.Empty : string.Empty;
+
     [HttpPost("test/{katmanKodu}")]
     public async Task<ActionResult<VeriKaynagiTestSonucDto>> Test(string katmanKodu, CancellationToken cancellationToken)
     {

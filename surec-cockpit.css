@@ -321,7 +321,7 @@
 .flow-layer-mini-table th,
 .flow-layer-mini-table td {
     padding: 7px 10px;
-    border-bottom: 0.5px solid var(--rb-border);
+    border-bottom: 1px solid var(--tbl-divider);
     text-align: left;
     vertical-align: middle;
 }
@@ -329,17 +329,32 @@
 .flow-layer-mini-table th {
     position: sticky;
     top: 0;
-    z-index: 1;
-    background: var(--rb-filter-bg);
+    z-index: 2;
+    background: var(--tbl-head-bg);
+    background-clip: padding-box;
+    border-bottom: 1px solid var(--tbl-head-border);
+    box-shadow: var(--tbl-head-shadow);
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--rb-text-muted);
+    color: var(--tbl-head-text);
 }
 
-.flow-layer-mini-table tbody tr:hover td {
-    background: var(--rb-accent-soft);
+.flow-layer-mini-table tbody tr:nth-child(even) {
+    background: var(--tbl-row-alt);
+}
+
+.flow-layer-mini-table tbody tr:hover {
+    background: var(--tbl-row-hover);
+}
+
+.flow-layer-mini-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--tbl-row-accent);
+}
+
+.flow-layer-mini-table tbody tr:last-child td {
+    border-bottom: 0;
 }
 
 .flow-layer-hedef {
@@ -368,7 +383,7 @@
 }
 
 .flow-status-pill.is-done { background: rgba(34, 197, 94, 0.14); color: #22c55e; }
-/* In Progress â€” turuncuya yakÄ±n sarÄ± (Ã¼st filtre ile aynÄ±) */
+/* In Progress  turuncuya yak?n sar? (st filtre ile ayn?) */
 .flow-status-pill.is-running { background: rgba(251, 191, 36, 0.2); color: #d97706; }
 .flow-status-pill.is-failed { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
 .flow-status-pill.is-not-started { background: rgba(132, 145, 168, 0.18); color: var(--rb-text-muted); }
@@ -727,7 +742,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* AkÄ±ÅŸ kutularÄ±yla aynÄ± renkler â€” varsayÄ±lan renkli; seÃ§iliyken biraz daha belirgin */
+/* Ak?? kutular?yla ayn? renkler  varsay?lan renkli; seiliyken biraz daha belirgin */
 .cockpit-status-chip.is-not-started {
     border-color: rgba(148, 163, 184, 0.55);
     background: rgba(148, 163, 184, 0.16);
@@ -944,7 +959,7 @@
     line-height: 1.15;
 }
 
-/* Bekleyen (aktif olmayan) adÄ±m kutularÄ± */
+/* Bekleyen (aktif olmayan) ad?m kutular? */
 .flow-step.is-idle {
     background: var(--rb-bg);
     border: 0.5px dashed var(--rb-border);
@@ -956,7 +971,7 @@
     color: var(--rb-text-muted);
 }
 
-/* Not Started â€” gri (aktif) */
+/* Not Started  gri (aktif) */
 .flow-step.is-active.not-started {
     border-style: solid;
     border-color: rgba(148, 163, 184, 0.55);
@@ -968,7 +983,7 @@
     color: #94a3b8;
 }
 
-/* In Progress â€” turuncuya yakÄ±n sarÄ± (aktif) */
+/* In Progress  turuncuya yak?n sar? (aktif) */
 .flow-step.is-active.running {
     border-style: solid;
     border-color: rgba(245, 158, 11, 0.6);
@@ -980,7 +995,7 @@
     color: #d97706;
 }
 
-/* Failed â€” kÄ±rmÄ±zÄ± (aktif) */
+/* Failed  k?rm?z? (aktif) */
 .flow-step.is-active.failed {
     border-style: solid;
     border-color: rgba(239, 68, 68, 0.5);
@@ -992,7 +1007,7 @@
     color: #ef4444;
 }
 
-/* Success â€” yeÅŸil (aktif) */
+/* Success  ye?il (aktif) */
 .flow-step.is-active.done {
     border-style: solid;
     border-color: rgba(34, 197, 94, 0.5);
@@ -1004,7 +1019,7 @@
     color: #22c55e;
 }
 
-/* LND Failed â€” koyu kÄ±rmÄ±zÄ± (aktif) */
+/* LND Failed  koyu k?rm?z? (aktif) */
 .flow-step.lnd-failed.is-active.failed {
     border-style: solid;
     border-color: rgba(127, 29, 29, 0.72);
@@ -1026,7 +1041,7 @@
     color: #b91c1c;
 }
 
-/* LND Completed â€” koyu yeÅŸil (aktif) */
+/* LND Completed  koyu ye?il (aktif) */
 .flow-step.lnd-done.is-active.done {
     border-style: solid;
     border-color: rgba(22, 101, 52, 0.72);
@@ -1082,7 +1097,7 @@
     .cockpit-grid { grid-template-columns: 1fr; }
 }
 
-/* Dataset kataloÄŸu */
+/* Dataset katalo?u */
 
 .dataset-catalog {
     display: flex;
@@ -1408,7 +1423,7 @@
     font-size: 12px;
 }
 
-/* Domain detay gÃ¶rÃ¼nÃ¼mÃ¼ */
+/* Domain detay grnm */
 
 .dataset-catalog.is-domain-focused .ds-page-content {
     overflow: hidden;
@@ -2271,8 +2286,13 @@
 }
 
 .ds-status-total-row td {
-    border-top: 0.5px solid var(--rb-border);
-    background: var(--rb-filter-bg);
+    border-top: 1px solid var(--tbl-head-border);
+    background: var(--tbl-head-bg);
+    font-weight: 700;
+}
+
+.ds-status-total-row:hover td:first-child {
+    box-shadow: none;
 }
 
 .ds-table-search {
@@ -2483,6 +2503,41 @@
     transform: translateX(0);
 }
 
+.sc-drawer.is-bottom .sc-drawer-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: min(86vh, 920px);
+    border-left: 0;
+    border-top: 0.5px solid color-mix(in srgb, var(--sc-drawer-accent, #22d3ee) 35%, var(--rb-border));
+    border-radius: 18px 18px 0 0;
+    box-shadow:
+        0 -24px 60px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 color-mix(in srgb, var(--sc-drawer-accent, #22d3ee) 22%, transparent);
+    transform: translateY(108%);
+}
+
+.sc-drawer.is-bottom.is-open .sc-drawer-panel {
+    transform: translateY(0);
+}
+
+.sc-drawer.is-bottom .sc-drawer-accent {
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sc-drawer-accent), transparent 78%);
+    transform: scaleX(0);
+    transform-origin: left;
+}
+
+.sc-drawer.is-bottom.is-open .sc-drawer-accent {
+    transform: scaleX(1);
+}
+
 .sc-drawer-panel.theme-cyan { --sc-drawer-accent: #22d3ee; }
 .sc-drawer-panel.theme-teal { --sc-drawer-accent: #2dd4bf; }
 .sc-drawer-panel.theme-blue { --sc-drawer-accent: #7c9aff; }
@@ -2642,7 +2697,7 @@
     }
 }
 
-/* -- Dataset Kartlar görünümü -- */
+/* -- Dataset Kartlar grnm -- */
 
 .dataset-view-kartlar .ds-page-content {
     overflow-y: auto;

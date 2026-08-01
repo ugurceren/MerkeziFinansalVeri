@@ -6,6 +6,7 @@
     border-radius: 10px;
     background: var(--rb-card);
     position: relative;
+    scrollbar-width: thin;
 }
 
 .vs-results-wrap.is-compact {
@@ -29,11 +30,11 @@
     font-size: 12px;
 }
 
+/* Görsel katman (renk, kenarlık, hover, zebra) table-theme.css içinde yönetilir. */
 .vs-results-table th,
 .vs-results-table td {
     padding: 8px 10px;
     text-align: left;
-    border-bottom: 0.5px solid var(--rb-border);
     white-space: nowrap;
     max-width: 260px;
     overflow: hidden;
@@ -43,20 +44,13 @@
 .vs-results-table th {
     position: sticky;
     top: 0;
-    background: var(--rb-filter-bg);
-    color: var(--rb-text-secondary);
-    font-weight: 700;
-    z-index: 1;
+    z-index: 2;
 }
 
 .smart-table.vs-results-table > thead > tr:not(.st-label-row):not(.st-filter-row) th,
 .smart-table.vs-results-table > thead .st-label-row th,
 .smart-table.vs-results-table > thead .st-filter-row th {
     position: sticky;
-}
-
-.vs-results-table tbody tr:not(.virtual-spacer):hover {
-    background: var(--rb-accent-soft);
 }
 
 .vs-results-table tr.virtual-spacer td {

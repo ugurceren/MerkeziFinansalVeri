@@ -7,9 +7,12 @@
 .smart-table thead .st-filter-row th {
     position: sticky;
     z-index: 2;
-    background: var(--rb-filter-bg);
+    background: var(--tbl-head-bg);
+    background-clip: padding-box;
+    color: var(--tbl-head-text);
     vertical-align: middle;
     padding: 0;
+    border-bottom: 0;
 }
 
 .smart-table thead .st-label-row th {
@@ -20,7 +23,19 @@
 .smart-table thead .st-filter-row th {
     top: 34px;
     height: 36px;
-    border-bottom: 0.5px solid var(--rb-border);
+}
+
+/* Alt kenarlık ve derinlik daima görünen son başlık satırında durur;
+   filtre satırı gizliyken :last-child yanlış satıra denk geldiği için burada elle yönetilir. */
+.smart-table thead .st-label-row th,
+.smart-table.st-filters-open thead .st-filter-row th {
+    border-bottom: 1px solid var(--tbl-head-border);
+    box-shadow: var(--tbl-head-shadow);
+}
+
+.smart-table.st-filters-open thead .st-label-row th {
+    border-bottom: 0;
+    box-shadow: none;
 }
 
 .smart-table .st-label-cell {
@@ -38,17 +53,26 @@
     padding: 0 24px 0 10px;
     border: 0;
     background: transparent;
-    color: var(--rb-text-secondary);
+    color: inherit;
     font: inherit;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     text-align: left;
     cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease;
 }
 
 .smart-table .st-sort-btn:hover {
     color: var(--rb-text);
-    background: var(--rb-accent-soft);
+    background: var(--tbl-head-hover);
+}
+
+.smart-table .st-sort-btn:focus-visible {
+    outline: none;
+    color: var(--rb-text);
+    background: var(--tbl-head-hover);
+    box-shadow: inset 0 0 0 1.5px var(--tbl-row-accent);
 }
 
 .smart-table .st-sort-label {
@@ -59,14 +83,31 @@
 
 .smart-table .st-sort-icon {
     font-size: 14px;
-    opacity: 0.45;
+    opacity: 0.4;
     flex-shrink: 0;
+    transition: opacity 0.14s ease, color 0.14s ease;
+}
+
+.smart-table .st-sort-btn:hover .st-sort-icon {
+    opacity: 0.75;
+}
+
+/* Sıralanan kolon belirgin şekilde işaretlenir */
+.smart-table .st-label-cell.is-sorted-asc,
+.smart-table .st-label-cell.is-sorted-desc {
+    color: var(--rb-accent);
+}
+
+.smart-table .st-label-cell.is-sorted-asc .st-sort-btn,
+.smart-table .st-label-cell.is-sorted-desc .st-sort-btn {
+    background: var(--rb-accent-soft);
+    box-shadow: inset 0 -2px 0 var(--tbl-row-accent);
 }
 
 .smart-table .st-label-cell.is-sorted-asc .st-sort-icon,
 .smart-table .st-label-cell.is-sorted-desc .st-sort-icon {
     opacity: 1;
-    color: var(--rb-accent, #3cb371);
+    color: var(--rb-accent);
 }
 
 .smart-table .st-label-cell:has(.st-filter-toggle) .st-sort-btn {
@@ -108,8 +149,15 @@
     background: var(--rb-accent-soft);
 }
 
+.smart-table .st-filter-toggle:focus-visible {
+    opacity: 1;
+    outline: none;
+    color: var(--rb-text);
+    box-shadow: 0 0 0 1.5px var(--tbl-row-accent);
+}
+
 .smart-table .st-filter-toggle.is-active {
-    color: var(--rb-accent, #3cb371);
+    color: var(--rb-accent);
 }
 
 .smart-table .st-filter-row {
@@ -118,6 +166,21 @@
 
 .smart-table.st-filters-open .st-filter-row {
     display: table-row;
+}
+
+.smart-table.st-filters-open .st-filter-row .st-filter-input {
+    animation: st-filter-reveal 0.18s ease both;
+}
+
+@keyframes st-filter-reveal {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .smart-table.st-filters-open .st-filter-row .st-filter-input {
+        animation: none;
+    }
 }
 
 .smart-table .st-col-resizer {
@@ -137,12 +200,17 @@
     right: 3px;
     width: 1px;
     height: 60%;
+    border-radius: 1px;
     background: var(--rb-border);
+    transition: background 0.12s ease, width 0.12s ease, top 0.12s ease, height 0.12s ease;
 }
 
 .smart-table .st-col-resizer:hover::after,
 body.st-col-resizing .smart-table .st-col-resizer::after {
-    background: var(--rb-accent, #3cb371);
+    top: 12%;
+    height: 76%;
+    width: 2px;
+    background: var(--tbl-row-accent);
 }
 
 .smart-table .st-filter-cell {
@@ -163,8 +231,8 @@ body.st-col-resizing .smart-table .st-col-resizer::after {
 
 .smart-table .st-filter-input:focus {
     outline: none;
-    border-color: rgba(60, 179, 113, 0.55);
-    box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.12);
+    border-color: var(--tbl-row-accent);
+    box-shadow: 0 0 0 2px var(--rb-accent-soft);
 }
 
 .smart-table tbody td {
@@ -186,7 +254,10 @@ body.st-col-resizing .smart-table .st-col-resizer::after {
 .smart-table .st-empty-row {
     text-align: center;
     color: var(--rb-text-muted);
-    padding: 18px 12px !important;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    padding: 28px 16px !important;
+    border-bottom: 0;
 }
 
 body.st-col-resizing {

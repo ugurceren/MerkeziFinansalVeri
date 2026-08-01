@@ -191,6 +191,9 @@
         testVeritabaniSorguBaglanti(data) {
             return request('/veritabani-sorgu/test-baglanti', { method: 'POST', body: data });
         },
+        getVeritabaniSorguSema(data) {
+            return request('/veritabani-sorgu/sema', { method: 'POST', body: data });
+        },
 
         // Ters Bakiye Raporu
         getTersBakiyeAyarlar() { return request('/raporlar/ters-bakiye/ayarlar'); },

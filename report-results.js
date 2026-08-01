@@ -235,6 +235,40 @@
         return activeTable;
     }
 
+    const SKELETON_WIDTHS = ['is-long', 'is-mid', 'is-short', 'is-mid', 'is-long', 'is-short'];
+
+    function renderSkeleton(options) {
+        const { scrollEl, headEl, bodyEl, cols, columnCount, rowCount } = options || {};
+        if (!headEl || !bodyEl) return;
+
+        destroyActiveTable();
+
+        const labels = Array.isArray(cols) && cols.length ? cols : null;
+        const columns = labels ? labels.length : Math.max(1, Number(columnCount) || 6);
+        const rows = Math.max(1, Number(rowCount) || 8);
+
+        const table = bodyEl.closest('table');
+        table?.querySelector('colgroup')?.remove();
+        table?.classList.remove('smart-table', 'st-filters-open');
+
+        const getColumnLabel = typeof options.getColumnLabel === 'function' ? options.getColumnLabel : col => col;
+        headEl.innerHTML = `<tr>${Array.from({ length: columns }, (_, i) =>
+            `<th>${labels ? escapeHtmlFast(getColumnLabel(labels[i])) : '&nbsp;'}</th>`
+        ).join('')}</tr>`;
+
+        bodyEl.innerHTML = Array.from({ length: rows }, (_, r) =>
+            `<tr class="tbl-skeleton-row" aria-hidden="true">${Array.from({ length: columns }, (_, c) =>
+                `<td><span class="tbl-skeleton-cell ${SKELETON_WIDTHS[(r + c) % SKELETON_WIDTHS.length]}"></span></td>`
+            ).join('')}</tr>`
+        ).join('');
+
+        if (scrollEl) scrollEl.scrollTop = 0;
+    }
+
+    function clearSkeleton(bodyEl) {
+        if (bodyEl?.querySelector('.tbl-skeleton-row')) bodyEl.innerHTML = '';
+    }
+
     function cellValue(val) {
         if (val === null || val === undefined) return '';
         if (val instanceof Date) return val.toISOString();
@@ -291,6 +325,8 @@
         setRecordCount,
         escapeHtmlFast,
         renderTable,
+        renderSkeleton,
+        clearSkeleton,
         destroyActiveTable,
         getActiveTable,
         exportToExcel,

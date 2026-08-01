@@ -29,6 +29,35 @@ public sealed class VeritabaniSorguSonucDto
     public int MaxSatir { get; set; }
 }
 
+public sealed class VeritabaniSorguSemaRequestDto
+{
+    public string KatmanKodu { get; set; } = "TDSTG";
+    public VeritabaniSorguBaglantiDto? Baglanti { get; set; }
+}
+
+public sealed class VeritabaniSorguSemaKolonDto
+{
+    public string Ad { get; set; } = string.Empty;
+    public string VeriTipi { get; set; } = string.Empty;
+}
+
+public sealed class VeritabaniSorguSemaTabloDto
+{
+    public string Sema { get; set; } = string.Empty;
+    public string Ad { get; set; } = string.Empty;
+    public string Tip { get; set; } = "TABLE";
+    public IReadOnlyList<VeritabaniSorguSemaKolonDto> Kolonlar { get; set; } = [];
+}
+
+public sealed class VeritabaniSorguSemaDto
+{
+    public bool Basarili { get; set; }
+    public string? Hata { get; set; }
+    public string KatmanKodu { get; set; } = string.Empty;
+    public bool Kisitlandi { get; set; }
+    public IReadOnlyList<VeritabaniSorguSemaTabloDto> Tablolar { get; set; } = [];
+}
+
 public sealed class VeritabaniSorguKatmanDto
 {
     public string KatmanKodu { get; set; } = string.Empty;

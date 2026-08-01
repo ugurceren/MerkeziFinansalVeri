@@ -222,13 +222,7 @@
     cursor: pointer;
 }
 
-#usersTable tbody tr.selected td {
-    background: var(--rb-rbtn-active-bg);
-}
-
-#usersTable tbody tr.selected td:first-child {
-    box-shadow: inset 3px 0 0 var(--rb-accent);
-}
+/* Seçili satır görünümü table-theme.css içinde yönetilir. */
 
 @media (max-width: 960px) {
     .um-grid {

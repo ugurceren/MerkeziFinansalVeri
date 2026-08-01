@@ -696,13 +696,14 @@ function closeSurecDrawer(options = {}) {
     setTimeout(finish, 480);
 }
 
-function openSurecDrawer({ title, subtitle, theme, bodyHtml, onMounted, onClose }) {
+function openSurecDrawer({ title, subtitle, theme, bodyHtml, onMounted, onClose, placement }) {
     closeSurecDrawer({ immediate: true });
 
     const host = ensureSurecDrawerHost();
     const themeClass = theme ? ` theme-${theme}` : '';
+    const placementClass = placement === 'bottom' ? ' is-bottom' : ' is-right';
     host.innerHTML = `
-        <div class="sc-drawer" aria-hidden="true">
+        <div class="sc-drawer${placementClass}" aria-hidden="true">
             <div class="sc-drawer-backdrop" data-drawer-close tabindex="-1"></div>
             <aside class="sc-drawer-panel${themeClass}" role="dialog" aria-modal="true" aria-label="${escapeDatasetHtml(title || 'Detay')}">
                 <div class="sc-drawer-accent" aria-hidden="true"></div>
@@ -792,6 +793,7 @@ function openDomainDrawer(domainId) {
         title: domain.name,
         subtitle: `Domain detayı · ${domain.datasets.length} dataset · sıra #${rank}`,
         theme: domain.theme,
+        placement: 'bottom',
         bodyHtml: buildDomainDetailView(domain, rank, maxCount, domainCount, totalDatasets),
         onMounted: () => {},
         onClose: () => {

@@ -63,7 +63,6 @@
     min-height: 0;
     border: none;
     border-radius: 0;
-    background: var(--rb-card);
 }
 
 .page-ribbon .tl-head h3 { font-size: 16px; }

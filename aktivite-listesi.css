@@ -44,7 +44,52 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 4px 16px 16px;
+    padding: 8px 10px 12px;
+    scrollbar-width: thin;
+}
+
+/* Tablo satırlarıyla aynı dil: zebra, hover ve sol accent şerit */
+.al-panel .activity-item {
+    padding: 10px 12px;
+    border-bottom: 0;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 0 var(--tbl-row-accent);
+    transition: background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.al-panel .activity-item:nth-child(even) {
+    background: var(--tbl-row-alt);
+}
+
+.al-panel .activity-item:hover {
+    background: var(--tbl-row-hover);
+    box-shadow: inset 3px 0 0 var(--tbl-row-accent);
+}
+
+.al-panel .activity-dot {
+    box-shadow: 0 0 0 1px var(--rb-border);
+    transition: box-shadow 0.14s ease;
+}
+
+.al-panel .activity-item:hover .activity-dot {
+    box-shadow: 0 0 0 1px var(--tbl-head-border), 0 0 0 4px var(--rb-accent-soft);
+}
+
+.al-panel .activity-time {
+    align-self: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--rb-card);
+    border: 0.5px solid var(--rb-border);
+    color: var(--rb-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .al-panel .activity-item,
+    .al-panel .activity-dot {
+        transition: none;
+    }
 }
 
 .al-status {

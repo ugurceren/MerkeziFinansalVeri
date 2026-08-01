@@ -14,6 +14,9 @@
     let ayarlar = null;
     let selectedKatman = 'TDSTG';
     let customConnections = [];
+    let intellisense = null;
+    const schemaCache = new Map();
+    let schemaRequestId = 0;
 
     function escapeHtml(str) {
         return String(str ?? '')
@@ -172,6 +175,27 @@
         sel.innerHTML = configOptions.join('') + divider + customOptions.join('');
     }
 
+    function showResultsSkeleton() {
+        const head = document.getElementById('vsResultsHead');
+        const body = document.getElementById('vsResultsBody');
+        const wrap = document.getElementById('vsResultsWrap');
+        const empty = document.getElementById('vsResultsEmpty');
+        if (!head || !body) return;
+
+        if (empty) empty.hidden = true;
+        wrap?.classList.add('has-data');
+        window.ReportResults.renderSkeleton({ scrollEl: wrap, headEl: head, bodyEl: body, rowCount: 10 });
+    }
+
+    function clearResultsSkeleton() {
+        const head = document.getElementById('vsResultsHead');
+        const body = document.getElementById('vsResultsBody');
+        if (!body?.querySelector('.tbl-skeleton-row')) return;
+        if (head) head.innerHTML = '';
+        window.ReportResults.clearSkeleton(body);
+        document.getElementById('vsResultsEmpty')?.removeAttribute('hidden');
+    }
+
     function renderResults(payload) {
         const head = document.getElementById('vsResultsHead');
         const body = document.getElementById('vsResultsBody');
@@ -220,6 +244,64 @@
             return `API'ye ulaşılamıyor. Proje kökünde start-api.bat çalıştırın, sayfayı HTTP sunucusundan açın (file:// değil). Varsayılan API: ${ApiClient.baseUrl}`;
         }
         return msg;
+    }
+
+    function setIntellisenseHint(state, text) {
+        const hint = document.getElementById('vsIntellisenseHint');
+        const label = document.getElementById('vsIntellisenseText');
+        if (!hint || !label) return;
+        hint.classList.toggle('is-loading', state === 'loading');
+        hint.classList.toggle('is-error', state === 'error');
+        hint.querySelector('i')?.setAttribute(
+            'class',
+            state === 'loading' ? 'ti ti-loader-2' : 'ti ti-sparkles'
+        );
+        label.textContent = text;
+    }
+
+    /* Katmanın tablo/kolon şemasını çekip IntelliSense'e verir.
+       Şema yoksa motor anahtar kelime ve fonksiyonlarla çalışmaya devam eder. */
+    async function loadSchema() {
+        if (!intellisense) return;
+
+        const selected = getSelectedConnection();
+        const cacheKey = selected.baglanti
+            ? `${selected.baglanti.sunucu}/${selected.baglanti.veritabani}`
+            : selected.katmanKodu;
+
+        const cached = schemaCache.get(cacheKey);
+        if (cached) {
+            intellisense.setSchema(cached);
+            setIntellisenseHint('ok', `IntelliSense · ${cached.length} nesne`);
+            return;
+        }
+
+        const requestId = ++schemaRequestId;
+        setIntellisenseHint('loading', 'Şema yükleniyor…');
+
+        const payload = { katmanKodu: selected.katmanKodu };
+        if (selected.baglanti) payload.baglanti = selected.baglanti;
+
+        try {
+            const res = await ApiClient.getVeritabaniSorguSema(payload);
+            if (requestId !== schemaRequestId) return;
+
+            if (!res?.basarili) {
+                intellisense.setSchema([]);
+                setIntellisenseHint('error', 'IntelliSense · yalnızca anahtar kelimeler');
+                return;
+            }
+
+            const tablolar = res.tablolar || [];
+            schemaCache.set(cacheKey, tablolar);
+            intellisense.setSchema(tablolar);
+            setIntellisenseHint('ok', `IntelliSense · ${tablolar.length} nesne`);
+        } catch (err) {
+            if (requestId !== schemaRequestId) return;
+            console.warn('Şema yüklenemedi:', err);
+            intellisense.setSchema([]);
+            setIntellisenseHint('error', 'IntelliSense · yalnızca anahtar kelimeler');
+        }
     }
 
     async function loadAyarlar() {
@@ -277,6 +359,7 @@
         setError('');
         setMeta('Sorgu çalıştırılıyor…');
         if (runBtn) runBtn.disabled = true;
+        showResultsSkeleton();
 
         const payload = { katmanKodu: selected.katmanKodu, sql };
         if (selected.baglanti) payload.baglanti = selected.baglanti;
@@ -285,6 +368,7 @@
             const res = await ApiClient.calistirVeritabaniSorgu(payload);
 
             if (!res.basarili) {
+                clearResultsSkeleton();
                 setMeta('');
                 setError(res.hata || 'Sorgu başarısız.');
                 const wrap = document.getElementById('vsResultsWrap');
@@ -296,6 +380,7 @@
             renderResults(res);
             setStatus('ok', `${selected.displayName} — sorgu tamamlandı`);
         } catch (err) {
+            clearResultsSkeleton();
             setMeta('');
             setError(apiErrorMessage(err));
             const wrap = document.getElementById('vsResultsWrap');
@@ -319,8 +404,15 @@
         document.getElementById('vsKatmanSelect')?.addEventListener('change', e => {
             selectedKatman = e.target.value;
             testConnection();
+            loadSchema();
         });
-        document.getElementById('vsQueryInput')?.addEventListener('keydown', e => {
+
+        const input = document.getElementById('vsQueryInput');
+        // IntelliSense önce bağlanır ki popup açıkken Enter'ı o karşılasın;
+        // Ctrl+Enter'ı hiç ele almadığı için çalıştırma kısayolu etkilenmez.
+        intellisense = window.SqlIntellisense?.attach(input) || null;
+
+        input?.addEventListener('keydown', e => {
             if (RUN_QUERY_SHORTCUT.matches(e)) {
                 e.preventDefault();
                 runQuery();
@@ -332,7 +424,11 @@
         await window.PagePermissions?.ready?.();
         bindEvents();
         await loadAyarlar();
-        if (document.getElementById('vsStatusDot')?.classList.contains('err')) return;
+        if (document.getElementById('vsStatusDot')?.classList.contains('err')) {
+            setIntellisenseHint('error', 'IntelliSense · yalnızca anahtar kelimeler');
+            return;
+        }
         testConnection();
+        loadSchema();
     });
 })();

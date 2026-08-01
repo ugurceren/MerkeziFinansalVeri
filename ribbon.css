@@ -28,6 +28,20 @@
   --rb-welcome-bg:linear-gradient(135deg,rgba(124,154,255,0.12) 0%,#262c3e 60%);
   --rb-bar-fill:linear-gradient(90deg,#7c9aff,rgba(124,154,255,0.55));
   --rb-shadow:rgba(0,0,0,0.22);
+
+  --tbl-head-bg:linear-gradient(180deg,#333c52 0%,#2a3143 100%);
+  --tbl-head-text:#b6bfd6;
+  --tbl-head-border:rgba(124,154,255,0.30);
+  --tbl-head-shadow:0 6px 12px -10px rgba(0,0,0,0.85);
+  --tbl-head-hover:rgba(124,154,255,0.12);
+  --tbl-row-alt:rgba(255,255,255,0.038);
+  --tbl-row-hover:rgba(124,154,255,0.10);
+  --tbl-row-accent:#7c9aff;
+  --tbl-row-selected:rgba(124,154,255,0.18);
+  --tbl-divider:rgba(255,255,255,0.055);
+  --tbl-edge-shadow:rgba(0,0,0,0.34);
+  --tbl-skeleton-base:rgba(255,255,255,0.06);
+  --tbl-skeleton-shine:rgba(255,255,255,0.14);
 }
 [data-theme="light"]{
   --rb-bg:#f3f4f6;
@@ -59,6 +73,20 @@
   --rb-welcome-bg:linear-gradient(135deg,#eff6ff 0%,#fff 60%);
   --rb-bar-fill:linear-gradient(90deg,#1e3a5f,#4a90d9);
   --rb-shadow:rgba(0,0,0,0.08);
+
+  --tbl-head-bg:linear-gradient(180deg,#ffffff 0%,#f1f2f6 100%);
+  --tbl-head-text:#475069;
+  --tbl-head-border:rgba(79,70,229,0.24);
+  --tbl-head-shadow:0 6px 12px -10px rgba(15,23,42,0.45);
+  --tbl-head-hover:rgba(79,70,229,0.08);
+  --tbl-row-alt:rgba(15,23,42,0.032);
+  --tbl-row-hover:rgba(79,70,229,0.07);
+  --tbl-row-accent:#4f46e5;
+  --tbl-row-selected:rgba(79,70,229,0.13);
+  --tbl-divider:rgba(15,23,42,0.06);
+  --tbl-edge-shadow:rgba(15,23,42,0.14);
+  --tbl-skeleton-base:rgba(15,23,42,0.06);
+  --tbl-skeleton-shine:rgba(255,255,255,0.75);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:var(--rb-bg);color:var(--rb-text);height:100vh;display:flex;flex-direction:column;transition:background 0.3s,color 0.3s}
@@ -143,7 +171,7 @@ thead tr{background:var(--rb-filter-bg)}
 th{padding:7px 10px;text-align:left;font-weight:500;font-size:11px;color:var(--rb-text-muted);border-bottom:0.5px solid var(--rb-border);white-space:nowrap}
 td{padding:7px 10px;border-bottom:0.5px solid var(--rb-border);color:var(--rb-text)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--rb-row-hover)}
+tbody tr:hover{background:var(--rb-row-hover)}
 .edit-btn,.del-btn,.save-btn,.cancel-btn{padding:3px 8px;font-size:11px;border-radius:4px;background:none;cursor:pointer;font-family:inherit}
 .edit-btn{border:0.5px solid var(--rb-accent);color:var(--rb-accent);margin-right:4px}
 .edit-btn:hover{background:var(--rb-accent-soft)}
@@ -154,7 +182,7 @@ tr:hover td{background:var(--rb-row-hover)}
 .cancel-btn{border:0.5px solid var(--rb-text-muted);color:var(--rb-text-muted)}
 .cancel-btn:hover{background:var(--rb-rbtn-hover)}
 
-tr.row-editing{background:var(--rb-accent-soft)!important;outline:1px solid var(--rb-accent);outline-offset:-1px}
+tr.row-editing{background:var(--rb-accent-soft);outline:1px solid var(--rb-accent);outline-offset:-1px}
 .cell-input{width:100%;padding:4px 8px;border-radius:6px;border:1px solid var(--rb-accent);background:var(--rb-input-bg);color:var(--rb-text);font:inherit;font-size:12px;box-sizing:border-box;min-width:70px}
 .cell-input:focus{outline:none}
 

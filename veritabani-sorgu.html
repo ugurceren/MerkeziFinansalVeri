@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="theme-menu.css">
     <link rel="stylesheet" href="query-results-table.css">
     <link rel="stylesheet" href="veritabani-sorgu.css">
+    <link rel="stylesheet" href="table-theme.css">
     <script>
     (function(){document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');})();
     </script>
@@ -194,6 +195,11 @@
                             </button>
                             <span class="vs-execute-shortcut" id="vsRunShortcut" aria-hidden="true"></span>
                         </div>
+                        <span class="vs-intellisense-hint" id="vsIntellisenseHint">
+                            <i class="ti ti-sparkles" aria-hidden="true"></i>
+                            <span id="vsIntellisenseText">IntelliSense</span>
+                            <kbd>Ctrl+Space</kbd>
+                        </span>
                     </div>
                     <textarea id="vsQueryInput" class="vs-query-input" spellcheck="false" placeholder="SELECT .."></textarea>
 
@@ -224,6 +230,7 @@
 <script src="ribbon-shell.js"></script>
 <script src="smart-table.js"></script>
 <script src="report-results.js"></script>
+<script src="sql-intellisense.js"></script>
 <script src="veritabani-sorgu.js"></script>
 </body>
 </html>

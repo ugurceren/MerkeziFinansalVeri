@@ -235,7 +235,27 @@
         if (clearBtn) clearBtn.disabled = loading;
         if (loading) {
             setStatus('Rapor çalıştırılıyor…', 'loading');
+            showResultsSkeleton();
         }
+    }
+
+    function showResultsSkeleton() {
+        const wrap = document.getElementById('tbResultsWrap');
+        const head = document.getElementById('tbResultsHead');
+        const body = document.getElementById('tbResultsBody');
+        const empty = document.getElementById('tbEmpty');
+        if (!head || !body) return;
+
+        if (empty) empty.hidden = true;
+        wrap?.classList.add('has-data');
+        window.ReportResults.renderSkeleton({
+            scrollEl: wrap,
+            headEl: head,
+            bodyEl: body,
+            cols: resolveDisplayColumns(cache[currentMod]?.kolonlar || []),
+            getColumnLabel: columnLabel,
+            rowCount: 10
+        });
     }
 
     function resetResultsChrome() {
@@ -428,6 +448,7 @@
             cache[currentMod] = result;
             renderResults(result);
         } catch (err) {
+            renderResults(null);
             setStatus(apiErrorMessage(err), 'error');
         } finally {
             setLoading(false);
