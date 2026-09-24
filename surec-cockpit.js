@@ -644,6 +644,8 @@ const DATASET_STATUS_MODEL_MOCK = [
 let datasetPageView = 'katalog';
 let datasetCatalogFocusId = null;
 let datasetPageSearchTerm = '';
+let datasetCardsStatusFilter = null;
+let datasetCardsSort = 'name';
 let surecDrawerCloser = null;
 let surecDrawerKeyHandler = null;
 
@@ -1243,106 +1245,260 @@ function buildDatasetListeContent() {
         </div>`;
 }
 
-function datasetCardMetaValue(value) {
-    const text = String(value ?? '').trim();
-    return text ? escapeDatasetHtml(text) : '—';
+const DATASET_CARD_SORTS = [
+    { id: 'name', label: 'Ada göre (A-Z)' },
+    { id: 'date', label: 'Statü tarihi (yeni → eski)' },
+    { id: 'status', label: 'Statüye göre' }
+];
+
+const DATASET_CARD_STATUS_ORDER = { 'is-failed': 0, 'is-running': 1, 'is-pending': 2, 'is-neutral': 3, 'is-done': 4 };
+
+const datasetCardCollator = new Intl.Collator('tr', { sensitivity: 'base', numeric: true });
+
+function datasetCardText(value) {
+    return String(value ?? '').trim();
+}
+
+function formatRelativeDays(value) {
+    if (!value || !Intl.RelativeTimeFormat) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+    const rtf = new Intl.RelativeTimeFormat('tr', { numeric: 'auto' });
+    const abs = Math.abs(diffDays);
+
+    if (abs < 30) return rtf.format(diffDays, 'day');
+    if (abs < 365) return rtf.format(Math.round(diffDays / 30), 'month');
+    return rtf.format(Math.round(diffDays / 365), 'year');
+}
+
+function getDatasetCardsBaseRows() {
+    return filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
+}
+
+/** Arama + statü filtresi + sıralama; hem render hem tıklama bu listeyi kullanır. */
+function getVisibleDatasetCards() {
+    const rows = getDatasetCardsBaseRows();
+    const filtered = datasetCardsStatusFilter === null
+        ? rows
+        : rows.filter(row => datasetCardText(row.status) === datasetCardsStatusFilter);
+
+    const byName = (a, b) => datasetCardCollator.compare(datasetCardText(a.datasetName), datasetCardText(b.datasetName));
+    const timeOf = row => {
+        const time = new Date(row.statusChangeDate).getTime();
+        return Number.isNaN(time) ? 0 : time;
+    };
+    const orderOf = row => DATASET_CARD_STATUS_ORDER[statusBadgeClass(row.status)] ?? 99;
+
+    const sorted = [...filtered];
+    if (datasetCardsSort === 'date') {
+        sorted.sort((a, b) => (timeOf(b) - timeOf(a)) || byName(a, b));
+    } else if (datasetCardsSort === 'status') {
+        sorted.sort((a, b) => (orderOf(a) - orderOf(b)) || byName(a, b));
+    } else {
+        sorted.sort(byName);
+    }
+    return sorted;
+}
+
+function getDatasetCardStatusCounts(rows) {
+    const counts = new Map();
+    rows.forEach(row => {
+        const status = datasetCardText(row.status);
+        counts.set(status, (counts.get(status) || 0) + 1);
+    });
+    return [...counts.entries()]
+        .map(([status, count]) => ({ status, count }))
+        .sort((a, b) => (b.count - a.count) || datasetCardCollator.compare(a.status, b.status));
+}
+
+function buildDatasetCardsToolbar(baseRows, visibleCount) {
+    const counts = getDatasetCardStatusCounts(baseRows);
+    if (datasetCardsStatusFilter !== null && !counts.some(c => c.status === datasetCardsStatusFilter)) {
+        counts.push({ status: datasetCardsStatusFilter, count: 0 });
+    }
+
+    const allActive = datasetCardsStatusFilter === null;
+    const chips = [`
+        <button type="button" class="ds-cards-chip${allActive ? ' is-active' : ''}" data-ds-status-all aria-pressed="${allActive}">
+            Tümü<span class="ds-cards-chip-count">${baseRows.length}</span>
+        </button>`];
+
+    counts.forEach(({ status, count }) => {
+        const active = datasetCardsStatusFilter === status;
+        const safe = escapeDatasetHtml(status);
+        chips.push(`
+        <button type="button" class="ds-cards-chip ${statusBadgeClass(status)}${active ? ' is-active' : ''}" data-ds-status="${safe}" aria-pressed="${active}">
+            <span class="ds-cards-chip-dot" aria-hidden="true"></span>${safe || 'Statüsüz'}<span class="ds-cards-chip-count">${count}</span>
+        </button>`);
+    });
+
+    const sortOptions = DATASET_CARD_SORTS.map(option =>
+        `<option value="${option.id}"${option.id === datasetCardsSort ? ' selected' : ''}>${option.label}</option>`
+    ).join('');
+
+    return `
+        <div class="ds-cards-toolbar">
+            <div class="ds-cards-chips" role="group" aria-label="Statüye göre filtrele">${chips.join('')}</div>
+            <div class="ds-cards-toolbar-end">
+                <label class="ds-cards-sort">
+                    <i class="ti ti-arrows-sort" aria-hidden="true"></i>
+                    <select id="dsCardsSort" aria-label="Kartları sırala">${sortOptions}</select>
+                </label>
+                ${tableCountHtml(visibleCount, DATASET_LIST_ROWS.length, { wrapId: 'dsCardsCountWrap' })}
+            </div>
+        </div>`;
+}
+
+function buildDatasetCardPerson(icon, label, value) {
+    const text = datasetCardText(value);
+    if (!text) return '';
+    const safe = escapeDatasetHtml(text);
+    return `
+        <div class="ds-dataset-card-person">
+            <i class="ti ${icon}" aria-hidden="true"></i>
+            <span class="ds-dataset-card-person-label">${label}</span>
+            <span class="ds-dataset-card-person-name" title="${safe}">${safe}</span>
+        </div>`;
 }
 
 function buildDatasetCard(row, index) {
     const statusClass = statusBadgeClass(row.status);
     const name = escapeDatasetHtml(row.datasetName || '—');
     const status = escapeDatasetHtml(row.status || '—');
+    const model = escapeDatasetHtml(datasetCardText(row.dataModel));
+    const layer = escapeDatasetHtml(datasetCardText(row.layer));
+    const staging = escapeDatasetHtml(datasetCardText(row.stagingTableName));
+    const scope = escapeDatasetHtml(datasetCardText(row.descriptionScope));
+    const relative = formatRelativeDays(row.statusChangeDate);
+
+    const chips = [
+        model ? `<span class="ds-dataset-card-chip" title="Data Model"><i class="ti ti-box-model-2" aria-hidden="true"></i>${model}</span>` : '',
+        layer ? `<span class="ds-dataset-card-chip is-layer" title="Layer"><i class="ti ti-stack-2" aria-hidden="true"></i>${layer}</span>` : ''
+    ].join('');
+
+    const people = [
+        buildDatasetCardPerson('ti-user', 'Analist', row.tdAnalyst),
+        buildDatasetCardPerson('ti-test-pipe', 'Tester', row.tester),
+        buildDatasetCardPerson('ti-user-check', 'Sorumlu', row.statusResponsible)
+    ].join('');
 
     return `
         <article class="ds-dataset-card ${statusClass}"
             data-ds-card-index="${index}"
             role="button"
             tabindex="0"
-            aria-label="${name} dataset detayı">
-            <div class="ds-dataset-card-accent" aria-hidden="true"></div>
+            aria-label="${name} dataset detayı, statü ${status}">
             <header class="ds-dataset-card-head">
                 <h4 class="ds-dataset-card-title" title="${name}">${name}</h4>
                 <span class="ds-status-badge ${statusClass}">${status}</span>
             </header>
-            <dl class="ds-dataset-card-meta">
-                <div><dt>Model</dt><dd title="${datasetCardMetaValue(row.dataModel)}">${datasetCardMetaValue(row.dataModel)}</dd></div>
-                <div><dt>Layer</dt><dd title="${datasetCardMetaValue(row.layer)}">${datasetCardMetaValue(row.layer)}</dd></div>
-                <div class="is-wide"><dt>Staging</dt><dd title="${datasetCardMetaValue(row.stagingTableName)}">${datasetCardMetaValue(row.stagingTableName)}</dd></div>
-            </dl>
-            <div class="ds-dataset-card-people">
-                <span><i class="ti ti-user" aria-hidden="true"></i>${datasetCardMetaValue(row.tdAnalyst)}</span>
-                <span><i class="ti ti-test-pipe" aria-hidden="true"></i>${datasetCardMetaValue(row.tester)}</span>
-                <span><i class="ti ti-user-check" aria-hidden="true"></i>${datasetCardMetaValue(row.statusResponsible)}</span>
-            </div>
-            <p class="ds-dataset-card-scope" title="${datasetCardMetaValue(row.descriptionScope)}">${datasetCardMetaValue(row.descriptionScope)}</p>
+            ${chips ? `<div class="ds-dataset-card-chips">${chips}</div>` : ''}
+            ${staging ? `
+            <div class="ds-dataset-card-staging">
+                <span>Staging</span>
+                <code title="${staging}">${staging}</code>
+            </div>` : ''}
+            <p class="ds-dataset-card-scope${scope ? '' : ' is-empty'}"${scope ? ` title="${scope}"` : ''}>${scope || 'Kapsam açıklaması yok'}</p>
             <footer class="ds-dataset-card-foot">
-                <span>Statü tarihi</span>
-                <strong>${formatDatasetDate(row.statusChangeDate)}</strong>
+                ${people ? `<div class="ds-dataset-card-people">${people}</div>` : ''}
+                <div class="ds-dataset-card-date" title="Statü tarihi">
+                    <i class="ti ti-clock" aria-hidden="true"></i>
+                    <strong>${formatDatasetDate(row.statusChangeDate)}</strong>
+                    ${relative ? `<span>· ${escapeDatasetHtml(relative)}</span>` : ''}
+                </div>
             </footer>
         </article>`;
 }
 
-function buildDatasetKartlarContent() {
-    const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
-    const count = DATASET_LIST_ROWS.length;
-    const term = datasetPageSearchTerm.trim();
+function buildDatasetCardsSkeleton(count = 6) {
+    const card = `
+        <div class="ds-dataset-card is-skeleton" aria-hidden="true">
+            <span class="ds-skel ds-skel-title"></span>
+            <span class="ds-skel ds-skel-chips"></span>
+            <span class="ds-skel ds-skel-line"></span>
+            <span class="ds-skel ds-skel-line is-short"></span>
+            <span class="ds-skel ds-skel-foot"></span>
+        </div>`;
+    return `
+        <div class="ds-cards-wrap" aria-busy="true">
+            <div class="ds-cards-grid">${card.repeat(count)}</div>
+        </div>`;
+}
 
-    if (!filtered.length) {
+function buildDatasetKartlarContent() {
+    const baseRows = getDatasetCardsBaseRows();
+    const visible = getVisibleDatasetCards();
+    const toolbar = buildDatasetCardsToolbar(baseRows, visible.length);
+
+    if (!visible.length) {
+        const hasFilter = Boolean(datasetPageSearchTerm.trim()) || datasetCardsStatusFilter !== null;
         return `
             <div class="ds-cards-wrap">
-                <div class="ds-cards-toolbar">
-                    ${tableCountHtml(0, count, { wrapId: 'dsCardsCountWrap' })}
+                ${toolbar}
+                <div class="ds-empty ds-cards-empty">
+                    <i class="ti ${hasFilter ? 'ti-filter-off' : 'ti-database-off'}" aria-hidden="true"></i>
+                    <p>${hasFilter ? 'Filtrelerle eşleşen dataset bulunamadı.' : 'Dataset kaydı bulunamadı.'}</p>
+                    ${hasFilter ? '<button type="button" class="ds-cards-clear" data-ds-cards-clear>Filtreyi temizle</button>' : ''}
                 </div>
-                <div class="ds-empty">${term ? 'Aramayla eşleşen dataset bulunamadı.' : 'Dataset kaydı bulunamadı.'}</div>
             </div>`;
     }
 
-    const cards = filtered.map((row, index) => buildDatasetCard(row, index)).join('');
-
     return `
         <div class="ds-cards-wrap">
-            <div class="ds-cards-toolbar">
-                <p class="ds-cards-hint">
-                    <i class="ti ti-click" aria-hidden="true"></i>
-                    ${term
-                        ? `${filtered.length} kart · arama: “${escapeDatasetHtml(term)}”`
-                        : 'Detay için karta tıklayın'}
-                </p>
-                ${tableCountHtml(filtered.length, count, { wrapId: 'dsCardsCountWrap' })}
-            </div>
-            <div class="ds-cards-grid" id="dsCardsGrid">${cards}</div>
+            ${toolbar}
+            <div class="ds-cards-grid" id="dsCardsGrid">${visible.map(buildDatasetCard).join('')}</div>
         </div>`;
 }
 
 function buildDatasetCardDrawerBody(row) {
-    const fields = [
-        ['Dataset', row.datasetName],
-        ['Statü', row.status],
-        ['Data Model', row.dataModel],
-        ['Layer', row.layer],
-        ['Staging Tablo', row.stagingTableName],
-        ['TD Analist', row.tdAnalyst],
-        ['Tester', row.tester],
-        ['Statü Sorumlusu', row.statusResponsible],
-        ['Statü Tarihi', formatDatasetDate(row.statusChangeDate)],
-        ['KT IT Birimi', row.ktResponsibleItUnit],
-        ['KT SP', row.ktSpName],
-        ['Kapsam', row.descriptionScope],
-        ['Not', row.note]
+    const groups = [
+        ['Genel', [
+            ['Dataset', row.datasetName],
+            ['Data Model', row.dataModel],
+            ['Layer', row.layer],
+            ['Staging Tablo', row.stagingTableName, true],
+            ['Statü Tarihi', row.statusChangeDate ? formatDatasetDate(row.statusChangeDate) : '']
+        ]],
+        ['Sorumlular', [
+            ['TD Analist', row.tdAnalyst],
+            ['Tester', row.tester],
+            ['Statü Sorumlusu', row.statusResponsible],
+            ['KT IT Birimi', row.ktResponsibleItUnit]
+        ]],
+        ['Teknik', [
+            ['KT SP', row.ktSpName, true]
+        ]],
+        ['Açıklama', [
+            ['Kapsam', row.descriptionScope],
+            ['Not', row.note]
+        ]]
     ];
 
-    const rows = fields.map(([label, value]) => `
-        <div class="ds-card-detail-row">
-            <dt>${escapeDatasetHtml(label)}</dt>
-            <dd>${datasetCardMetaValue(value)}</dd>
-        </div>`).join('');
+    const sections = groups.map(([title, fields]) => {
+        const rows = fields
+            .filter(([, value]) => datasetCardText(value))
+            .map(([label, value, isCode]) => `
+                <div class="ds-card-detail-row">
+                    <dt>${escapeDatasetHtml(label)}</dt>
+                    <dd${isCode ? ' class="is-code"' : ''}>${escapeDatasetHtml(datasetCardText(value))}</dd>
+                </div>`).join('');
+        if (!rows) return '';
+        return `
+            <section class="ds-card-detail-group">
+                <h5 class="ds-card-detail-group-title">${escapeDatasetHtml(title)}</h5>
+                <dl class="ds-card-detail-list">${rows}</dl>
+            </section>`;
+    }).join('');
 
     return `
         <div class="ds-card-detail">
             <div class="ds-card-detail-status">
                 <span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status || '—')}</span>
             </div>
-            <dl class="ds-card-detail-list">${rows}</dl>
+            ${sections}
         </div>`;
 }
 
@@ -1358,36 +1514,65 @@ function openDatasetCardDrawer(row) {
 
 function bindDatasetKartlarInteractions(root) {
     const shell = root.querySelector?.('.dataset-catalog') || root;
-    const grid = shell.querySelector('#dsCardsGrid');
-    if (!grid || grid.dataset.bound === '1') return;
-    grid.dataset.bound = '1';
+    const wrap = shell.querySelector('.ds-cards-wrap');
+    if (!wrap || wrap.dataset.bound === '1') return;
+    wrap.dataset.bound = '1';
 
     const openFromCard = card => {
         const index = Number(card.getAttribute('data-ds-card-index'));
-        const filtered = filterDatasetListRows(DATASET_LIST_ROWS, datasetPageSearchTerm);
-        openDatasetCardDrawer(filtered[index]);
+        openDatasetCardDrawer(getVisibleDatasetCards()[index]);
     };
 
-    grid.addEventListener('click', event => {
+    // Filtre/sıralama değişiminde içerik yeniden çizilir; klavye odağı aynı kontrole geri verilir.
+    const rerender = focusSelector => {
+        refreshDatasetKartlarContent(shell, { animate: false });
+        if (focusSelector) shell.querySelector(focusSelector)?.focus();
+    };
+
+    wrap.addEventListener('click', event => {
+        const chip = event.target.closest('[data-ds-status], [data-ds-status-all]');
+        if (chip) {
+            const next = chip.hasAttribute('data-ds-status-all') ? null : chip.getAttribute('data-ds-status');
+            datasetCardsStatusFilter = next === datasetCardsStatusFilter ? null : next;
+            rerender(datasetCardsStatusFilter === null
+                ? '[data-ds-status-all]'
+                : `[data-ds-status="${CSS.escape(datasetCardsStatusFilter)}"]`);
+            return;
+        }
+
+        if (event.target.closest('[data-ds-cards-clear]')) {
+            datasetCardsStatusFilter = null;
+            datasetPageSearchTerm = '';
+            const input = shell.querySelector('#dsPageSearch');
+            if (input) input.value = '';
+            rerender('[data-ds-status-all]');
+            return;
+        }
+
         const card = event.target.closest('.ds-dataset-card[data-ds-card-index]');
-        if (!card || !grid.contains(card)) return;
-        openFromCard(card);
+        if (card) openFromCard(card);
     });
 
-    grid.addEventListener('keydown', event => {
-        const card = event.target.closest('.ds-dataset-card[data-ds-card-index]');
-        if (!card || !grid.contains(card)) return;
+    wrap.addEventListener('keydown', event => {
         if (event.key !== 'Enter' && event.key !== ' ') return;
+        const card = event.target.closest('.ds-dataset-card[data-ds-card-index]');
+        if (!card || event.target !== card) return;
         event.preventDefault();
         openFromCard(card);
     });
+
+    wrap.addEventListener('change', event => {
+        if (event.target.id !== 'dsCardsSort') return;
+        datasetCardsSort = event.target.value;
+        rerender('#dsCardsSort');
+    });
 }
 
-function refreshDatasetKartlarContent(shell) {
+function refreshDatasetKartlarContent(shell, { animate = true } = {}) {
     const contentEl = shell.querySelector('.ds-page-content');
     if (!contentEl) return;
     contentEl.innerHTML = buildDatasetKartlarContent();
-    animateDatasetStage(contentEl);
+    if (animate) animateDatasetStage(contentEl);
     bindDatasetKartlarInteractions(shell);
 }
 
@@ -1880,7 +2065,9 @@ async function renderDatasetPage(container) {
 
     const contentEl = shell.querySelector('.ds-page-content');
     if (contentEl) {
-        contentEl.innerHTML = '<div class="ds-loading">Yükleniyor…</div>';
+        contentEl.innerHTML = datasetPageView === 'kartlar'
+            ? buildDatasetCardsSkeleton()
+            : '<div class="ds-loading">Yükleniyor…</div>';
     }
 
     let loadError = null;

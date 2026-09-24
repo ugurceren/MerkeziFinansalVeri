@@ -383,7 +383,7 @@
 }
 
 .flow-status-pill.is-done { background: rgba(34, 197, 94, 0.14); color: #22c55e; }
-/* In Progress  turuncuya yak?n sar? (st filtre ile ayn?) */
+/* In Progress ï¿½ turuncuya yak?n sar? (ï¿½st filtre ile ayn?) */
 .flow-status-pill.is-running { background: rgba(251, 191, 36, 0.2); color: #d97706; }
 .flow-status-pill.is-failed { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
 .flow-status-pill.is-not-started { background: rgba(132, 145, 168, 0.18); color: var(--rb-text-muted); }
@@ -742,7 +742,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Ak?? kutular?yla ayn? renkler  varsay?lan renkli; seiliyken biraz daha belirgin */
+/* Ak?? kutular?yla ayn? renkler ï¿½ varsay?lan renkli; seï¿½iliyken biraz daha belirgin */
 .cockpit-status-chip.is-not-started {
     border-color: rgba(148, 163, 184, 0.55);
     background: rgba(148, 163, 184, 0.16);
@@ -971,7 +971,7 @@
     color: var(--rb-text-muted);
 }
 
-/* Not Started  gri (aktif) */
+/* Not Started ï¿½ gri (aktif) */
 .flow-step.is-active.not-started {
     border-style: solid;
     border-color: rgba(148, 163, 184, 0.55);
@@ -983,7 +983,7 @@
     color: #94a3b8;
 }
 
-/* In Progress  turuncuya yak?n sar? (aktif) */
+/* In Progress ï¿½ turuncuya yak?n sar? (aktif) */
 .flow-step.is-active.running {
     border-style: solid;
     border-color: rgba(245, 158, 11, 0.6);
@@ -995,7 +995,7 @@
     color: #d97706;
 }
 
-/* Failed  k?rm?z? (aktif) */
+/* Failed ï¿½ k?rm?z? (aktif) */
 .flow-step.is-active.failed {
     border-style: solid;
     border-color: rgba(239, 68, 68, 0.5);
@@ -1007,7 +1007,7 @@
     color: #ef4444;
 }
 
-/* Success  ye?il (aktif) */
+/* Success ï¿½ ye?il (aktif) */
 .flow-step.is-active.done {
     border-style: solid;
     border-color: rgba(34, 197, 94, 0.5);
@@ -1019,7 +1019,7 @@
     color: #22c55e;
 }
 
-/* LND Failed  koyu k?rm?z? (aktif) */
+/* LND Failed ï¿½ koyu k?rm?z? (aktif) */
 .flow-step.lnd-failed.is-active.failed {
     border-style: solid;
     border-color: rgba(127, 29, 29, 0.72);
@@ -1041,7 +1041,7 @@
     color: #b91c1c;
 }
 
-/* LND Completed  koyu ye?il (aktif) */
+/* LND Completed ï¿½ koyu ye?il (aktif) */
 .flow-step.lnd-done.is-active.done {
     border-style: solid;
     border-color: rgba(22, 101, 52, 0.72);
@@ -1423,7 +1423,7 @@
     font-size: 12px;
 }
 
-/* Domain detay grnm */
+/* Domain detay gï¿½rï¿½nï¿½mï¿½ */
 
 .dataset-catalog.is-domain-focused .ds-page-content {
     overflow: hidden;
@@ -2697,86 +2697,242 @@
     }
 }
 
-/* -- Dataset Kartlar grnm -- */
+/* -- Dataset Kartlar gorunumu -- */
 
 .dataset-view-kartlar .ds-page-content {
     overflow-y: auto;
     min-height: 0;
 }
 
+/* Kart gorunumune ozel tema tokenlari (koyu varsayilan, acik tema asagida) */
+.ds-cards-wrap,
+.ds-card-detail {
+    --dsc-bg: var(--rb-card);
+    --dsc-border: rgba(255, 255, 255, 0.10);
+    --dsc-border-hover: color-mix(in srgb, var(--rb-accent) 55%, transparent);
+    --dsc-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --dsc-shadow-hover: 0 10px 24px rgba(0, 0, 0, 0.32);
+    --dsc-code-bg: rgba(255, 255, 255, 0.05);
+
+    --dsc-done: #4ade80;       --dsc-done-text: #4ade80;       --dsc-done-soft: rgba(74, 222, 128, 0.14);
+    --dsc-running: #60a5fa;    --dsc-running-text: #7cb4fb;    --dsc-running-soft: rgba(96, 165, 250, 0.15);
+    --dsc-pending: #fbbf24;    --dsc-pending-text: #fbbf24;    --dsc-pending-soft: rgba(251, 191, 36, 0.14);
+    --dsc-failed: #f87171;     --dsc-failed-text: #fca5a5;     --dsc-failed-soft: rgba(248, 113, 113, 0.15);
+    --dsc-neutral: #7a84a1;    --dsc-neutral-text: #b6bfd6;    --dsc-neutral-soft: rgba(148, 163, 184, 0.14);
+}
+
+[data-theme="light"] .ds-cards-wrap,
+[data-theme="light"] .ds-card-detail {
+    --dsc-bg: #ffffff;
+    --dsc-border: rgba(15, 23, 42, 0.10);
+    --dsc-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --dsc-shadow-hover: 0 10px 24px rgba(15, 23, 42, 0.10);
+    --dsc-code-bg: rgba(15, 23, 42, 0.045);
+
+    --dsc-done: #16a34a;       --dsc-done-text: #15803d;       --dsc-done-soft: rgba(22, 163, 74, 0.10);
+    --dsc-running: #2563eb;    --dsc-running-text: #1d4ed8;    --dsc-running-soft: rgba(37, 99, 235, 0.10);
+    --dsc-pending: #d97706;    --dsc-pending-text: #b45309;    --dsc-pending-soft: rgba(217, 119, 6, 0.11);
+    --dsc-failed: #dc2626;     --dsc-failed-text: #b91c1c;     --dsc-failed-soft: rgba(220, 38, 38, 0.09);
+    --dsc-neutral: #94a3b8;    --dsc-neutral-text: #475569;    --dsc-neutral-soft: rgba(71, 85, 105, 0.09);
+}
+
+/* Statu sinifi -> aktif renk uclusu */
+.ds-cards-wrap .is-neutral, .ds-card-detail .is-neutral { --dsc-c: var(--dsc-neutral); --dsc-text: var(--dsc-neutral-text); --dsc-soft: var(--dsc-neutral-soft); }
+.ds-cards-wrap .is-done,    .ds-card-detail .is-done    { --dsc-c: var(--dsc-done);    --dsc-text: var(--dsc-done-text);    --dsc-soft: var(--dsc-done-soft); }
+.ds-cards-wrap .is-running, .ds-card-detail .is-running { --dsc-c: var(--dsc-running); --dsc-text: var(--dsc-running-text); --dsc-soft: var(--dsc-running-soft); }
+.ds-cards-wrap .is-pending, .ds-card-detail .is-pending { --dsc-c: var(--dsc-pending); --dsc-text: var(--dsc-pending-text); --dsc-soft: var(--dsc-pending-soft); }
+.ds-cards-wrap .is-failed,  .ds-card-detail .is-failed  { --dsc-c: var(--dsc-failed);  --dsc-text: var(--dsc-failed-text);  --dsc-soft: var(--dsc-failed-soft); }
+
+.ds-cards-wrap .ds-status-badge,
+.ds-card-detail .ds-status-badge {
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    font-size: 11.5px;
+    background: var(--dsc-soft);
+    color: var(--dsc-text);
+}
+
+.ds-cards-wrap .ds-status-badge::before,
+.ds-card-detail .ds-status-badge::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dsc-c);
+    flex-shrink: 0;
+}
+
 .ds-cards-wrap {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     min-height: 0;
 }
+
+/* -- Arac cubugu: statu cipleri + siralama -- */
 
 .ds-cards-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px 16px;
     flex-wrap: wrap;
     flex-shrink: 0;
 }
 
-.ds-cards-hint {
+.ds-cards-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ds-cards-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin: 0;
-    font-size: 12px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--dsc-border);
+    background: var(--dsc-bg);
+    color: var(--rb-text-secondary);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ds-cards-chip:hover {
+    border-color: var(--dsc-border-hover);
+    color: var(--rb-text);
+}
+
+.ds-cards-chip:focus-visible {
+    outline: 2px solid var(--rb-accent);
+    outline-offset: 2px;
+}
+
+.ds-cards-chip.is-active {
+    background: var(--rb-accent-soft);
+    border-color: var(--rb-accent);
+    color: var(--rb-text);
+}
+
+.ds-cards-chip[data-ds-status].is-active {
+    background: var(--dsc-soft);
+    border-color: var(--dsc-c);
+    color: var(--dsc-text);
+}
+
+.ds-cards-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dsc-c);
+    flex-shrink: 0;
+}
+
+.ds-cards-chip-count {
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--dsc-code-bg);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.ds-cards-toolbar-end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ds-cards-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 4px 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--dsc-border);
+    background: var(--rb-input-bg);
     color: var(--rb-text-muted);
 }
 
+.ds-cards-sort:focus-within {
+    border-color: var(--rb-accent);
+}
+
+.ds-cards-sort select {
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--rb-text);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+    outline: none;
+}
+
+.ds-cards-sort select option {
+    background: var(--rb-surface);
+    color: var(--rb-text);
+}
+
+/* -- Izgara ve kart -- */
+
 .ds-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    grid-auto-rows: 1fr;
+    gap: 16px;
     padding-bottom: 8px;
 }
 
 .ds-dataset-card {
+    --dsc-c: var(--dsc-neutral);
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-height: 220px;
-    padding: 14px 14px 12px;
-    border-radius: 14px;
-    border: 0.5px solid var(--rb-border);
-    background: var(--rb-card);
+    min-width: 0;
+    min-height: 230px;
+    padding: 14px 16px 12px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--dsc-border);
+    background: var(--dsc-bg);
+    box-shadow: var(--dsc-shadow);
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
-.ds-dataset-card:hover,
-.ds-dataset-card:focus-visible {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--rb-accent) 40%, var(--rb-border));
-    box-shadow: 0 14px 28px var(--rb-shadow);
-    outline: none;
-}
-
-.ds-dataset-card-accent {
+/* Sol kenarda statu seridi */
+.ds-dataset-card::before {
+    content: '';
     position: absolute;
     top: 0;
+    bottom: 0;
     left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--rb-accent);
-    opacity: 0.75;
+    width: 4px;
+    background: var(--dsc-c);
 }
 
-.ds-dataset-card.is-done { border-color: rgba(34, 197, 94, 0.35); }
-.ds-dataset-card.is-done .ds-dataset-card-accent { background: #22c55e; }
-.ds-dataset-card.is-running { border-color: rgba(59, 130, 246, 0.35); }
-.ds-dataset-card.is-running .ds-dataset-card-accent { background: #3b82f6; }
-.ds-dataset-card.is-pending { border-color: rgba(245, 158, 11, 0.4); }
-.ds-dataset-card.is-pending .ds-dataset-card-accent { background: #f59e0b; }
-.ds-dataset-card.is-failed { border-color: rgba(239, 68, 68, 0.4); }
-.ds-dataset-card.is-failed .ds-dataset-card-accent { background: #ef4444; }
+.ds-dataset-card:hover {
+    border-color: var(--dsc-border-hover);
+    box-shadow: var(--dsc-shadow-hover);
+}
+
+.ds-dataset-card:focus-visible {
+    outline: 2px solid var(--rb-accent);
+    outline-offset: 2px;
+    box-shadow: var(--dsc-shadow-hover);
+}
 
 .ds-dataset-card-head {
     display: flex;
@@ -2787,99 +2943,249 @@
 
 .ds-dataset-card-title {
     margin: 0;
-    font-size: 14px;
+    min-width: 0;
+    font-size: 15px;
     font-weight: 700;
     color: var(--rb-text);
     line-height: 1.35;
+    overflow-wrap: anywhere;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
-.ds-dataset-card-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 10px;
-    margin: 0;
+.ds-dataset-card-head .ds-status-badge {
+    flex-shrink: 0;
+    margin-top: 1px;
 }
 
-.ds-dataset-card-meta .is-wide {
-    grid-column: 1 / -1;
-}
-
-.ds-dataset-card-meta dt {
-    font-size: 10px;
-    font-weight: 650;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--rb-text-muted);
-}
-
-.ds-dataset-card-meta dd {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: var(--rb-text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ds-dataset-card-people {
+.ds-dataset-card-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 10px;
-    font-size: 11px;
-    color: var(--rb-text-muted);
+    gap: 6px;
 }
 
-.ds-dataset-card-people span {
+.ds-dataset-card-chip {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     max-width: 100%;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--rb-accent-soft);
+    color: var(--rb-text);
+    font-size: 12px;
+    font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.ds-dataset-card-people i {
+.ds-dataset-card-chip i {
     font-size: 13px;
-    opacity: 0.85;
+    color: var(--rb-accent);
+}
+
+.ds-dataset-card-chip.is-layer {
+    background: var(--dsc-code-bg);
+}
+
+.ds-dataset-card-chip.is-layer i {
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-staging {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ds-dataset-card-staging span {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-staging code {
+    min-width: 0;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--dsc-code-bg);
+    color: var(--rb-text-secondary);
+    font-family: Consolas, 'Cascadia Mono', 'Courier New', monospace;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ds-dataset-card-scope {
+    flex: 1;
     margin: 0;
-    font-size: 12px;
-    line-height: 1.45;
+    font-size: 13px;
+    line-height: 1.5;
     color: var(--rb-text-secondary);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    flex: 1;
+}
+
+.ds-dataset-card-scope.is-empty {
+    font-style: italic;
+    color: var(--rb-text-muted);
+    opacity: 0.8;
 }
 
 .ds-dataset-card-foot {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 8px;
-    padding-top: 8px;
-    border-top: 0.5px solid var(--rb-border);
-    font-size: 11px;
+    padding-top: 10px;
+    border-top: 1px solid var(--dsc-border);
+}
+
+.ds-dataset-card-people {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 4px 12px;
+}
+
+.ds-dataset-card-person {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    font-size: 12px;
+}
+
+.ds-dataset-card-person i {
+    flex-shrink: 0;
+    font-size: 14px;
     color: var(--rb-text-muted);
 }
 
-.ds-dataset-card-foot strong {
-    font-weight: 650;
-    color: var(--rb-text-secondary);
+.ds-dataset-card-person-label {
+    flex-shrink: 0;
+    color: var(--rb-text-muted);
 }
+
+.ds-dataset-card-person-name {
+    min-width: 0;
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ds-dataset-card-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--rb-text-muted);
+}
+
+.ds-dataset-card-date i {
+    font-size: 14px;
+}
+
+.ds-dataset-card-date strong {
+    font-weight: 600;
+    color: var(--rb-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* -- Iskelet kartlar (yukleniyor) -- */
+
+.ds-dataset-card.is-skeleton {
+    cursor: default;
+    box-shadow: none;
+}
+
+.ds-dataset-card.is-skeleton::before {
+    background: var(--tbl-skeleton-base);
+}
+
+.ds-skel {
+    display: block;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--tbl-skeleton-base) 25%, var(--tbl-skeleton-shine) 50%, var(--tbl-skeleton-base) 75%);
+    background-size: 200% 100%;
+    animation: ds-skel-shine 1.3s ease-in-out infinite;
+}
+
+.ds-skel-title { height: 16px; width: 70%; }
+.ds-skel-chips { height: 20px; width: 45%; }
+.ds-skel-line { width: 100%; }
+.ds-skel-line.is-short { width: 60%; }
+.ds-skel-foot { margin-top: auto; height: 28px; width: 100%; }
+
+@keyframes ds-skel-shine {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ds-skel { animation: none; }
+    .ds-dataset-card, .ds-cards-chip { transition: none; }
+}
+
+/* -- Bos durum -- */
+
+.ds-cards-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 24px;
+    border: 1px dashed var(--dsc-border);
+    border-radius: 12px;
+}
+
+.ds-cards-empty i {
+    font-size: 32px;
+    opacity: 0.7;
+}
+
+.ds-cards-empty p {
+    margin: 0;
+    font-size: 13.5px;
+}
+
+.ds-cards-clear {
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--rb-accent);
+    background: var(--rb-accent-soft);
+    color: var(--rb-text);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ds-cards-clear:hover {
+    background: color-mix(in srgb, var(--rb-accent) 24%, transparent);
+}
+
+.ds-cards-clear:focus-visible {
+    outline: 2px solid var(--rb-accent);
+    outline-offset: 2px;
+}
+
+/* -- Drawer detayi -- */
 
 .ds-card-detail {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     height: 100%;
     min-height: 0;
     padding: 16px 18px 20px;
@@ -2891,13 +3197,27 @@
     align-items: center;
 }
 
+.ds-card-detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ds-card-detail-group-title {
+    margin: 0;
+    padding-left: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rb-text-muted);
+}
+
 .ds-card-detail-list {
     display: flex;
     flex-direction: column;
     gap: 0;
     margin: 0;
-    border: 0.5px solid var(--rb-border);
-    border-radius: 12px;
+    border: 1px solid var(--dsc-border);
+    border-radius: 10px;
     overflow: hidden;
     background: var(--rb-surface);
 }
@@ -2907,7 +3227,7 @@
     grid-template-columns: 140px minmax(0, 1fr);
     gap: 12px;
     padding: 10px 14px;
-    border-bottom: 0.5px solid var(--rb-border);
+    border-bottom: 1px solid var(--dsc-border);
 }
 
 .ds-card-detail-row:last-child {
@@ -2915,23 +3235,33 @@
 }
 
 .ds-card-detail-row dt {
-    font-size: 11px;
-    font-weight: 650;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--rb-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
 }
 
 .ds-card-detail-row dd {
     margin: 0;
     font-size: 13px;
+    line-height: 1.5;
     color: var(--rb-text);
     word-break: break-word;
+    white-space: pre-line;
+}
+
+.ds-card-detail-row dd.is-code {
+    font-family: Consolas, 'Cascadia Mono', 'Courier New', monospace;
+    font-size: 12.5px;
 }
 
 @media (max-width: 720px) {
     .ds-card-detail-row {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .ds-cards-toolbar-end {
+        width: 100%;
+        justify-content: space-between;
     }
 }
