@@ -164,7 +164,7 @@
     padding: 3px 8px;
     border-radius: 999px;
     background: rgba(251, 191, 36, 0.14);
-    color: #f59e0b;
+    color: var(--status-warning-text);
 }
 
 .ky-toolbar {
@@ -319,7 +319,7 @@
     content: ' · özel';
     font-size: 10px;
     font-weight: 600;
-    color: #f59e0b;
+    color: var(--status-warning-text);
 }
 
 .ky-save-hint {
@@ -329,7 +329,7 @@
 }
 
 .ky-save-hint.saved {
-    color: #22c55e;
+    color: var(--status-success-text);
 }
 
 @media (max-width: 960px) {

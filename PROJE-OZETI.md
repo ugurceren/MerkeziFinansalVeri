@@ -165,7 +165,7 @@ MerkeziFinansalVeri/
 
 | Bileşen | Dosya | Açıklama |
 |---------|-------|----------|
-| Ribbon kabuk | `ribbon-shell.js`, `ribbon.css` | Sekme menüsü, sayfa geçişleri, tema token'ları (`--rb-*`, `--tbl-*`) |
+| Ribbon kabuk | `ribbon-shell.js`, `ribbon.css` | Sekme menüsü, sayfa geçişleri, tema token'ları (`--rb-*`, `--tbl-*`, `--status-*`) |
 | Akıllı tablo | `smart-table.js`, `table-theme.css` | Sıralama, kolon filtresi, kolon genişliği ayarı |
 | Filtre çubuğu | `filter-bar.js` | Debounce'lu arama/filtre alanları |
 | Kayıt sayacı | `table-count.js` | "Gösterilen / Toplam" rozeti |
@@ -217,6 +217,7 @@ dotnet run --project FinansalVeriApp/FinansalVeriApp.csproj
 ## Geliştirme Notları
 
 - **İkon sürümü:** Tabler Icons v3'te CSS dosyası `dist/` altına taşındı ve bazı ikon adları değişti. v3'e geçmek için yol `@3.x/dist/tabler-icons.min.css` olmalı ve kullanılan `ti-*` adları kontrol edilmeli.
+- **Statü renkleri:** Sabit renk kodu yazmayın; `ribbon.css` içindeki `--status-success|warning|danger|info|progress|neutral` token'larını kullanın. Yazı için `-text` varyantı (açık temada okunaklı koyu ton), zemin/kenarlık için temel token; şeffaf ton için `color-mix(in srgb, var(--status-success) 15%, transparent)`.
 - **Encoding:** Tüm dosyalar UTF-8'dir (`.editorconfig`). Türkçe karakterlerin bozulmaması için dosyaları ANSI/Windows-1254 ile kaydetmeyin.
 - **API:** Backend değişikliklerinden sonra API manuel olarak yeniden başlatılmalıdır.
 - **Kimlik doğrulama:** `X-User-Id` başlığı yalnızca geliştirme içindir; gerçek ortamda JWT veya AD kimlik doğrulaması gerekir.

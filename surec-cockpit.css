@@ -119,8 +119,8 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #22c55e;
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+    background: var(--status-success);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-success) 50%, transparent);
     animation: cockpit-pulse 1.8s infinite;
 }
 
@@ -131,8 +131,8 @@
 }
 
 @keyframes cockpit-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
-    50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-success) 45%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--status-success) 0%, transparent); }
 }
 
 .cockpit-grid {
@@ -218,15 +218,15 @@
 .flow-layer-tile.theme-blue { --flow-accent: #7c9aff; --flow-soft: rgba(124, 154, 255, 0.16); }
 .flow-layer-tile.theme-purple { --flow-accent: #a855f7; --flow-soft: rgba(168, 85, 247, 0.16); }
 
-.flow-layer-tile.status-done { border-color: rgba(34, 197, 94, 0.35); }
-.flow-layer-tile.status-failed { border-color: rgba(239, 68, 68, 0.35); }
+.flow-layer-tile.status-done { border-color: color-mix(in srgb, var(--status-success) 35%, transparent); }
+.flow-layer-tile.status-failed { border-color: color-mix(in srgb, var(--status-danger) 35%, transparent); }
 .flow-layer-tile.status-running {
-    border-color: rgba(245, 158, 11, 0.6);
+    border-color: color-mix(in srgb, var(--status-warning) 60%, transparent);
 }
 
 .flow-layer-tile.status-running .flow-layer-tile-badge {
-    background: rgba(251, 191, 36, 0.2);
-    color: #d97706;
+    background: color-mix(in srgb, var(--status-progress) 20%, transparent);
+    color: var(--status-progress-text);
 }
 
 .flow-layer-tile-head {
@@ -382,10 +382,10 @@
     letter-spacing: 0.02em;
 }
 
-.flow-status-pill.is-done { background: rgba(34, 197, 94, 0.14); color: #22c55e; }
+.flow-status-pill.is-done { background: color-mix(in srgb, var(--status-success) 14%, transparent); color: var(--status-success-text); }
 /* In Progress — turuncuya yakın sarı (üst filtre ile aynı) */
-.flow-status-pill.is-running { background: rgba(251, 191, 36, 0.2); color: #d97706; }
-.flow-status-pill.is-failed { background: rgba(239, 68, 68, 0.14); color: #ef4444; }
+.flow-status-pill.is-running { background: color-mix(in srgb, var(--status-progress) 20%, transparent); color: var(--status-progress-text); }
+.flow-status-pill.is-failed { background: color-mix(in srgb, var(--status-danger) 14%, transparent); color: var(--status-danger-text); }
 .flow-status-pill.is-not-started { background: rgba(132, 145, 168, 0.18); color: var(--rb-text-muted); }
 
 .flow-layer-empty {
@@ -520,7 +520,7 @@
     line-height: 1.45;
     overflow: visible;
     vertical-align: top;
-    color: #ef4444;
+    color: var(--status-danger-text);
     font-size: 11px;
 }
 
@@ -567,8 +567,8 @@
 .cockpit-col.theme-blue { --col-accent: #7c9aff; --col-soft: rgba(124, 154, 255, 0.14); }
 .cockpit-col.theme-purple { --col-accent: #a855f7; --col-soft: rgba(168, 85, 247, 0.14); }
 .cockpit-col.status-running { border-color: color-mix(in srgb, var(--col-accent) 45%, var(--rb-border)); }
-.cockpit-col.status-done { border-color: rgba(34, 197, 94, 0.35); }
-.cockpit-col.status-failed { border-color: rgba(239, 68, 68, 0.35); }
+.cockpit-col.status-done { border-color: color-mix(in srgb, var(--status-success) 35%, transparent); }
+.cockpit-col.status-failed { border-color: color-mix(in srgb, var(--status-danger) 35%, transparent); }
 
 .col-header {
     display: flex;
@@ -642,8 +642,8 @@
 }
 
 .cockpit-col.status-done .col-status-badge {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--status-success) 12%, transparent);
+    color: var(--status-success-text);
 }
 
 .cockpit-col.status-waiting .col-status-badge {
@@ -756,39 +756,39 @@
 }
 
 .cockpit-status-chip.is-running {
-    border-color: rgba(245, 158, 11, 0.6);
-    background: rgba(251, 191, 36, 0.2);
-    color: #d97706;
+    border-color: color-mix(in srgb, var(--status-warning) 60%, transparent);
+    background: color-mix(in srgb, var(--status-progress) 20%, transparent);
+    color: var(--status-progress-text);
 }
 
-.cockpit-status-chip.is-running strong { color: #d97706; }
-.cockpit-status-chip.is-running input { accent-color: #d97706; }
+.cockpit-status-chip.is-running strong { color: var(--status-progress-text); }
+.cockpit-status-chip.is-running input { accent-color: var(--status-progress-text); }
 .cockpit-status-chip.is-running:has(input:checked) {
-    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-warning) 40%, transparent);
 }
 
 .cockpit-status-chip.is-failed {
-    border-color: rgba(239, 68, 68, 0.5);
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
+    border-color: color-mix(in srgb, var(--status-danger) 50%, transparent);
+    background: color-mix(in srgb, var(--status-danger) 12%, transparent);
+    color: var(--status-danger-text);
 }
 
-.cockpit-status-chip.is-failed strong { color: #ef4444; }
-.cockpit-status-chip.is-failed input { accent-color: #ef4444; }
+.cockpit-status-chip.is-failed strong { color: var(--status-danger-text); }
+.cockpit-status-chip.is-failed input { accent-color: var(--status-danger); }
 .cockpit-status-chip.is-failed:has(input:checked) {
-    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-danger) 35%, transparent);
 }
 
 .cockpit-status-chip.is-done {
-    border-color: rgba(34, 197, 94, 0.5);
-    background: rgba(34, 197, 94, 0.14);
-    color: #22c55e;
+    border-color: color-mix(in srgb, var(--status-success) 50%, transparent);
+    background: color-mix(in srgb, var(--status-success) 14%, transparent);
+    color: var(--status-success-text);
 }
 
-.cockpit-status-chip.is-done strong { color: #22c55e; }
-.cockpit-status-chip.is-done input { accent-color: #22c55e; }
+.cockpit-status-chip.is-done strong { color: var(--status-success-text); }
+.cockpit-status-chip.is-done input { accent-color: var(--status-success); }
 .cockpit-status-chip.is-done:has(input:checked) {
-    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--status-success) 35%, transparent);
 }
 
 .cockpit-status-chip.is-lnd-failed {
@@ -843,11 +843,11 @@
     background: var(--col-soft);
 }
 
-.dataset-card.done { border-color: rgba(34, 197, 94, 0.25); }
+.dataset-card.done { border-color: color-mix(in srgb, var(--status-success) 25%, transparent); }
 
 .dataset-card.failed {
-    border-color: rgba(239, 68, 68, 0.35);
-    background: rgba(239, 68, 68, 0.06);
+    border-color: color-mix(in srgb, var(--status-danger) 35%, transparent);
+    background: color-mix(in srgb, var(--status-danger) 6%, transparent);
 }
 
 .dataset-head {
@@ -915,7 +915,7 @@
     display: block;
     font-size: 9px;
     font-weight: 500;
-    color: #ef4444;
+    color: var(--status-danger-text);
     line-height: 1.25;
     max-width: 100%;
     overflow: hidden;
@@ -986,37 +986,37 @@
 /* In Progress — turuncuya yakın sarı (aktif) */
 .flow-step.is-active.running {
     border-style: solid;
-    border-color: rgba(245, 158, 11, 0.6);
-    background: rgba(251, 191, 36, 0.2);
+    border-color: color-mix(in srgb, var(--status-warning) 60%, transparent);
+    background: color-mix(in srgb, var(--status-progress) 20%, transparent);
 }
 
 .flow-step.is-active.running .flow-status-text,
 .flow-step.is-active.running .flow-label {
-    color: #d97706;
+    color: var(--status-progress-text);
 }
 
 /* Failed — kırmızı (aktif) */
 .flow-step.is-active.failed {
     border-style: solid;
-    border-color: rgba(239, 68, 68, 0.5);
-    background: rgba(239, 68, 68, 0.12);
+    border-color: color-mix(in srgb, var(--status-danger) 50%, transparent);
+    background: color-mix(in srgb, var(--status-danger) 12%, transparent);
 }
 
 .flow-step.is-active.failed .flow-status-text,
 .flow-step.is-active.failed .flow-label {
-    color: #ef4444;
+    color: var(--status-danger-text);
 }
 
 /* Success — yeşil (aktif) */
 .flow-step.is-active.done {
     border-style: solid;
-    border-color: rgba(34, 197, 94, 0.5);
-    background: rgba(34, 197, 94, 0.14);
+    border-color: color-mix(in srgb, var(--status-success) 50%, transparent);
+    background: color-mix(in srgb, var(--status-success) 14%, transparent);
 }
 
 .flow-step.is-active.done .flow-status-text,
 .flow-step.is-active.done .flow-label {
-    color: #22c55e;
+    color: var(--status-success-text);
 }
 
 /* LND Failed — koyu kırmızı (aktif) */
@@ -2340,10 +2340,10 @@
     white-space: nowrap;
 }
 
-.ds-status-badge.is-done { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-.ds-status-badge.is-running { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-.ds-status-badge.is-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.ds-status-badge.is-failed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.ds-status-badge.is-done { background: color-mix(in srgb, var(--status-success) 15%, transparent); color: var(--status-success-text); }
+.ds-status-badge.is-running { background: color-mix(in srgb, var(--status-info) 15%, transparent); color: var(--status-info-text); }
+.ds-status-badge.is-pending { background: color-mix(in srgb, var(--status-warning) 15%, transparent); color: var(--status-warning-text); }
+.ds-status-badge.is-failed { background: color-mix(in srgb, var(--status-danger) 15%, transparent); color: var(--status-danger-text); }
 .ds-status-badge.is-neutral { background: var(--rb-bg); color: var(--rb-text-muted); }
 
 .dataset-view-statu {
@@ -2376,10 +2376,10 @@
     font-weight: 600;
 }
 
-.ds-status-chip.is-done { border-color: rgba(34, 197, 94, 0.35); }
-.ds-status-chip.is-running { border-color: rgba(59, 130, 246, 0.35); }
-.ds-status-chip.is-pending { border-color: rgba(245, 158, 11, 0.35); }
-.ds-status-chip.is-failed { border-color: rgba(239, 68, 68, 0.35); }
+.ds-status-chip.is-done { border-color: color-mix(in srgb, var(--status-success) 35%, transparent); }
+.ds-status-chip.is-running { border-color: color-mix(in srgb, var(--status-info) 35%, transparent); }
+.ds-status-chip.is-pending { border-color: color-mix(in srgb, var(--status-warning) 35%, transparent); }
+.ds-status-chip.is-failed { border-color: color-mix(in srgb, var(--status-danger) 35%, transparent); }
 
 .ds-status-breakdown {
     display: flex;
@@ -2397,10 +2397,10 @@
     color: var(--rb-text-muted);
 }
 
-.ds-status-mini.is-done { color: #22c55e; }
-.ds-status-mini.is-running { color: #3b82f6; }
-.ds-status-mini.is-pending { color: #f59e0b; }
-.ds-status-mini.is-failed { color: #ef4444; }
+.ds-status-mini.is-done { color: var(--status-success-text); }
+.ds-status-mini.is-running { color: var(--status-info-text); }
+.ds-status-mini.is-pending { color: var(--status-warning-text); }
+.ds-status-mini.is-failed { color: var(--status-danger-text); }
 
 .ds-status-empty {
     padding: 12px;
@@ -2421,15 +2421,15 @@
     align-items: flex-start;
     gap: 8px;
     padding: 18px 20px;
-    border: 0.5px solid rgba(239, 68, 68, 0.35);
+    border: 0.5px solid color-mix(in srgb, var(--status-danger) 35%, transparent);
     border-radius: 12px;
-    background: rgba(239, 68, 68, 0.08);
+    background: color-mix(in srgb, var(--status-danger) 8%, transparent);
     color: var(--rb-text);
 }
 
 .ds-error-box > i {
     font-size: 22px;
-    color: #ef4444;
+    color: var(--status-danger-text);
 }
 
 .ds-error-box strong {
@@ -2714,11 +2714,19 @@
     --dsc-shadow-hover: 0 10px 24px rgba(0, 0, 0, 0.32);
     --dsc-code-bg: rgba(255, 255, 255, 0.05);
 
-    --dsc-done: #4ade80;       --dsc-done-text: #4ade80;       --dsc-done-soft: rgba(74, 222, 128, 0.14);
-    --dsc-running: #60a5fa;    --dsc-running-text: #7cb4fb;    --dsc-running-soft: rgba(96, 165, 250, 0.15);
-    --dsc-pending: #fbbf24;    --dsc-pending-text: #fbbf24;    --dsc-pending-soft: rgba(251, 191, 36, 0.14);
-    --dsc-failed: #f87171;     --dsc-failed-text: #fca5a5;     --dsc-failed-soft: rgba(248, 113, 113, 0.15);
-    --dsc-neutral: #7a84a1;    --dsc-neutral-text: #b6bfd6;    --dsc-neutral-soft: rgba(148, 163, 184, 0.14);
+    --dsc-soft-mix: 14%;
+
+    /* Statü renkleri ribbon.css'teki global --status-* token'larından gelir */
+    --dsc-done: var(--status-success);    --dsc-done-text: var(--status-success-text);
+    --dsc-running: var(--status-info);    --dsc-running-text: var(--status-info-text);
+    --dsc-pending: var(--status-warning); --dsc-pending-text: var(--status-warning-text);
+    --dsc-failed: var(--status-danger);   --dsc-failed-text: var(--status-danger-text);
+    --dsc-neutral: var(--status-neutral); --dsc-neutral-text: var(--status-neutral-text);
+    --dsc-done-soft: color-mix(in srgb, var(--dsc-done) var(--dsc-soft-mix), transparent);
+    --dsc-running-soft: color-mix(in srgb, var(--dsc-running) var(--dsc-soft-mix), transparent);
+    --dsc-pending-soft: color-mix(in srgb, var(--dsc-pending) var(--dsc-soft-mix), transparent);
+    --dsc-failed-soft: color-mix(in srgb, var(--dsc-failed) var(--dsc-soft-mix), transparent);
+    --dsc-neutral-soft: color-mix(in srgb, var(--dsc-neutral) var(--dsc-soft-mix), transparent);
 }
 
 [data-theme="light"] .ds-cards-wrap,
@@ -2728,12 +2736,7 @@
     --dsc-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
     --dsc-shadow-hover: 0 10px 24px rgba(15, 23, 42, 0.10);
     --dsc-code-bg: rgba(15, 23, 42, 0.045);
-
-    --dsc-done: #16a34a;       --dsc-done-text: #15803d;       --dsc-done-soft: rgba(22, 163, 74, 0.10);
-    --dsc-running: #2563eb;    --dsc-running-text: #1d4ed8;    --dsc-running-soft: rgba(37, 99, 235, 0.10);
-    --dsc-pending: #d97706;    --dsc-pending-text: #b45309;    --dsc-pending-soft: rgba(217, 119, 6, 0.11);
-    --dsc-failed: #dc2626;     --dsc-failed-text: #b91c1c;     --dsc-failed-soft: rgba(220, 38, 38, 0.09);
-    --dsc-neutral: #94a3b8;    --dsc-neutral-text: #475569;    --dsc-neutral-soft: rgba(71, 85, 105, 0.09);
+    --dsc-soft-mix: 10%;
 }
 
 /* Statü sınıfı → aktif renk üçlüsü */

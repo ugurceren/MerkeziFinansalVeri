@@ -159,11 +159,7 @@
 
 .mt-table .mt-diff {
     font-weight: 600;
-    color: #f59e0b;
-}
-
-[data-theme="light"] .mt-table .mt-diff {
-    color: #d97706;
+    color: var(--status-warning-text);
 }
 
 .mt-badge {
@@ -181,18 +177,18 @@
 }
 
 .mt-badge.kapali {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--status-success) 12%, transparent);
+    color: var(--status-success-text);
 }
 
 .mt-badge.onay {
-    background: rgba(245, 158, 11, 0.14);
-    color: #f59e0b;
+    background: color-mix(in srgb, var(--status-warning) 14%, transparent);
+    color: var(--status-warning-text);
 }
 
 .mt-badge.acik {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--status-danger) 10%, transparent);
+    color: var(--status-danger-text);
 }
 
 .mt-badge.inceleniyor {
@@ -201,8 +197,8 @@
 }
 
 .mt-badge.kapatildi {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--status-success) 12%, transparent);
+    color: var(--status-success-text);
 }
 
 .mt-filter-bar {
@@ -257,9 +253,9 @@
 .mt-error {
     padding: 10px 14px;
     border-radius: 8px;
-    border: 0.5px solid rgba(239, 68, 68, 0.35);
-    background: rgba(239, 68, 68, 0.08);
-    color: #ef4444;
+    border: 0.5px solid color-mix(in srgb, var(--status-danger) 35%, transparent);
+    background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+    color: var(--status-danger-text);
     font-size: 12px;
 }
 
