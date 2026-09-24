@@ -81,8 +81,7 @@
     letter-spacing: 0.04em;
 }
 
-.ay-field select,
-.ay-field .ay-month-input {
+.ay-field select {
     width: 100%;
     max-width: 320px;
     height: 34px;
@@ -95,8 +94,7 @@
     color: var(--rb-text);
 }
 
-.ay-field select:focus,
-.ay-field .ay-month-input:focus {
+.ay-field select:focus {
     outline: none;
     border-color: var(--rb-accent);
 }

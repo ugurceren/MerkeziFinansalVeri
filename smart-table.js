@@ -4,8 +4,6 @@
     const OVERSCAN = 6;
     const DEFAULT_COL_WIDTH = 140;
     const MIN_COL_WIDTH = 72;
-    const FILTER_ROW_HEIGHT = 36;
-    const HEADER_ROW_HEIGHT = 34;
 
     const instances = new WeakMap();
 

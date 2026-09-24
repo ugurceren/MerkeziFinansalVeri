@@ -61,8 +61,6 @@ Tüm sayfalar aynı ribbon kabuğunu kullanır; sekme ve butonlar `ribbon-shell.
 | | Aktivite Listesi | `aktivite-listesi.html` | Kullanıcı aktivite logu |
 | | Veritabanı Bağlantısı | `veritabani-baglantisi.html` | TD veri kaynağı (bağlantı) yönetimi |
 
-Yardımcı sayfa: `logo-secim.html` — marka/logo alternatiflerinin karşılaştırılması.
-
 ---
 
 ## Veri Katmanları (Süreç)

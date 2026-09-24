@@ -68,15 +68,6 @@
 .page-ribbon .tl-head h3 { font-size: 16px; }
 .page-ribbon .tl-card .vs-results-table { font-size: 13px; }
 
-.tl-empty-cell {
-    padding: 28px !important;
-    text-align: center;
-    color: var(--rb-text-muted);
-    font-size: 13px;
-    white-space: normal !important;
-    max-width: none !important;
-}
-
 .tl-badge {
     display: inline-block;
     font-size: 10px;

@@ -87,7 +87,6 @@
     transition: width 0.22s ease, flex-basis 0.22s ease, opacity 0.18s ease, border-color 0.22s ease;
 }
 
-
 .tb-criteria-head {
     display: flex;
     align-items: center;
@@ -213,12 +212,6 @@
     resize: vertical;
     min-height: 52px;
     font-family: ui-monospace, Consolas, monospace;
-}
-
-.tb-hint {
-    font-size: 10px;
-    color: var(--rb-text-muted);
-    line-height: 1.35;
 }
 
 .tb-field-check {

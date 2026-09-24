@@ -14,6 +14,4 @@ public class MutabakatDonem
     public DateTime? GuncellemeZamani { get; set; }
 
     public ICollection<FarkVerenHesap> FarkVerenHesaplar { get; set; } = [];
-    public ICollection<SurecGorevDurum> SurecGorevDurumlari { get; set; } = [];
-    public ICollection<RaporSonucSnapshot> RaporSonucSnapshotlari { get; set; } = [];
 }

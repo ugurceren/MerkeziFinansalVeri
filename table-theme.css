@@ -92,16 +92,14 @@
 .vs-results-table > tbody > tr:hover > td.st-empty-row,
 .vk-table > tbody > tr:hover > td.st-empty-row,
 .mt-table > tbody > tr:hover > td.st-empty-row,
-.smart-table > tbody > tr:hover > td.st-empty-row,
-.vs-results-table > tbody > tr:hover > td.tl-empty-cell {
+.smart-table > tbody > tr:hover > td.st-empty-row {
     box-shadow: none;
 }
 
 .vs-results-table > tbody > tr:has(> .st-empty-row):hover,
 .vk-table > tbody > tr:has(> .st-empty-row):hover,
 .mt-table > tbody > tr:has(> .st-empty-row):hover,
-.smart-table > tbody > tr:has(> .st-empty-row):hover,
-.vs-results-table > tbody > tr:has(> .tl-empty-cell):hover {
+.smart-table > tbody > tr:has(> .st-empty-row):hover {
     background: none;
 }
 
@@ -164,8 +162,7 @@
 
 /* ── Boş durum ── */
 
-.smart-table td.st-empty-row,
-.vs-results-table td.tl-empty-cell {
+.smart-table td.st-empty-row {
     padding: 28px 16px !important;
     text-align: center;
     color: var(--rb-text-muted);

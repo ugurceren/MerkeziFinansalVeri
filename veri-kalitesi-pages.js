@@ -206,30 +206,6 @@
         });
     }
 
-    function buildResultTable(cols, rows, formatCell, columnLabels) {
-        const headerCells = cols.map(c =>
-            `<th>${escapeHtml(columnLabels[c] || c)}</th>`
-        ).join('');
-
-        const bodyRows = rows.map(row => {
-            const cells = cols.map(col => {
-                const raw = getVkRowValue(row, col);
-                const display = formatCell(col, raw);
-                const title = raw === null || raw === undefined ? '' : String(raw);
-                const cellClass = isVkWrapColumn(col) ? 'vk-cell-wrap' : 'vk-cell-nowrap';
-                return `<td class="${cellClass}" title="${escapeHtml(title)}">${display}</td>`;
-            }).join('');
-            return `<tr>${cells}</tr>`;
-        }).join('');
-
-        const emptyRow = `<tr><td colspan="${cols.length || 1}">Kayıt bulunamadı.</td></tr>`;
-
-        return `<table class="vk-table vk-table--wrap">
-            <thead><tr>${headerCells}</tr></thead>
-            <tbody>${bodyRows || emptyRow}</tbody>
-        </table>`;
-    }
-
     async function loadVkKurallarSorgu() {
         vkKurallarSorgu = null;
 

@@ -129,23 +129,6 @@
 }
 
 /* Sidebar uygulaması — header */
-.header-user-menu .tb-user {
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.header-user-menu .tb-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: grid;
-    place-items: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-}
 
 .page-ribbon .title-bar-right {
     display: flex;

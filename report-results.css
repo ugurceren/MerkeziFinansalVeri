@@ -74,14 +74,6 @@
     grid-row: 1;
 }
 
-.report-results-info {
-    margin: 0;
-    font-size: 12px;
-    color: var(--rb-text-muted);
-    line-height: 1.4;
-    min-width: 0;
-}
-
 .report-export-btn {
     display: inline-flex;
     align-items: center;

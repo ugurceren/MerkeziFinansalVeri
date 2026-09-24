@@ -22,51 +22,6 @@
         { pageId: 'ayarlar', label: 'Uygulama Ayarları', href: 'ayarlar.html', icon: 'ti-settings' }
     ];
 
-    const PORTAL_HUB = [
-        {
-            section: 'MUTABAKAT',
-            title: 'Mutabakat',
-            desc: 'Mizan, dönem ve fark veren hesaplar',
-            icon: 'ti-scale',
-            pages: ['mizan', 'mutabakat-donem', 'fark-veren', 'matrixmap']
-        },
-        {
-            section: 'SÜREÇ',
-            title: 'Süreç',
-            desc: 'Dataset kataloğu ve günlük ETL akışı',
-            icon: 'ti-timeline',
-            pages: ['surec', 'datasetler', 'task-listesi']
-        },
-        {
-            section: 'RAPORLAMA',
-            title: 'Raporlama',
-            desc: 'Sorgu ve rapor ekranları',
-            icon: 'ti-chart-bar',
-            pages: ['veritabani-sorgu', 'ters-bakiye', 'nazim']
-        },
-        {
-            section: 'VERİ KALİTESİ',
-            title: 'Veri Kalitesi',
-            desc: 'Kurallar ve günlük sonuçlar',
-            icon: 'ti-list-check',
-            pages: ['vk-kurallar', 'vk-gunluk']
-        },
-        {
-            section: 'PARAMETRE YÖNETİMİ',
-            title: 'Parametreler',
-            desc: 'Kebir hesap sorumlulukları',
-            icon: 'ti-notebook',
-            pages: ['kebir']
-        },
-        {
-            section: 'YÖNETİM',
-            title: 'Yönetim',
-            desc: 'Kullanıcı ve yetki yönetimi',
-            icon: 'ti-users',
-            pages: ['kullanici-yonetimi', 'kisi-yetkileri', 'veritabani-baglantisi', 'aktivite-listesi']
-        }
-    ];
-
     const PLACEHOLDER_ICONS = {
         'Ters Bakiye Raporu': 'ti-arrows-exchange',
         'Nazım Hesapları Raporu': 'ti-file-analytics'
@@ -402,30 +357,6 @@
                 </a>
             </div>
         </div>`;
-    }
-
-    function buildHubHTML() {
-        const cards = PORTAL_HUB.map(hub => {
-            const allowed = hub.pages.filter(hasAccess);
-            if (!allowed.length) return '';
-            const href = pageHref(allowed[0]);
-            if (!href) return '';
-            return `
-                <a class="portal-hub-card" href="${href}">
-                    <span class="portal-hub-icon"><i class="ti ${hub.icon}"></i></span>
-                    <strong>${hub.title}</strong>
-                    <span>${hub.desc}</span>
-                </a>
-            `;
-        }).filter(Boolean);
-
-        if (!cards.length) return '';
-        return `
-            <div class="dashboard-panel portal-hub-panel">
-                <div class="panel-head"><h4>Benim İşlerim</h4><span>Rolünüze göre modüller</span></div>
-                <div class="portal-hub-grid">${cards.join('')}</div>
-            </div>
-        `;
     }
 
     function escapeHtml(text) {

@@ -154,37 +154,6 @@
         }
     }
 
-    function buildPeriodRows(activeId) {
-        return periods.map(p => {
-            const badge = STATUS_LABEL[p.durum] || { cls: '', label: p.durum };
-            const isActive = p.yilAy === activeId;
-            return `<tr class="${isActive ? 'mt-row-active' : ''}" data-period="${p.yilAy}" data-donem-id="${p.donemId}">
-                <td><strong>${escapeHtml(formatDonemEtiket(p))}</strong></td>
-                <td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>
-                <td class="mt-num">${p.hesapSayisi}</td>
-                <td class="mt-num">${p.farkVerenSayisi}</td>
-                <td>${formatKapanisTarihi(p.kapanisTarihi)}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    function buildDiffRows(rows) {
-        return rows.map(r => {
-            const diff = r.mizanBakiye - r.kartonBakiye;
-            const badge = STATUS_LABEL[r.durum] || { cls: '', label: r.durum };
-            const diffClass = diff !== 0 ? 'mt-diff' : '';
-            return `<tr>
-                <td class="mt-cell-nowrap">${r.hesapKodu}</td>
-                <td class="mt-cell-wrap">${r.hesapAdi}</td>
-                <td class="mt-cell-wrap">${r.ekipAdi || ''}</td>
-                <td class="mt-num">${formatMoney(r.mizanBakiye)}</td>
-                <td class="mt-num">${formatMoney(r.kartonBakiye)}</td>
-                <td class="mt-num ${diffClass}">${diff > 0 ? '+' : ''}${formatMoney(diff)}</td>
-                <td><span class="mt-badge ${badge.cls}">${badge.label}</span></td>
-            </tr>`;
-        }).join('');
-    }
-
     function buildDonemHTML() {
         const activeId = getActivePeriod();
         const activePeriod = periods.find(p => p.yilAy === activeId);
@@ -293,24 +262,6 @@
             return `<span class="mt-badge ${active ? 'aktif' : 'kapali'}">${active ? '1' : '0'}</span>`;
         }
         return escapeHtml(String(val));
-    }
-
-    function buildMatrixMapRows(rows) {
-        const readCell = (row, col) => {
-            const dbKey = MATRIXMAP_COLUMN_KEYS[col.key];
-            return window.FilterBar?.getQueryRowValue(row, dbKey)
-                ?? window.FilterBar?.getQueryRowValue(row, col.key);
-        };
-
-        return rows.map(row => {
-            const cells = MATRIXMAP_COLUMNS.map(col => {
-                const val = readCell(row, col);
-                const display = formatMatrixMapCell(col.key, val);
-                const title = val === null || val === undefined ? '' : String(val);
-                return `<td class="mt-cell-wrap" title="${escapeHtml(title)}">${display}</td>`;
-            }).join('');
-            return `<tr>${cells}</tr>`;
-        }).join('');
     }
 
     function mountPeriodSmartTable(root) {

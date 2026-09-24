@@ -228,10 +228,7 @@ tr.row-editing{background:var(--rb-accent-soft);outline:1px solid var(--rb-accen
 .stat-icon.amber{background:rgba(251,191,36,0.18);color:#fbbf24}
 .stat-icon.green{background:color-mix(in srgb, var(--status-success) 18%, transparent);color:var(--status-success-text)}
 .stat-icon.purple{background:rgba(168,85,247,0.18);color:#a855f7}
-.stat-trend{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
-.stat-trend.up{background:color-mix(in srgb, var(--status-success) 15%, transparent);color:var(--status-success-text)}
-.stat-trend.down{background:rgba(247,99,121,0.15);color:#f76379}
-.stat-trend.neutral{background:var(--rb-accent-soft);color:var(--rb-text-muted)}
+
 .stat-value{margin:0 0 2px;font-size:22px;font-weight:800;color:var(--rb-text);line-height:1.1}
 .stat-label{margin:0;font-size:11px;color:var(--rb-text-muted);font-weight:600}
 .dashboard-grid{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
@@ -257,10 +254,7 @@ tr.row-editing{background:var(--rb-accent-soft);outline:1px solid var(--rb-accen
 .activity-body strong{display:block;font-size:12px;font-weight:600;color:var(--rb-text);margin-bottom:2px}
 .activity-body span{font-size:11px;color:var(--rb-text-muted)}
 .activity-time{font-size:10px;color:var(--rb-text-muted);white-space:nowrap}
-.quick-links{display:flex;flex-direction:column;gap:6px}
-.quick-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--rb-card);border:0.5px solid var(--rb-border);color:var(--rb-text-secondary);text-decoration:none;font-size:12px;font-weight:600;transition:background 0.15s,border-color 0.15s,color 0.15s}
-.quick-link:hover{background:var(--rb-accent-soft);border-color:var(--rb-accent);color:var(--rb-accent)}
-.quick-link-icon{width:28px;height:28px;border-radius:7px;background:var(--rb-accent-soft);color:var(--rb-accent);display:grid;place-items:center;font-size:12px;flex-shrink:0}
+
 .team-load-list{display:flex;flex-direction:column;gap:10px}
 .team-load-header{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--rb-text-secondary)}
 .team-load-header span:last-child{color:var(--rb-text-muted)}

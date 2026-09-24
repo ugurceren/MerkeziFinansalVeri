@@ -63,10 +63,6 @@ function getGlobalFilterOptions() {
     return COCKPIT_FILTER_STG;
 }
 
-function getFilterStatusesForColumn(columnName) {
-    return COCKPIT_FILTER_STG;
-}
-
 function mapKokpitKatmanlar(kokpit) {
     const byCode = Object.fromEntries(
         (kokpit || []).map(k => [String(k.katmanKodu || ''), k])
@@ -123,13 +119,6 @@ function mapKokpitKatmanlar(kokpit) {
     });
 }
 
-function formatFlowRecordCount(value) {
-    if (value === null || value === undefined) return '';
-    const num = Number(value);
-    if (Number.isNaN(num)) return '';
-    return `${num.toLocaleString('tr-TR')} kayıt`;
-}
-
 function resetCockpitStatusFilters() {
     COCKPIT_GLOBAL_STATUS_FILTERS = new Set();
 }
@@ -163,72 +152,6 @@ function gunlukAkisStatusChipClass(durumMetni, durum) {
     return 'is-not-started';
 }
 
-function resolveTaskFilterStatus(task) {
-    if (task.statusText === 'LND Failed' || task.statusText === 'LND Completed') {
-        return task.statusText;
-    }
-    if (task.status === 'failed') return 'Failed';
-    if (task.status === 'done') return 'Success';
-    if (task.status === 'running') return 'In Progress';
-    return 'Not Started';
-}
-
-function isTaskVisible(task) {
-    if (!isGlobalFilterActive()) return true;
-    return COCKPIT_GLOBAL_STATUS_FILTERS.has(resolveTaskFilterStatus(task));
-}
-
-function isDatasetVisible(ds, layerName) {
-    if (!isGlobalFilterActive()) return true;
-    const status = resolveDatasetFilterStatus(ds, layerName);
-    return COCKPIT_GLOBAL_STATUS_FILTERS.has(status);
-}
-
-function isStgPhaseComplete(tasks) {
-    return (tasks || []).length > 0 && tasks.every(task => task.status === 'done');
-}
-
-function isProcessFlowLayer(layerName) {
-    return GUNLUK_AKIS_LAYER_ORDER.includes(layerName) || layerName === 'TDSTG';
-}
-
-function resolveDatasetCardStatus(ds, layerName) {
-    const status = resolveDatasetFilterStatus(ds, layerName);
-    if (status === 'Failed' || status === 'LND Failed') return 'failed';
-    if (status === 'Success' || status === 'LND Completed') return 'done';
-    if (status === 'In Progress') return 'running';
-    return 'waiting';
-}
-
-function resolveDatasetFilterStatus(ds, layerName) {
-    if (['STG', 'LND', 'COR'].includes(layerName)) {
-        const tasks = ds.tasks || [];
-        if (!tasks.length) return 'Not Started';
-        if (tasks.some(t => t.status === 'failed')) return 'Failed';
-        if (tasks.every(t => t.status === 'done')) return 'Success';
-        if (tasks.some(t => t.status === 'running')) return 'In Progress';
-        return 'Not Started';
-    }
-
-    const tasks = ds.tasks || [];
-    const stgActive = resolveActiveFlowLabel(tasks);
-
-    if (layerName !== 'TDSTG' || !ds.lndTasks?.length) {
-        return stgActive;
-    }
-
-    if (!isStgPhaseComplete(tasks)) {
-        return stgActive;
-    }
-
-    const lndActive = resolveActiveFlowLabel(ds.lndTasks);
-    if (lndActive === 'Not Started') {
-        return 'Success';
-    }
-
-    return lndActive;
-}
-
 function countGlobalDatasetStatuses() {
     const options = getGlobalFilterOptions();
     const counts = Object.fromEntries(options.map(item => [item.key, 0]));
@@ -250,35 +173,6 @@ function countGlobalDatasetStatuses() {
                 counts[row.durumMetni] += 1;
             }
         });
-    });
-
-    return counts;
-}
-
-function countVisibleDatasetStatuses(datasets, layerName) {
-    const statuses = getFilterStatusesForColumn(layerName);
-    const counts = Object.fromEntries(statuses.map(item => [item.key, 0]));
-    const isLedgerLayer = ['STG', 'LND', 'COR'].includes(layerName);
-
-    (datasets || []).forEach(ds => {
-        if (isLedgerLayer) {
-            (ds.tasks || []).filter(isTaskVisible).forEach(task => {
-                const status = resolveTaskFilterStatus(task);
-                if (Object.prototype.hasOwnProperty.call(counts, status)) {
-                    counts[status] += 1;
-                }
-            });
-            return;
-        }
-
-        if (!isDatasetVisible(ds, layerName)) return;
-
-        const status = layerName === 'TDSTG'
-            ? resolveTdStgStgFilterStatus(ds)
-            : resolveDatasetFilterStatus(ds, layerName);
-        if (Object.prototype.hasOwnProperty.call(counts, status)) {
-            counts[status] += 1;
-        }
     });
 
     return counts;
@@ -390,24 +284,7 @@ function resolveFlowKayitDataDate(row) {
 }
 
 function buildFlowLayerDetail(col) {
-    const allKayitlar = col.kayitlar || [];
     const kayitlar = getVisibleKayitlar(col);
-    const rows = kayitlar.map(row => `
-        <tr>
-            <td class="flow-detail-target" title="${escapeDatasetHtml(row.targetTableName)}">${escapeDatasetHtml(row.targetTableName)}</td>
-            <td class="flow-detail-statu">
-                <span class="flow-status-pill ${gunlukAkisStatusChipClass(row.durumMetni, row.durum)}">${escapeDatasetHtml(row.durumMetni || 'Not Started')}</span>
-            </td>
-            <td class="flow-detail-nowrap">${escapeDatasetHtml(formatDatasetDate(resolveFlowKayitDataDate(row)))}</td>
-            <td class="flow-detail-nowrap">${formatGunlukAkisDateTime(row.executionStartTime)}</td>
-            <td class="flow-detail-nowrap">${formatGunlukAkisDateTime(row.executionEndTime)}</td>
-            <td class="flow-detail-nowrap">${formatGunlukAkisMinutes(row.sureDakika)}</td>
-            <td class="flow-detail-nowrap">${row.executionRecordCount != null ? Number(row.executionRecordCount).toLocaleString('tr-TR') : '—'}</td>
-            <td class="flow-detail-error" title="${escapeDatasetHtml(row.errorMessageText || '')}">${escapeDatasetHtml(row.errorMessageText || '—')}</td>
-        </tr>`).join('');
-    const emptyMessage = allKayitlar.length > 0 && !kayitlar.length
-        ? 'Seçili statülere uygun kayıt yok.'
-        : 'Kayıt bulunamadı.';
 
     return `
         <div class="flow-layer-detail theme-${col.theme}" data-flow-detail="${escapeDatasetHtml(col.name)}">
@@ -433,109 +310,6 @@ function buildFlowLayerDetail(col) {
 
 function buildFlowLayerGridHtml() {
     return COCKPIT_COLUMNS.map(buildFlowLayerTile).join('');
-}
-
-function getVisiblePaketCount(datasets, layerName) {
-    if (['STG', 'LND', 'COR'].includes(layerName)) {
-        return (datasets || []).reduce(
-            (sum, ds) => sum + (ds.tasks || []).filter(isTaskVisible).length,
-            0
-        );
-    }
-    return (datasets || []).filter(ds => isDatasetVisible(ds, layerName)).length;
-}
-
-function buildColumnStatusSummaryText(counts, columnName) {
-    const parts = getFilterStatusesForColumn(columnName)
-        .map(({ key }) => ({ label: key, count: counts[key] || 0 }))
-        .filter(part => part.count > 0)
-        .map(part => `${part.count} ${part.label}`);
-    return parts.length ? parts.join(', ') : 'Kayıt yok';
-}
-
-function buildSingleStatusFlowHtml(layerName, ds) {
-    const status = resolveDatasetFilterStatus(ds, layerName);
-    const statusClass = {
-        'Not Started': 'not-started',
-        'In Progress': 'running',
-        'Failed': 'failed',
-        'Success': 'done',
-        'LND Failed': 'failed lnd-failed',
-        'LND Completed': 'done lnd-done'
-    }[status] || 'not-started';
-
-    return `<div class="task-flow task-flow-single">
-        <div class="flow-step is-active ${statusClass}">
-            <span class="flow-status-text">${escapeDatasetHtml(status)}</span>
-        </div>
-    </div>`;
-}
-
-function renderCockpitDatasetsHtml(layerName, datasets) {
-    const isTdStg = layerName === 'TDSTG';
-    const isLedgerLayer = ['STG', 'LND', 'COR'].includes(layerName);
-    const visible = (datasets || []).filter(ds => {
-        if (isLedgerLayer) {
-            const tasks = (ds.tasks || []).filter(isTaskVisible);
-            return tasks.length > 0;
-        }
-        return isDatasetVisible(ds, layerName);
-    });
-
-    if (!visible.length) {
-        if (!datasets?.length) {
-            return '<div class="cockpit-empty">Bu katmanda kayıt bulunamadı.</div>';
-        }
-        return '<div class="cockpit-empty cockpit-filter-empty">Seçili statülere uygun kayıt yok.</div>';
-    }
-
-    return visible.map(ds => {
-        const visibleTasks = isLedgerLayer ? (ds.tasks || []).filter(isTaskVisible) : (ds.tasks || []);
-
-        let flowHtml;
-        if (isLedgerLayer) {
-            const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
-            const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
-            const flowClass = cockpitRenderMode === 'mizan'
-                ? 'task-flow task-flow-mizan'
-                : 'task-flow task-flow-ledger';
-            flowHtml = `<div class="${flowClass}">${tasksHtml}</div>`;
-        } else if (isProcessFlowLayer(layerName)) {
-            flowHtml = buildSingleStatusFlowHtml(layerName, ds);
-        } else {
-            const rowTasks = [...visibleTasks, ...(ds.lndTasks || [])];
-            const tasksHtml = visibleTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('');
-            const lndTasksHtml = isTdStg && ds.lndTasks?.length
-                ? ds.lndTasks.map(t => buildFlowStepHtml(layerName, t, rowTasks)).join('')
-                : '';
-            const flowClass = isTdStg ? 'task-flow task-flow-tdstg' : 'task-flow';
-            flowHtml = `<div class="${flowClass}">${tasksHtml}${lndTasksHtml}</div>`;
-        }
-
-        const dsStatus = isProcessFlowLayer(layerName)
-            ? resolveDatasetCardStatus(ds, layerName)
-            : (() => {
-                const dsDone = visibleTasks.length > 0 && visibleTasks.every(t => t.status === 'done')
-                    && (!ds.lndTasks?.length || ds.lndTasks.every(t => t.status === 'done' || t.status === 'not-started'));
-                const dsRunning = visibleTasks.some(t => t.status === 'running')
-                    || (ds.lndTasks || []).some(t => t.status === 'running');
-                const dsFailed = visibleTasks.some(t => t.status === 'failed')
-                    || (ds.lndTasks || []).some(t => t.status === 'failed');
-                return dsFailed ? 'failed' : dsDone ? 'done' : dsRunning ? 'running' : 'waiting';
-            })();
-
-        return `
-            <article class="dataset-card ${dsStatus}">
-                <div class="dataset-head">
-                    <strong>${ds.targetTableName || ds.label || ds.name}</strong>
-                </div>
-                ${flowHtml}
-            </article>`;
-    }).join('');
-}
-
-function refreshCockpitColumnDatasets() {
-    rerenderSurecCockpit();
 }
 
 function updateGlobalFilterCounts() {
@@ -1183,29 +957,6 @@ function buildDatasetCatalogHTML() {
     );
 }
 
-function buildDatasetListRows(rows) {
-    if (!rows.length) {
-        return '<tr><td colspan="13">Kayıt bulunamadı.</td></tr>';
-    }
-
-    return rows.map(row => `
-        <tr>
-            <td class="vs-cell-nowrap">${escapeDatasetHtml(row.datasetName)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.dataModel)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.stagingTableName)}</td>
-            <td class="vs-cell-nowrap">${escapeDatasetHtml(row.layer)}</td>
-            <td class="vs-cell-nowrap"><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td class="vs-cell-nowrap">${formatDatasetDate(row.statusChangeDate)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.statusResponsible)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.tdAnalyst)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.tester)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.ktResponsibleItUnit)}</td>
-            <td class="vs-cell-wrap vs-cell-wrap--kt-sp">${escapeDatasetHtml(row.ktSpName || '—')}</td>
-            <td class="vs-cell-wrap vs-cell-wrap--scope">${escapeDatasetHtml(row.descriptionScope || '—')}</td>
-            <td class="vs-cell-wrap vs-cell-wrap--note">${escapeDatasetHtml(row.note || '—')}</td>
-        </tr>`).join('');
-}
-
 function filterDatasetListRows(rows, term) {
     const needle = String(term || '').trim().toLowerCase();
     if (!needle) return rows;
@@ -1576,13 +1327,6 @@ function refreshDatasetKartlarContent(shell, { animate = true } = {}) {
     bindDatasetKartlarInteractions(shell);
 }
 
-function buildDatasetListeHTML() {
-    return buildDatasetPageShell('liste').replace(
-        '<div class="ds-loading">Yükleniyor…</div>',
-        buildDatasetListeContent()
-    );
-}
-
 function resolveDatasetStatusOzet() {
     return DATASET_STATUS_OZET.length ? DATASET_STATUS_OZET : DATASET_STATUS_OZET_MOCK;
 }
@@ -1617,37 +1361,6 @@ function sortDatasetStatusModelRows(rows) {
         if (modelCmp !== 0) return modelCmp;
         return a.status.localeCompare(b.status, 'tr', { sensitivity: 'base' });
     });
-}
-
-function buildDatasetStatusOzetRows(rows) {
-    if (!rows.length) {
-        return '<tr><td colspan="2">Kayıt bulunamadı.</td></tr>';
-    }
-
-    const toplam = rows.reduce((sum, row) => sum + (row.adet || 0), 0);
-
-    return rows.map(row => `
-        <tr>
-            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td class="ds-num-col"><strong>${row.adet}</strong></td>
-        </tr>`).join('') + `
-        <tr class="ds-status-total-row">
-            <td><strong>Toplam</strong></td>
-            <td class="ds-num-col"><strong>${toplam}</strong></td>
-        </tr>`;
-}
-
-function buildDatasetStatusModelRows(rows) {
-    if (!rows.length) {
-        return '<tr><td colspan="3">Kayıt bulunamadı.</td></tr>';
-    }
-
-    return rows.map(row => `
-        <tr>
-            <td class="vs-cell-wrap ds-model-name-col">${escapeDatasetHtml(row.dataModel)}</td>
-            <td><span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status)}</span></td>
-            <td class="ds-num-col"><strong>${row.adet}</strong></td>
-        </tr>`).join('');
 }
 
 function buildDatasetStatusContent() {
@@ -1686,13 +1399,6 @@ function buildDatasetStatusContent() {
                 </div>
             </div>
         </div>`;
-}
-
-function buildDatasetStatusHTML() {
-    return buildDatasetPageShell('statu').replace(
-        '<div class="ds-loading">Yükleniyor…</div>',
-        buildDatasetStatusContent()
-    );
 }
 
 async function loadDatasetListData() {
@@ -2133,91 +1839,6 @@ async function renderDatasetPage(container) {
     bindDatasetPageSearch(shell);
 }
 
-function shouldShowFlowStepLabel(layerName, task) {
-    if (['STG', 'LND', 'COR'].includes(layerName)) {
-        return !!(task.label && task.label !== '—');
-    }
-    if (task.status === 'done' && (layerName === 'TDSTG' || layerName === 'TDMAIN' || layerName === 'TDREPORT')) {
-        return false;
-    }
-    return !!(task.label && task.label !== '—');
-}
-
-function resolveActiveFlowLabel(tasks) {
-    const progressed = tasks.find(t => t.status === 'running' || t.status === 'failed' || t.status === 'done');
-    if (progressed) return progressed.statusText;
-    return 'Not Started';
-}
-
-function getFlowStepClasses(task, rowTasks, layerName) {
-    if (['STG', 'LND', 'COR'].includes(layerName)) {
-        return ['flow-step', 'is-active', task.status || 'not-started'].join(' ');
-    }
-
-    const isLndFailed = task.statusText === 'LND Failed';
-    const isLndCompleted = task.statusText === 'LND Completed';
-    const lndTasks = rowTasks.filter(t => t.statusText === 'LND Failed' || t.statusText === 'LND Completed');
-    const stgTasks = rowTasks.filter(t => !lndTasks.includes(t));
-
-    let isActive;
-    if (isLndFailed || isLndCompleted) {
-        const activeLnd = resolveActiveFlowLabel(lndTasks);
-        isActive = task.statusText === activeLnd;
-    } else {
-        isActive = task.statusText === resolveActiveFlowLabel(stgTasks);
-    }
-
-    const classes = ['flow-step', isActive ? 'is-active' : 'is-idle'];
-    if (isLndFailed) {
-        classes.push('lnd-failed');
-        if (isActive && task.status === 'failed') classes.push('failed');
-        else if (isActive) classes.push('not-started');
-    } else if (isLndCompleted) {
-        classes.push('lnd-done');
-        if (isActive && task.status === 'done') classes.push('done');
-        else if (isActive && task.status === 'running') classes.push('running');
-        else if (isActive) classes.push('not-started');
-    } else if (isActive) {
-        classes.push(task.status || 'not-started');
-    }
-
-    return classes.join(' ');
-}
-
-function buildFlowStepHtml(layerName, task, rowTasks) {
-    const isMizanLedger = cockpitRenderMode === 'mizan' && ['STG', 'LND', 'COR'].includes(layerName);
-    const showLabel = shouldShowFlowStepLabel(layerName, task);
-    const recordText = formatFlowRecordCount(task.recordCount);
-    const recordHtml = recordText
-        ? `<span class="flow-record-count${isMizanLedger ? ' flow-record-count-prominent' : ''}">${recordText}</span>`
-        : '';
-    const errorHtml = task.errorMessage
-        ? `<span class="flow-error" title="${escapeDatasetHtml(task.errorMessage)}">${escapeDatasetHtml(task.errorMessage)}</span>`
-        : '';
-    const labelHtml = showLabel
-        ? `<span class="flow-label">${escapeDatasetHtml(task.label)}</span>`
-        : '';
-    const statusHtml = `<span class="flow-status-text">${task.statusText || 'Not Started'}</span>`;
-
-    if (isMizanLedger) {
-        return `
-            <div class="${getFlowStepClasses(task, rowTasks, layerName)}">
-                ${recordHtml}
-                ${labelHtml}
-                ${statusHtml}
-                ${errorHtml}
-            </div>`;
-    }
-
-    return `
-            <div class="${getFlowStepClasses(task, rowTasks, layerName)}">
-                ${statusHtml}
-                ${labelHtml}
-                ${recordHtml}
-                ${errorHtml}
-            </div>`;
-}
-
 function buildCockpitColumn(col) {
     return buildFlowLayerTile(col);
 }
@@ -2370,13 +1991,6 @@ async function initDatasetCatalog(container) {
     await renderDatasetPage(el);
 }
 
-const TASK_STATUS_LABELS = {
-    done: 'Tamam',
-    running: 'Çalışıyor',
-    pending: 'Bekliyor',
-    failed: 'Hata'
-};
-
 let TASK_LIST_ROWS = [];
 
 function pickTaskListField(item, ...keys) {
@@ -2419,28 +2033,6 @@ function formatTransferTypeCell(row) {
     return '—';
 }
 
-function buildTaskListRowsFromCockpit() {
-    const rows = [];
-    COCKPIT_COLUMNS.forEach(col => {
-        col.datasets.forEach(ds => {
-            ds.tasks.forEach((task, idx) => {
-                rows.push({
-                    layer: col.name,
-                    datasetCode: ds.name,
-                    datasetLabel: ds.label,
-                    task: task.label,
-                    loadPeriodType: '—',
-                    lastExecution: null,
-                    taskOrder: idx + 1,
-                    active: null,
-                    status: task.status
-                });
-            });
-        });
-    });
-    return rows;
-}
-
 async function loadTaskListesiData() {
     if (typeof ApiClient === 'undefined') return;
     try {
@@ -2458,23 +2050,6 @@ async function loadTaskListesiData() {
 
 function getTaskListRows() {
     return TASK_LIST_ROWS;
-}
-
-function renderTaskListesiRows(rows) {
-    if (!rows.length) {
-        return '<tr><td colspan="8" class="tl-empty-cell">Arama kriterine uygun kayıt bulunamadı.</td></tr>';
-    }
-    return rows.map(row => `
-        <tr>
-            <td class="vs-cell-nowrap">${row.layer}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.task)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.datasetCode)}</td>
-            <td class="vs-cell-nowrap">${formatAktiflikCell(row.active)}</td>
-            <td class="vs-cell-nowrap">${formatDatasetDate(row.lastExecution)}</td>
-            <td class="vs-cell-wrap">${formatTransferTypeCell(row)}</td>
-            <td class="vs-cell-wrap">${escapeDatasetHtml(row.loadPeriodType)}</td>
-            <td class="vs-cell-wrap">${row.datasetLabel}</td>
-        </tr>`).join('');
 }
 
 function tableCountHtml(filtered, total, options = {}) {
@@ -2533,26 +2108,6 @@ async function initTaskListesi(container) {
     await loadTaskListesiData();
     el.innerHTML = buildTaskListesiHTML();
     mountTaskListesi(el);
-}
-
-function getLayerProgress(col) {
-    if (col.tamamlanmaYuzdesi != null) {
-        return {
-            done: col.basariliAdimSayisi ?? 0,
-            total: col.paketSayisi ?? 0,
-            pct: col.tamamlanmaYuzdesi ?? 0
-        };
-    }
-
-    let done = 0;
-    let total = 0;
-    col.datasets.forEach(ds => {
-        ds.tasks.forEach(t => {
-            total++;
-            if (t.status === 'done') done++;
-        });
-    });
-    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
 function buildPortalDatasetCardHTML(surecOzet) {

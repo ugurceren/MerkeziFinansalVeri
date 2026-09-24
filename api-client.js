@@ -77,7 +77,6 @@
         // Kullanıcı / Rol
         getKullanicilar() { return request('/kullanicilar'); },
         getKullanici(id) { return request(`/kullanicilar/${id}`); },
-        updateKullanici(id, data) { return request(`/kullanicilar/${id}`, { method: 'PUT', body: data }); },
         getKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler`); },
         updateKullaniciYetkiler(id, yetkiler) { return request(`/kullanicilar/${id}/yetkiler`, { method: 'PUT', body: yetkiler }); },
         sifirlaKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler/sifirla`, { method: 'POST' }); },
@@ -96,7 +95,6 @@
             const qs = q.toString();
             return request(`/mutabakat/fark-veren${qs ? `?${qs}` : ''}`);
         },
-        getMatrixMapAyarlar() { return request('/mutabakat/matrixmap/ayarlar'); },
         getMatrixMap(params = {}) {
             const q = new URLSearchParams();
             const keys = [
@@ -120,17 +118,9 @@
             const qs = q.toString();
             return request(`/surec/kokpit${qs ? `?${qs}` : ''}`);
         },
-        getSurecDomainler() { return request('/surec/domainler'); },
         getSurecDatasetKatalog() { return request('/surec/dataset-katalog'); },
         getSurecDatasetListe() { return request('/surec/dataset-liste'); },
         getSurecDatasetStatus() { return request('/surec/dataset-status'); },
-        getSurecGorevler(params = {}) {
-            const q = new URLSearchParams();
-            if (params.datasetId) q.set('datasetId', params.datasetId);
-            if (params.donemId) q.set('donemId', params.donemId);
-            const qs = q.toString();
-            return request(`/surec/gorevler${qs ? `?${qs}` : ''}`);
-        },
         getTaskListesi() { return request('/surec/task-listesi'); },
         getMizanAkis(params = {}) {
             const q = new URLSearchParams();
@@ -144,20 +134,10 @@
                 body
             });
         },
-        getMizanGorevler() { return request('/mizan/gorevler'); },
-        yenidenBaslatMizanGorev(gorevTanimId) {
-            return request('/mizan/gorevler/yeniden-baslat', { method: 'POST', body: { gorevTanimId } });
-        },
 
         // Portal / VK / Aktivite
         getPortalOzet() { return request('/portal/ozet'); },
-        getVkKurallar() { return request('/veri-kalitesi/kurallar'); },
-        getVkKurallarAyarlar() { return request('/veri-kalitesi/kurallar/ayarlar'); },
         getVkKurallarSorgu() { return request('/veri-kalitesi/kurallar/sorgu'); },
-        getVkGunlukSonuclar(tarih) {
-            const q = tarih ? `?tarih=${tarih}` : '';
-            return request(`/veri-kalitesi/gunluk-sonuclar${q}`);
-        },
         getVkGunlukSonuclarSorgu() { return request('/veri-kalitesi/gunluk-sonuclar/sorgu'); },
         getAktiviteLog(params = {}) {
             const q = new URLSearchParams();
