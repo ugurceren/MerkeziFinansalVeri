@@ -3,12 +3,13 @@ using MerkeziFinansalVeri.Infrastructure.Data;
 using MerkeziFinansalVeri.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace MerkeziFinansalVeri.Api.Controllers;
 
 [ApiController]
 [Route("api/mutabakat")]
-public class MutabakatController(
+public partial class MutabakatController(
     AppDbContext dbContext,
     IActivityLogService activityLogService,
     ITrustedDataMatrixMapService matrixMapService) : ControllerBase
@@ -55,8 +56,38 @@ public class MutabakatController(
         [FromBody] MutabakatAktifDonemDto dto,
         CancellationToken cancellationToken)
     {
-        var target = await dbContext.MutabakatDonemleri
-            .FirstOrDefaultAsync(d => d.DonemId == dto.DonemId, cancellationToken);
+        Domain.Entities.MutabakatDonem? target;
+        var olusturuldu = false;
+        if (dto.DonemId > 0)
+        {
+            target = await dbContext.MutabakatDonemleri
+                .FirstOrDefaultAsync(d => d.DonemId == dto.DonemId, cancellationToken);
+        }
+        else
+        {
+            var yilAy = dto.YilAy?.Trim() ?? string.Empty;
+            if (!YilAyRegex().IsMatch(yilAy))
+            {
+                return BadRequest(new { error = "Dönem YYYY-AA biçiminde olmalıdır." });
+            }
+
+            target = await dbContext.MutabakatDonemleri
+                .FirstOrDefaultAsync(d => d.YilAy == yilAy, cancellationToken);
+
+            if (target is null)
+            {
+                // Listede olmayan bir ay seçildi: hesap/fark sayıları 0 olan açık dönem olarak oluşturulur
+                target = new Domain.Entities.MutabakatDonem
+                {
+                    YilAy = yilAy,
+                    Etiket = FormatDonemEtiket(yilAy),
+                    Durum = "acik",
+                    OlusturmaZamani = DateTime.UtcNow
+                };
+                dbContext.MutabakatDonemleri.Add(target);
+                olusturuldu = true;
+            }
+        }
 
         if (target is null)
         {
@@ -77,6 +108,10 @@ public class MutabakatController(
         target.GuncellemeZamani = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        if (olusturuldu)
+        {
+            await activityLogService.LogAsync("mutabakat", "Mutabakat dönemi oluşturuldu", target.Etiket, HttpContext.GetCurrentUserId(), cancellationToken);
+        }
         await activityLogService.LogAsync("mutabakat", "Aktif dönem değiştirildi", target.Etiket, HttpContext.GetCurrentUserId(), cancellationToken);
 
         return Ok(ToDonemDto(target));
@@ -169,6 +204,18 @@ public class MutabakatController(
         var result = await matrixMapService.QueryAsync(ToMatrixMapFilter(filter), cancellationToken);
         return Ok(ToMatrixMapDto(result));
     }
+
+    private static readonly string[] AylarTr =
+    [
+        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
+    ];
+
+    [GeneratedRegex(@"^\d{4}-(0[1-9]|1[0-2])$")]
+    private static partial Regex YilAyRegex();
+
+    private static string FormatDonemEtiket(string yilAy) =>
+        $"{AylarTr[int.Parse(yilAy[5..]) - 1]} {yilAy[..4]}";
 
     private static MutabakatDonemDto ToDonemDto(Domain.Entities.MutabakatDonem d) => new()
     {

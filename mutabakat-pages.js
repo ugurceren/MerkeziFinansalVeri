@@ -134,7 +134,7 @@
     }
 
     async function setActivePeriod(donemId, yilAy) {
-        await ApiClient.setAktifDonem(donemId);
+        await ApiClient.setAktifDonem(donemId, yilAy);
         activePeriodYilAy = yilAy;
         persistMutabakatPeriod(yilAy);
         await loadData();
@@ -177,7 +177,8 @@
                             <span class="mt-period-tr-label">${escapeHtml(formatYilAy(activeId))}</span>
                         </div>
                     </div>
-                    <p class="mt-hint">Kebir hesapları, mizan ve fark veren ekranlarında varsayılan filtre dönemi olarak kullanılır. Ay/yıl alanından veya alttaki tablodan satır seçerek değiştirebilirsiniz.</p>
+                    <p class="mt-period-msg" id="mtPeriodMsg" role="alert" hidden></p>
+                    <p class="mt-hint">Kebir hesapları, mizan ve fark veren ekranlarında varsayılan filtre dönemi olarak kullanılır. Ay/yıl alanından veya alttaki tablodan satır seçerek değiştirebilirsiniz. Listede olmayan bir ay seçilirse yeni dönem olarak oluşturulur.</p>
                 </div>
             </div>
             <div class="mt-card" id="mt-donem">
@@ -303,14 +304,7 @@
                 'data-period': row.yilAy,
                 'data-donem-id': row.donemId
             }),
-            onRowClick: async row => {
-                try {
-                    await setActivePeriod(row.donemId, row.yilAy);
-                    await initMutabakatPage(root);
-                } catch (err) {
-                    console.error('Dönem seçilemedi:', err);
-                }
-            }
+            onRowClick: row => changeActivePeriod(root, row.yilAy)
         });
     }
 
@@ -506,24 +500,44 @@
         await applyDiffFilter(root);
     }
 
+    function showPeriodMessage(root, message) {
+        const el = root.querySelector('#mtPeriodMsg');
+        if (!el) return;
+        el.hidden = !message;
+        el.textContent = message || '';
+    }
+
+    /* Ay alanı flatpickr ile süslendiği için görünen metin de ayrıca geri alınmalı */
+    function resetPeriodInput(root) {
+        const input = root.querySelector('#mtActivePeriod');
+        if (!input) return;
+        const active = getActivePeriod();
+        if (input._flatpickr) input._flatpickr.setDate(active, false);
+        else input.value = active;
+    }
+
+    async function changeActivePeriod(root, yilAy) {
+        if (!/^\d{4}-\d{2}$/.test(yilAy || '')) {
+            resetPeriodInput(root);
+            return;
+        }
+        if (yilAy === getActivePeriod()) return;
+
+        const target = periods.find(p => p.yilAy === yilAy);
+        showPeriodMessage(root, '');
+        try {
+            await setActivePeriod(target?.donemId, yilAy);
+            await initMutabakatPage(root);
+        } catch (err) {
+            console.error('Aktif dönem değiştirilemedi:', err);
+            resetPeriodInput(root);
+            showPeriodMessage(root, `${formatYilAy(yilAy)} aktif dönem yapılamadı: ${apiErrorMessage(err)}`);
+        }
+    }
+
     function bindMutabakatPage(root) {
         const periodInput = root.querySelector('#mtActivePeriod');
-        if (periodInput) {
-            periodInput.addEventListener('change', async () => {
-                const target = periods.find(p => p.yilAy === periodInput.value);
-                if (!target) {
-                    periodInput.value = getActivePeriod();
-                    return;
-                }
-                try {
-                    await setActivePeriod(target.donemId, target.yilAy);
-                    await initMutabakatPage(root);
-                } catch (err) {
-                    console.error('Aktif dönem değiştirilemedi:', err);
-                    periodInput.value = getActivePeriod();
-                }
-            });
-        }
+        periodInput?.addEventListener('change', () => changeActivePeriod(root, periodInput.value));
 
         window.FilterBar?.bind(root.querySelector('#mtDiffFilterPanel'), {
             bindKey: 'fark-veren',

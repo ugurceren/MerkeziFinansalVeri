@@ -30,6 +30,9 @@ public sealed class MutabakatDonemUpdateDto
 public sealed class MutabakatAktifDonemDto
 {
     public int DonemId { get; set; }
+
+    /// <summary>DonemId verilmezse kullanılır (YYYY-AA); bu ay için dönem yoksa oluşturulur.</summary>
+    public string? YilAy { get; set; }
 }
 
 public sealed class FarkVerenHesapDto

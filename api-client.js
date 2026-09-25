@@ -85,7 +85,10 @@
 
         // Mutabakat
         getMutabakatDonemler() { return request('/mutabakat/donemler'); },
-        setAktifDonem(donemId) { return request('/mutabakat/donemler/aktif', { method: 'PUT', body: { donemId } }); },
+        /** donemId yoksa yilAy (YYYY-AA) ile seçilir; o ay için dönem yoksa API oluşturur. */
+        setAktifDonem(donemId, yilAy) {
+            return request('/mutabakat/donemler/aktif', { method: 'PUT', body: { donemId: donemId || 0, yilAy: yilAy || null } });
+        },
         getFarkVeren(params = {}) {
             const q = new URLSearchParams();
             if (params.donemId) q.set('donemId', params.donemId);
