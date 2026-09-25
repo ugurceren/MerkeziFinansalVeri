@@ -11,9 +11,13 @@
         }
     };
 
+    const LAST_TARGET_KEY = 'vs_last_target';
+
     let ayarlar = null;
     let selectedKatman = 'TDSTG';
     let customConnections = [];
+    /* Seçilebilir sorgu hedefleri: config katmanları + Veritabanı Bağlantısı sayfasında eklenen özel bağlantılar */
+    let targets = [];
     let intellisense = null;
     const schemaCache = new Map();
     let schemaRequestId = 0;
@@ -36,21 +40,29 @@
         }
     }
 
-    function saveCustomConnections() {
-        localStorage.setItem(CUSTOM_CONN_KEY, JSON.stringify(customConnections));
+    function readLastTarget() {
+        try {
+            return localStorage.getItem(LAST_TARGET_KEY);
+        } catch {
+            return null;
+        }
     }
 
-    function isCustomKatman(value) {
-        return String(value || '').startsWith(CUSTOM_PREFIX);
+    function saveLastTarget() {
+        try {
+            localStorage.setItem(LAST_TARGET_KEY, selectedKatman);
+        } catch {
+            /* tercih kaydedilemezse varsayılan katmanla devam edilir */
+        }
     }
 
-    function getCustomId(katmanValue) {
-        return String(katmanValue || '').slice(CUSTOM_PREFIX.length);
+    function serverKeyOf(sunucu, port) {
+        return `${String(sunucu || '').trim().toLowerCase()},${port || 1433}`;
     }
 
-    function getCustomConnection(katmanValue) {
-        const id = getCustomId(katmanValue);
-        return customConnections.find(c => c.id === id) || null;
+    function serverLabel(sunucu, port) {
+        if (!sunucu) return 'Yapılandırılmış sunucu';
+        return port && port !== 1433 ? `${sunucu}:${port}` : sunucu;
     }
 
     function toBaglantiDto(conn) {
@@ -65,17 +77,53 @@
         };
     }
 
-    function getSelectedConnection() {
-        const katman = document.getElementById('vsKatmanSelect')?.value || selectedKatman;
-        if (isCustomKatman(katman)) {
-            const conn = getCustomConnection(katman);
+    function buildTargets() {
+        const katmanlar = ayarlar?.katmanlar?.length
+            ? ayarlar.katmanlar
+            : [
+                { katmanKodu: 'TDSTG', veritabani: 'TDSTG' },
+                { katmanKodu: 'TDMAIN', veritabani: 'TDMAIN' },
+                { katmanKodu: 'TDREPORT', veritabani: 'TDREPORT' }
+            ];
+
+        const configTargets = katmanlar.map(k => {
+            const veritabani = k.veritabani || k.katmanKodu;
             return {
-                katmanKodu: conn?.etiket || conn?.veritabani || 'OZEL',
-                baglanti: toBaglantiDto(conn),
-                displayName: conn ? `${conn.etiket} — ${conn.veritabani}` : katman
+                key: k.katmanKodu,
+                katmanKodu: k.katmanKodu,
+                sunucu: k.sunucu || '',
+                port: k.port || 1433,
+                veritabani,
+                baglanti: null,
+                dbLabel: veritabani === k.katmanKodu ? k.katmanKodu : `${k.katmanKodu} — ${veritabani}`
             };
-        }
-        return { katmanKodu: katman, baglanti: null, displayName: katman };
+        });
+
+        const customTargets = customConnections.map(c => {
+            const varsayilanEtiket = `${c.sunucu} — ${c.veritabani}`;
+            const etiket = c.etiket && c.etiket !== varsayilanEtiket && c.etiket !== c.veritabani
+                ? ` · ${c.etiket}`
+                : '';
+            return {
+                key: `${CUSTOM_PREFIX}${c.id}`,
+                katmanKodu: c.etiket || c.veritabani || 'OZEL',
+                sunucu: c.sunucu,
+                port: c.port || 1433,
+                veritabani: c.veritabani,
+                baglanti: toBaglantiDto(c),
+                dbLabel: `${c.veritabani}${etiket} (özel)`
+            };
+        });
+
+        return [...configTargets, ...customTargets].map(t => ({
+            ...t,
+            serverKey: serverKeyOf(t.sunucu, t.port),
+            displayName: `${serverLabel(t.sunucu, t.port)} / ${t.veritabani}`
+        }));
+    }
+
+    function getSelectedConnection() {
+        return targets.find(t => t.key === selectedKatman) || null;
     }
 
     function setStatus(state, text) {
@@ -99,7 +147,7 @@
         box.textContent = message;
     }
 
-    function setMeta(textOrPayload) {
+    function setMeta(textOrPayload, kaynak) {
         const meta = document.getElementById('vsQueryMeta');
         if (!meta) return;
 
@@ -117,6 +165,7 @@
         const total = textOrPayload.satirSayisi ?? rows.length;
         const count = Number(total || 0).toLocaleString('tr-TR');
         const parts = [`${count} kayıt`];
+        if (kaynak) parts.unshift(`Kaynak: ${kaynak}`);
         if (textOrPayload.sureMs != null) parts.push(`${textOrPayload.sureMs} ms`);
         meta.textContent = parts.join(' · ');
     }
@@ -133,33 +182,44 @@
         return matchedKey ? row[matchedKey] : undefined;
     }
 
-    function renderKatmanSelect() {
+    function renderDbSelect(serverKey) {
         const sel = document.getElementById('vsKatmanSelect');
         if (!sel) return;
+        sel.innerHTML = targets
+            .filter(t => t.serverKey === serverKey)
+            .map(t => `<option value="${escapeHtml(t.key)}" ${t.key === selectedKatman ? 'selected' : ''}>${escapeHtml(t.dbLabel)}</option>`)
+            .join('');
+    }
 
-        const katmanlar = ayarlar?.katmanlar?.length
-            ? ayarlar.katmanlar
-            : [
-                { katmanKodu: 'TDSTG', veritabani: 'TDSTG' },
-                { katmanKodu: 'TDMAIN', veritabani: 'TDMAIN' },
-                { katmanKodu: 'TDREPORT', veritabani: 'TDREPORT' }
-            ];
+    /* Sunucu listesi hedeflerden türetilir; aynı sunucudaki config katmanı ve özel bağlantılar tek sunucu altında toplanır. */
+    function renderTargetSelects() {
+        targets = buildTargets();
+        if (!targets.some(t => t.key === selectedKatman)) {
+            const varsayilan = ayarlar?.varsayilanKatman;
+            selectedKatman = targets.some(t => t.key === varsayilan) ? varsayilan : targets[0]?.key || 'TDSTG';
+        }
 
-        const configOptions = katmanlar.map(k =>
-            `<option value="${escapeHtml(k.katmanKodu)}" ${k.katmanKodu === selectedKatman ? 'selected' : ''}>${escapeHtml(k.katmanKodu)} — ${escapeHtml(k.veritabani)}</option>`
-        );
-
-        const customOptions = customConnections.map(c => {
-            const value = `${CUSTOM_PREFIX}${c.id}`;
-            const label = `${c.etiket} — ${c.veritabani}`;
-            return `<option value="${escapeHtml(value)}" ${value === selectedKatman ? 'selected' : ''}>${escapeHtml(label)} (özel)</option>`;
+        const current = getSelectedConnection();
+        const servers = [];
+        targets.forEach(t => {
+            const server = servers.find(s => s.key === t.serverKey);
+            if (server) server.count += 1;
+            else servers.push({ key: t.serverKey, label: serverLabel(t.sunucu, t.port), count: 1 });
         });
 
-        const divider = customConnections.length
-            ? '<option disabled>──────────</option>'
-            : '';
+        const serverSel = document.getElementById('vsServerSelect');
+        if (serverSel) {
+            serverSel.innerHTML = servers.map(s =>
+                `<option value="${escapeHtml(s.key)}" ${s.key === current?.serverKey ? 'selected' : ''}>${escapeHtml(s.label)} (${s.count} veritabanı)</option>`
+            ).join('');
+        }
+        renderDbSelect(current?.serverKey);
+    }
 
-        sel.innerHTML = configOptions.join('') + divider + customOptions.join('');
+    function onTargetChanged() {
+        saveLastTarget();
+        testConnection();
+        loadSchema();
     }
 
     function showResultsSkeleton() {
@@ -183,7 +243,7 @@
         document.getElementById('vsResultsEmpty')?.removeAttribute('hidden');
     }
 
-    function renderResults(payload) {
+    function renderResults(payload, kaynak) {
         const head = document.getElementById('vsResultsHead');
         const body = document.getElementById('vsResultsBody');
         const wrap = document.getElementById('vsResultsWrap');
@@ -200,7 +260,7 @@
             body.innerHTML = '';
             if (empty) empty.hidden = rows.length > 0;
             wrap.classList.toggle('has-data', rows.length > 0);
-            setMeta(payload);
+            setMeta(payload, kaynak);
             return;
         }
 
@@ -218,7 +278,7 @@
 
         if (empty) empty.hidden = true;
         wrap.classList.add('has-data');
-        setMeta(payload);
+        setMeta(payload, kaynak);
     }
 
     function apiErrorMessage(err) {
@@ -245,9 +305,9 @@
     /* Katmanın tablo/kolon şemasını çekip IntelliSense'e verir.
        Şema yoksa motor anahtar kelime ve fonksiyonlarla çalışmaya devam eder. */
     async function loadSchema() {
-        if (!intellisense) return;
-
         const selected = getSelectedConnection();
+        if (!intellisense || !selected) return;
+
         const cacheKey = selected.baglanti
             ? `${selected.baglanti.sunucu}/${selected.baglanti.veritabani}`
             : selected.katmanKodu;
@@ -289,35 +349,36 @@
 
     async function loadAyarlar() {
         customConnections = loadCustomConnections();
+        const lastTarget = readLastTarget();
         try {
             ayarlar = await ApiClient.getVeritabaniSorguAyarlar();
-            if (!isCustomKatman(selectedKatman)) {
-                selectedKatman = ayarlar.varsayilanKatman || 'TDSTG';
-            }
-            renderKatmanSelect();
+            selectedKatman = lastTarget || ayarlar.varsayilanKatman || 'TDSTG';
+            renderTargetSelects();
         } catch (err) {
             console.warn('Sorgu ayarları yüklenemedi:', err);
             ayarlar = null;
-            renderKatmanSelect();
+            if (lastTarget) selectedKatman = lastTarget;
+            renderTargetSelects();
             setStatus('err', apiErrorMessage(err));
         }
     }
 
     async function testConnection() {
-        setStatus('pending', 'Bağlantı test ediliyor…');
+        const selected = getSelectedConnection();
+        if (!selected) return;
+
+        setStatus('pending', `${selected.displayName} — bağlantı test ediliyor…`);
         setError('');
         try {
-            const selected = getSelectedConnection();
-            let res;
-            if (selected.baglanti) {
-                res = await ApiClient.testVeritabaniSorguBaglanti(selected.baglanti);
-            } else {
-                res = await ApiClient.testVeritabaniSorguKatman(selected.katmanKodu);
-            }
+            const res = selected.baglanti
+                ? await ApiClient.testVeritabaniSorguBaglanti(selected.baglanti)
+                : await ApiClient.testVeritabaniSorguKatman(selected.katmanKodu);
+            // Yanıt gelene kadar seçim değiştiyse eski hedefin sonucu gösterilmez
+            if (getSelectedConnection()?.key !== selected.key) return;
             if (res.basarili) {
-                setStatus('ok', res.mesaj || 'Bağlantı başarılı.');
+                setStatus('ok', `${selected.displayName} — ${res.mesaj || 'Bağlantı başarılı.'}`);
             } else {
-                setStatus('err', res.mesaj || 'Bağlantı başarısız.');
+                setStatus('err', `${selected.displayName} — ${res.mesaj || 'Bağlantı başarısız.'}`);
             }
         } catch (err) {
             setStatus('err', apiErrorMessage(err));
@@ -334,13 +395,13 @@
             return;
         }
 
-        if (isCustomKatman(document.getElementById('vsKatmanSelect')?.value) && !selected.baglanti) {
-            setError('Seçili özel bağlantı bulunamadı.');
+        if (!selected) {
+            setError('Seçili bağlantı bulunamadı.');
             return;
         }
 
         setError('');
-        setMeta('Sorgu çalıştırılıyor…');
+        setMeta(`${selected.displayName} — sorgu çalıştırılıyor…`);
         if (runBtn) runBtn.disabled = true;
         showResultsSkeleton();
 
@@ -360,7 +421,7 @@
                 return;
             }
 
-            renderResults(res);
+            renderResults(res, selected.displayName);
             setStatus('ok', `${selected.displayName} — sorgu tamamlandı`);
         } catch (err) {
             clearResultsSkeleton();
@@ -384,10 +445,26 @@
         }
         if (shortcutEl) shortcutEl.textContent = shortcutLabel;
 
+        document.getElementById('vsServerSelect')?.addEventListener('change', e => {
+            const first = targets.find(t => t.serverKey === e.target.value);
+            if (!first) return;
+            selectedKatman = first.key;
+            renderDbSelect(first.serverKey);
+            onTargetChanged();
+        });
+
         document.getElementById('vsKatmanSelect')?.addEventListener('change', e => {
             selectedKatman = e.target.value;
-            testConnection();
-            loadSchema();
+            onTargetChanged();
+        });
+
+        // Veritabanı Bağlantısı sayfası başka sekmede açıkken eklenen/silinen bağlantılar listeye yansır
+        window.addEventListener('storage', e => {
+            if (e.key !== CUSTOM_CONN_KEY) return;
+            const previous = selectedKatman;
+            customConnections = loadCustomConnections();
+            renderTargetSelects();
+            if (selectedKatman !== previous) onTargetChanged();
         });
 
         const input = document.getElementById('vsQueryInput');
