@@ -77,6 +77,7 @@
         // Kullanıcı / Rol
         getKullanicilar() { return request('/kullanicilar'); },
         getKullanici(id) { return request(`/kullanicilar/${id}`); },
+        createKullanici(data) { return request('/kullanicilar', { method: 'POST', body: data }); },
         getKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler`); },
         updateKullaniciYetkiler(id, yetkiler) { return request(`/kullanicilar/${id}/yetkiler`, { method: 'PUT', body: yetkiler }); },
         sifirlaKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler/sifirla`, { method: 'POST' }); },

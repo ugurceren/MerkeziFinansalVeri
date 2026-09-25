@@ -68,7 +68,7 @@
                             <h3>Yetkili Kullanıcılar</h3>
                             <p>Sisteme erişimi olan kullanıcılar ve atanmış rolleri</p>
                         </div>
-                        <button class="add-btn" type="button">+ Yeni Kullanıcı</button>
+                        <button class="add-btn" type="button" id="umNewUserBtn">+ Yeni Kullanıcı</button>
                     </div>
                     <div class="table-scroll">
                         <table id="usersTable" class="vs-results-table vs-results-table--wrap">
@@ -99,6 +99,56 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+
+    <div class="um-modal" id="umUserModal" hidden>
+        <div class="um-modal-backdrop" data-um-modal-close></div>
+        <div class="um-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="umUserModalTitle">
+            <header class="um-modal-header">
+                <h3 id="umUserModalTitle">Yeni Kullanıcı</h3>
+                <button type="button" class="um-modal-close" data-um-modal-close aria-label="Kapat">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+            </header>
+            <form class="um-modal-body" id="umUserForm" novalidate>
+                <div class="um-row">
+                    <div class="um-field">
+                        <label for="umUserId">Sicil No <span class="um-optional">(isteğe bağlı)</span></label>
+                        <input type="text" id="umUserId" name="kullaniciId" inputmode="numeric" autocomplete="off" placeholder="Boşsa otomatik atanır">
+                    </div>
+                    <div class="um-field">
+                        <label for="umUserCode">Kullanıcı Kodu</label>
+                        <input type="text" id="umUserCode" name="kullaniciKodu" autocomplete="off" placeholder="Örn. uceren" required>
+                    </div>
+                </div>
+                <div class="um-field">
+                    <label for="umUserName">Ad Soyad</label>
+                    <input type="text" id="umUserName" name="ad" autocomplete="off" required>
+                </div>
+                <div class="um-field">
+                    <label for="umUserEmail">E-posta</label>
+                    <input type="email" id="umUserEmail" name="eposta" autocomplete="off" placeholder="ad.soyad@kuveytturk.com.tr" required>
+                </div>
+                <div class="um-row">
+                    <div class="um-field">
+                        <label for="umUserRole">Rol</label>
+                        <select id="umUserRole" name="rolId" required></select>
+                    </div>
+                    <div class="um-field">
+                        <label for="umUserStatus">Durum</label>
+                        <select id="umUserStatus" name="durum">
+                            <option value="active" selected>Aktif</option>
+                            <option value="passive">Pasif</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="um-form-msg" id="umUserFormMsg" role="alert" hidden></p>
+                <div class="um-modal-actions">
+                    <button type="button" class="um-cancel-btn" data-um-modal-close>Vazgeç</button>
+                    <button type="submit" class="um-save-btn" id="umUserSaveBtn">Kaydet</button>
+                </div>
+            </form>
         </div>
     </div>
 

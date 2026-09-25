@@ -224,6 +224,184 @@
 
 /* Seçili satır görünümü table-theme.css içinde yönetilir. */
 
+/* -- Yeni kullanıcı penceresi (Veritabanı Bağlantısı → Yeni Bağlantı ile aynı düzen) -- */
+
+.um-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.um-modal[hidden] {
+    display: none;
+}
+
+.um-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.um-modal-dialog {
+    position: relative;
+    width: min(100%, 520px);
+    max-height: min(92vh, 720px);
+    display: flex;
+    flex-direction: column;
+    background: var(--rb-surface);
+    border: 0.5px solid var(--rb-border);
+    border-radius: 14px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.um-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--rb-border);
+    background: var(--rb-filter-bg);
+}
+
+.um-modal-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rb-text);
+}
+
+.um-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    background: var(--rb-bg);
+    color: var(--rb-text-muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.um-modal-close:hover {
+    color: var(--rb-text);
+    border-color: var(--rb-accent);
+}
+
+.um-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    overflow: auto;
+}
+
+.um-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.um-field label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--rb-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.um-optional {
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.um-field input,
+.um-field select {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border: 0.5px solid var(--rb-border);
+    border-radius: 8px;
+    background: var(--rb-input-bg);
+    color: var(--rb-text);
+    font-family: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.um-field input:focus,
+.um-field select:focus {
+    outline: none;
+    border-color: var(--rb-accent);
+}
+
+.um-form-msg {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--status-danger-text);
+    background: color-mix(in srgb, var(--status-danger) 12%, transparent);
+}
+
+.um-modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.um-cancel-btn,
+.um-save-btn {
+    flex: 1;
+    height: 32px;
+    border-radius: 8px;
+    border: 0.5px solid var(--rb-border);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.um-cancel-btn {
+    background: var(--rb-card);
+    color: var(--rb-text);
+}
+
+.um-cancel-btn:hover {
+    background: var(--rb-rbtn-hover);
+}
+
+.um-save-btn {
+    background: var(--rb-header);
+    border-color: transparent;
+    color: #fff;
+}
+
+.um-save-btn:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.um-save-btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+@media (max-width: 480px) {
+    .um-row {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 960px) {
     .um-grid {
         grid-template-columns: 1fr;

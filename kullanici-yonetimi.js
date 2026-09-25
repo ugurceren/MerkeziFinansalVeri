@@ -212,8 +212,114 @@
         mountUsersSmartTable();
     }
 
+    /* -- Yeni kullanıcı penceresi → POST /api/kullanicilar (VIB.sec_User) -- */
+
+    const userModal = document.getElementById('umUserModal');
+    const userForm = document.getElementById('umUserForm');
+    let lastFocusBeforeModal = null;
+
+    function setUserFormMessage(message) {
+        const el = document.getElementById('umUserFormMsg');
+        if (!el) return;
+        el.hidden = !message;
+        el.textContent = message || '';
+    }
+
+    function openUserModal() {
+        if (!userModal || !userForm) return;
+        userForm.reset();
+        const roleSelect = userForm.elements.rolId;
+        // API yanıtı rolId/ad, çevrimdışı yedek (KullaniciShared) id/name kullanır
+        roleSelect.innerHTML = ROLES.map(r => `<option value="${r.rolId ?? r.id}">${r.ad ?? r.name}</option>`).join('');
+        // Varsayılan rol, sağ panelde seçili olan rol
+        if (ROLES.some(r => (r.rolId ?? r.id) === selectedRoleId)) roleSelect.value = selectedRoleId;
+        setUserFormMessage('');
+        lastFocusBeforeModal = document.activeElement;
+        userModal.hidden = false;
+        userForm.elements.kullaniciKodu.focus();
+    }
+
+    function closeUserModal() {
+        if (!userModal || userModal.hidden) return;
+        userModal.hidden = true;
+        lastFocusBeforeModal?.focus?.();
+    }
+
+    function readUserForm() {
+        const f = userForm.elements;
+        const sicil = f.kullaniciId.value.trim();
+        return {
+            // Boş sicil no null gider; API otomatik numara atar
+            kullaniciId: sicil ? Number(sicil) : null,
+            kullaniciKodu: f.kullaniciKodu.value.trim(),
+            ad: f.ad.value.trim(),
+            eposta: f.eposta.value.trim(),
+            rolId: f.rolId.value,
+            durum: f.durum.value
+        };
+    }
+
+    function validateUserForm(data) {
+        if (data.kullaniciId !== null && (!Number.isInteger(data.kullaniciId) || data.kullaniciId <= 0)) {
+            return 'Sicil no pozitif bir sayı olmalıdır; bilinmiyorsa boş bırakın.';
+        }
+        if (!data.kullaniciKodu || !data.ad || !data.eposta || !data.rolId) {
+            return 'Tüm alanları doldurun.';
+        }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.eposta)) return 'Geçerli bir e-posta adresi girin.';
+        if (data.kullaniciId !== null && USERS.some(u => u.kullaniciId === data.kullaniciId)) {
+            return `${data.kullaniciId} sicil numaralı kullanıcı zaten listede.`;
+        }
+        return '';
+    }
+
+    async function saveNewUser(event) {
+        event.preventDefault();
+        const data = readUserForm();
+        const invalid = validateUserForm(data);
+        if (invalid) {
+            setUserFormMessage(invalid);
+            return;
+        }
+
+        const saveBtn = document.getElementById('umUserSaveBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Kaydediliyor…';
+        setUserFormMessage('');
+        try {
+            const created = await ApiClient.createKullanici(data);
+            closeUserModal();
+            await loadData();
+            selectedUserId = created?.kullaniciId ?? data.kullaniciId ?? selectedUserId;
+            selectedRoleId = created?.rolId ?? data.rolId;
+            renderRoleCards();
+            renderUsersTable();
+            await renderAccessPanel();
+        } catch (err) {
+            const msg = err?.message || String(err);
+            setUserFormMessage(msg.includes('Failed to fetch')
+                ? `API'ye ulaşılamıyor. start-api.bat çalıştırın. Varsayılan: ${ApiClient.baseUrl}`
+                : `Kullanıcı kaydedilemedi: ${msg}`);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Kaydet';
+        }
+    }
+
+    function bindUserModal() {
+        document.getElementById('umNewUserBtn')?.addEventListener('click', openUserModal);
+        userModal?.querySelectorAll('[data-um-modal-close]').forEach(el => {
+            el.addEventListener('click', closeUserModal);
+        });
+        userForm?.addEventListener('submit', saveNewUser);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeUserModal();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         await window.PagePermissions?.ready?.();
+        bindUserModal();
         await loadData();
         renderRoleCards();
         renderUsersTable();

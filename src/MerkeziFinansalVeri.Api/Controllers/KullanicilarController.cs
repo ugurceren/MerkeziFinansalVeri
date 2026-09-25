@@ -4,12 +4,13 @@ using MerkeziFinansalVeri.Infrastructure.Data;
 using MerkeziFinansalVeri.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace MerkeziFinansalVeri.Api.Controllers;
 
 [ApiController]
 [Route("api/kullanicilar")]
-public class KullanicilarController(
+public partial class KullanicilarController(
     AppDbContext dbContext,
     IPermissionService permissionService,
     IActivityLogService activityLogService) : ControllerBase
@@ -49,25 +50,103 @@ public class KullanicilarController(
         [FromBody] KullaniciCreateDto dto,
         CancellationToken cancellationToken)
     {
-        var entity = new Kullanici
-        {
-            KullaniciId = dto.KullaniciId,
-            KullaniciKodu = dto.KullaniciKodu,
-            Ad = dto.Ad,
-            Eposta = dto.Eposta,
-            RolId = dto.RolId,
-            Durum = dto.Durum,
-            OlusturmaZamani = DateTime.UtcNow
-        };
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "kullanici-yonetimi", cancellationToken);
+        if (denied is not null) return denied;
 
-        dbContext.Kullanicilar.Add(entity);
+        var kod = dto.KullaniciKodu?.Trim() ?? string.Empty;
+        var ad = dto.Ad?.Trim() ?? string.Empty;
+        var eposta = dto.Eposta?.Trim() ?? string.Empty;
+        var rolId = dto.RolId?.Trim() ?? string.Empty;
+        var durum = dto.Durum == "passive" ? "passive" : "active";
+
+        if (kod.Length == 0 || ad.Length == 0 || eposta.Length == 0 || rolId.Length == 0)
+        {
+            return BadRequest(new { message = "Kullanıcı kodu, ad soyad, e-posta ve rol zorunludur." });
+        }
+
+        if (dto.KullaniciId is <= 0)
+        {
+            return BadRequest(new { message = "Sicil no pozitif bir sayı olmalıdır; bilinmiyorsa boş bırakın." });
+        }
+
+        var kullaniciId = dto.KullaniciId ?? await NextOtomatikKullaniciIdAsync(cancellationToken);
+
+        if (!EpostaRegex().IsMatch(eposta))
+        {
+            return BadRequest(new { message = "Geçerli bir e-posta adresi girin." });
+        }
+
+        if (!await dbContext.Roller.AnyAsync(r => r.RolId == rolId, cancellationToken))
+        {
+            return BadRequest(new { message = $"'{rolId}' rolü bulunamadı." });
+        }
+
+        var kodKullanimda = await dbContext.Kullanicilar.AnyAsync(
+            k => k.KullaniciKodu == kod && k.KullaniciId != kullaniciId && !k.SilindiMi,
+            cancellationToken);
+        if (kodKullanimda)
+        {
+            return Conflict(new { message = $"'{kod}' kullanıcı kodu başka bir kullanıcıda kayıtlı." });
+        }
+
+        // UserId sicil numarasıdır; silinmiş bir kullanıcıya aitse yeni bilgilerle geri getirilir
+        var entity = await dbContext.Kullanicilar
+            .FirstOrDefaultAsync(k => k.KullaniciId == kullaniciId, cancellationToken);
+        var geriGetirildi = entity is not null;
+
+        if (entity is { SilindiMi: false })
+        {
+            return Conflict(new { message = $"{kullaniciId} sicil numaralı kullanıcı zaten kayıtlı ({entity.Ad})." });
+        }
+
+        if (entity is null)
+        {
+            entity = new Kullanici
+            {
+                KullaniciId = kullaniciId,
+                OlusturmaZamani = DateTime.UtcNow
+            };
+            dbContext.Kullanicilar.Add(entity);
+        }
+        else
+        {
+            entity.SilindiMi = false;
+            entity.GuncellemeZamani = DateTime.UtcNow;
+        }
+
+        entity.KullaniciKodu = kod;
+        entity.Ad = ad;
+        entity.Eposta = eposta;
+        entity.RolId = rolId;
+        entity.Durum = durum;
+
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(entity).Reference(e => e.Rol).LoadAsync(cancellationToken);
 
-        await activityLogService.LogAsync("kullanici", "Kullanıcı oluşturuldu", dto.Ad, HttpContext.GetCurrentUserId(), cancellationToken);
+        await activityLogService.LogAsync(
+            "kullanici",
+            geriGetirildi ? "Silinmiş kullanıcı geri getirildi" : "Kullanıcı oluşturuldu",
+            ad,
+            HttpContext.GetCurrentUserId(),
+            cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.KullaniciId }, ToDto(entity));
     }
+
+    /* Sicil no girilmeyen kullanıcılar gerçek sicil numaralarıyla çakışmasın diye ayrı aralıktan numara alır */
+    private const int OtomatikKullaniciIdBaslangic = 900001;
+
+    private async Task<int> NextOtomatikKullaniciIdAsync(CancellationToken cancellationToken)
+    {
+        var enBuyuk = await dbContext.Kullanicilar
+            .Where(k => k.KullaniciId >= OtomatikKullaniciIdBaslangic)
+            .MaxAsync(k => (int?)k.KullaniciId, cancellationToken);
+        return (enBuyuk ?? OtomatikKullaniciIdBaslangic - 1) + 1;
+    }
+
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
+    private static partial Regex EpostaRegex();
 
     [HttpPut("{id:int}")]
     public async Task<ActionResult<KullaniciDto>> Update(

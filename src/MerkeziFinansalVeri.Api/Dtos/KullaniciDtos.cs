@@ -14,7 +14,8 @@ public sealed class KullaniciDto
 
 public sealed class KullaniciCreateDto
 {
-    public int KullaniciId { get; set; }
+    /// <summary>Sicil no; boş bırakılırsa API otomatik numara atar.</summary>
+    public int? KullaniciId { get; set; }
     public string KullaniciKodu { get; set; } = string.Empty;
     public string Ad { get; set; } = string.Empty;
     public string Eposta { get; set; } = string.Empty;
