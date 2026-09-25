@@ -6,6 +6,6 @@
   Betik aynı numarayı API .csproj dosyasına da yazar.
 */
 window.APP_VERSION = {
-    version: '1.1.0',
+    version: '1.2.0',
     buildDate: '2026-09-25'
 };
