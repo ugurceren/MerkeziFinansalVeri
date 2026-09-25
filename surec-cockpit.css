@@ -1969,17 +1969,17 @@
 
     --dsc-soft-mix: 14%;
 
-    /* Statü renkleri ribbon.css'teki global --status-* token'larından gelir */
-    --dsc-done: var(--status-success);    --dsc-done-text: var(--status-success-text);
-    --dsc-running: var(--status-info);    --dsc-running-text: var(--status-info-text);
-    --dsc-pending: var(--status-warning); --dsc-pending-text: var(--status-warning-text);
-    --dsc-failed: var(--status-danger);   --dsc-failed-text: var(--status-danger-text);
-    --dsc-neutral: var(--status-neutral); --dsc-neutral-text: var(--status-neutral-text);
-    --dsc-done-soft: color-mix(in srgb, var(--dsc-done) var(--dsc-soft-mix), transparent);
-    --dsc-running-soft: color-mix(in srgb, var(--dsc-running) var(--dsc-soft-mix), transparent);
-    --dsc-pending-soft: color-mix(in srgb, var(--dsc-pending) var(--dsc-soft-mix), transparent);
-    --dsc-failed-soft: color-mix(in srgb, var(--dsc-failed) var(--dsc-soft-mix), transparent);
-    --dsc-neutral-soft: color-mix(in srgb, var(--dsc-neutral) var(--dsc-soft-mix), transparent);
+    /* Statü paleti: her statüye bir renk atanır (surec-cockpit.js → datasetStatusColorClass).
+       İlk beşi ribbon.css'teki global --status-* token'larından gelir. */
+    --dsc-green: var(--status-success);  --dsc-green-text: var(--status-success-text);
+    --dsc-blue: var(--status-info);      --dsc-blue-text: var(--status-info-text);
+    --dsc-red: var(--status-danger);     --dsc-red-text: var(--status-danger-text);
+    --dsc-amber: var(--status-warning);  --dsc-amber-text: var(--status-warning-text);
+    --dsc-slate: var(--status-neutral);  --dsc-slate-text: var(--status-neutral-text);
+    --dsc-violet: #a78bfa;               --dsc-violet-text: #c4b5fd;
+    --dsc-teal: #2dd4bf;                 --dsc-teal-text: #5eead4;
+    --dsc-pink: #f472b6;                 --dsc-pink-text: #f9a8d4;
+    --dsc-orange: #fb923c;               --dsc-orange-text: #fdba74;
 }
 
 [data-theme="light"] .ds-cards-wrap,
@@ -1990,14 +1990,24 @@
     --dsc-shadow-hover: 0 10px 24px rgba(15, 23, 42, 0.10);
     --dsc-code-bg: rgba(15, 23, 42, 0.045);
     --dsc-soft-mix: 10%;
+
+    /* Beyaz zeminde yazı tonları >= 4.5:1 kontrast verir */
+    --dsc-violet: #7c3aed;               --dsc-violet-text: #6d28d9;
+    --dsc-teal: #0d9488;                 --dsc-teal-text: #0f766e;
+    --dsc-pink: #db2777;                 --dsc-pink-text: #be185d;
+    --dsc-orange: #ea580c;               --dsc-orange-text: #c2410c;
 }
 
-/* Statü sınıfı → aktif renk üçlüsü */
-.ds-cards-wrap .is-neutral, .ds-card-detail .is-neutral { --dsc-c: var(--dsc-neutral); --dsc-text: var(--dsc-neutral-text); --dsc-soft: var(--dsc-neutral-soft); }
-.ds-cards-wrap .is-done,    .ds-card-detail .is-done    { --dsc-c: var(--dsc-done);    --dsc-text: var(--dsc-done-text);    --dsc-soft: var(--dsc-done-soft); }
-.ds-cards-wrap .is-running, .ds-card-detail .is-running { --dsc-c: var(--dsc-running); --dsc-text: var(--dsc-running-text); --dsc-soft: var(--dsc-running-soft); }
-.ds-cards-wrap .is-pending, .ds-card-detail .is-pending { --dsc-c: var(--dsc-pending); --dsc-text: var(--dsc-pending-text); --dsc-soft: var(--dsc-pending-soft); }
-.ds-cards-wrap .is-failed,  .ds-card-detail .is-failed  { --dsc-c: var(--dsc-failed);  --dsc-text: var(--dsc-failed-text);  --dsc-soft: var(--dsc-failed-soft); }
+/* Statü rengi sınıfı → aktif renk üçlüsü */
+.ds-cards-wrap .ds-sc-slate, .ds-card-detail .ds-sc-slate { --dsc-c: var(--dsc-slate); --dsc-text: var(--dsc-slate-text); --dsc-soft: color-mix(in srgb, var(--dsc-slate) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-green, .ds-card-detail .ds-sc-green { --dsc-c: var(--dsc-green); --dsc-text: var(--dsc-green-text); --dsc-soft: color-mix(in srgb, var(--dsc-green) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-blue, .ds-card-detail .ds-sc-blue { --dsc-c: var(--dsc-blue); --dsc-text: var(--dsc-blue-text); --dsc-soft: color-mix(in srgb, var(--dsc-blue) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-red, .ds-card-detail .ds-sc-red { --dsc-c: var(--dsc-red); --dsc-text: var(--dsc-red-text); --dsc-soft: color-mix(in srgb, var(--dsc-red) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-amber, .ds-card-detail .ds-sc-amber { --dsc-c: var(--dsc-amber); --dsc-text: var(--dsc-amber-text); --dsc-soft: color-mix(in srgb, var(--dsc-amber) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-violet, .ds-card-detail .ds-sc-violet { --dsc-c: var(--dsc-violet); --dsc-text: var(--dsc-violet-text); --dsc-soft: color-mix(in srgb, var(--dsc-violet) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-teal, .ds-card-detail .ds-sc-teal { --dsc-c: var(--dsc-teal); --dsc-text: var(--dsc-teal-text); --dsc-soft: color-mix(in srgb, var(--dsc-teal) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-pink, .ds-card-detail .ds-sc-pink { --dsc-c: var(--dsc-pink); --dsc-text: var(--dsc-pink-text); --dsc-soft: color-mix(in srgb, var(--dsc-pink) var(--dsc-soft-mix), transparent); }
+.ds-cards-wrap .ds-sc-orange, .ds-card-detail .ds-sc-orange { --dsc-c: var(--dsc-orange); --dsc-text: var(--dsc-orange-text); --dsc-soft: color-mix(in srgb, var(--dsc-orange) var(--dsc-soft-mix), transparent); }
 
 .ds-cards-wrap .ds-status-badge,
 .ds-card-detail .ds-status-badge {
@@ -2083,8 +2093,8 @@
 }
 
 .ds-cards-chip-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--dsc-c);
     flex-shrink: 0;
@@ -2151,7 +2161,7 @@
 }
 
 .ds-dataset-card {
-    --dsc-c: var(--dsc-neutral);
+    --dsc-c: var(--dsc-slate);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2211,9 +2221,15 @@
     -webkit-box-orient: vertical;
 }
 
-.ds-dataset-card-head .ds-status-badge {
+/* Statü yalnızca renkle gösterilir; adı üst bardaki çipte, tooltip'te ve detayda yer alır */
+.ds-dataset-card-dot {
     flex-shrink: 0;
-    margin-top: 1px;
+    width: 14px;
+    height: 14px;
+    margin-top: 3px;
+    border-radius: 50%;
+    background: var(--dsc-c);
+    box-shadow: 0 0 0 4px var(--dsc-soft);
 }
 
 .ds-dataset-card-chips {

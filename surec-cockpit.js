@@ -1010,6 +1010,53 @@ function datasetCardText(value) {
     return String(value ?? '').trim();
 }
 
+/* Kart görünümünde her statünün kendi rengi var (surec-cockpit.css → .ds-sc-*).
+   Bilinen statüler anlamına uygun rengi alır; diğerleri boşta kalan renklere dağıtılır. */
+const DATASET_STATUS_COLORS = ['green', 'blue', 'red', 'amber', 'slate', 'violet', 'teal', 'pink', 'orange'];
+const DATASET_STATUS_COLOR_HINTS = [
+    { color: 'green', pattern: /tamam|complete|done|aktif/ },
+    { color: 'red', pattern: /hata|fail|iptal|cancel/ },
+    { color: 'blue', pattern: /devam|progress|running/ },
+    { color: 'amber', pattern: /bekl|wait|pending|hold/ },
+    { color: 'slate', pattern: /not started|başlanmadı|baslanmadi/ }
+];
+
+let datasetStatusColorCache = { source: null, map: new Map() };
+
+function getDatasetStatusColorMap() {
+    if (datasetStatusColorCache.source === DATASET_LIST_ROWS) return datasetStatusColorCache.map;
+
+    // Arama/filtreden bağımsız tüm satırlardan hesaplanır ki bir statünün rengi filtreyle değişmesin
+    const statuses = [...new Set(DATASET_LIST_ROWS.map(row => datasetCardText(row.status)))]
+        .sort(datasetCardCollator.compare);
+    const map = new Map();
+    const used = new Set();
+    const assign = (status, color) => {
+        map.set(status, color);
+        used.add(color);
+    };
+
+    statuses.forEach(status => {
+        const hint = status
+            ? DATASET_STATUS_COLOR_HINTS.find(h => h.pattern.test(status.toLowerCase()))
+            : { color: 'slate' };
+        if (hint && !used.has(hint.color)) assign(status, hint.color);
+    });
+
+    let overflow = 0;
+    statuses.filter(status => !map.has(status)).forEach(status => {
+        const free = DATASET_STATUS_COLORS.find(color => !used.has(color));
+        assign(status, free || DATASET_STATUS_COLORS[overflow++ % DATASET_STATUS_COLORS.length]);
+    });
+
+    datasetStatusColorCache = { source: DATASET_LIST_ROWS, map };
+    return map;
+}
+
+function datasetStatusColorClass(status) {
+    return `ds-sc-${getDatasetStatusColorMap().get(datasetCardText(status)) || 'slate'}`;
+}
+
 function formatRelativeDays(value) {
     if (!value || !Intl.RelativeTimeFormat) return '';
     const date = new Date(value);
@@ -1081,7 +1128,7 @@ function buildDatasetCardsToolbar(baseRows, visibleCount) {
         const active = datasetCardsStatusFilter === status;
         const safe = escapeDatasetHtml(status);
         chips.push(`
-        <button type="button" class="ds-cards-chip ${statusBadgeClass(status)}${active ? ' is-active' : ''}" data-ds-status="${safe}" aria-pressed="${active}">
+        <button type="button" class="ds-cards-chip ${datasetStatusColorClass(status)}${active ? ' is-active' : ''}" data-ds-status="${safe}" aria-pressed="${active}">
             <span class="ds-cards-chip-dot" aria-hidden="true"></span>${safe || 'Statüsüz'}<span class="ds-cards-chip-count">${count}</span>
         </button>`);
     });
@@ -1116,7 +1163,7 @@ function buildDatasetCardPerson(icon, label, value) {
 }
 
 function buildDatasetCard(row, index) {
-    const statusClass = statusBadgeClass(row.status);
+    const statusClass = datasetStatusColorClass(row.status);
     const name = escapeDatasetHtml(row.datasetName || '—');
     const status = escapeDatasetHtml(row.status || '—');
     const model = escapeDatasetHtml(datasetCardText(row.dataModel));
@@ -1144,7 +1191,7 @@ function buildDatasetCard(row, index) {
             aria-label="${name} dataset detayı, statü ${status}">
             <header class="ds-dataset-card-head">
                 <h4 class="ds-dataset-card-title" title="${name}">${name}</h4>
-                <span class="ds-status-badge ${statusClass}">${status}</span>
+                <span class="ds-dataset-card-dot" title="${status}" aria-hidden="true"></span>
             </header>
             ${chips ? `<div class="ds-dataset-card-chips">${chips}</div>` : ''}
             ${staging ? `
@@ -1247,7 +1294,7 @@ function buildDatasetCardDrawerBody(row) {
     return `
         <div class="ds-card-detail">
             <div class="ds-card-detail-status">
-                <span class="ds-status-badge ${statusBadgeClass(row.status)}">${escapeDatasetHtml(row.status || '—')}</span>
+                <span class="ds-status-badge ${datasetStatusColorClass(row.status)}">${escapeDatasetHtml(row.status || '—')}</span>
             </div>
             ${sections}
         </div>`;
