@@ -111,6 +111,9 @@
             const editBtn = e.target.closest('.um-edit-btn');
             if (!editBtn) return;
             e.stopPropagation();
+            const id = Number(editBtn.dataset.userId || editBtn.closest('tr')?.dataset.userId);
+            const user = USERS.find(u => u.kullaniciId === id);
+            if (user) openUserModal(user);
         });
     }
 
@@ -225,23 +228,45 @@
         el.textContent = message || '';
     }
 
-    function openUserModal() {
+    /** Düzenlenen kullanıcı; null ise pencere "Yeni Kullanıcı" modundadır. */
+    let editingUser = null;
+
+    function openUserModal(user = null) {
         if (!userModal || !userForm) return;
+        editingUser = user;
         userForm.reset();
-        const roleSelect = userForm.elements.rolId;
+        const f = userForm.elements;
         // API yanıtı rolId/ad, çevrimdışı yedek (KullaniciShared) id/name kullanır
-        roleSelect.innerHTML = ROLES.map(r => `<option value="${r.rolId ?? r.id}">${r.ad ?? r.name}</option>`).join('');
-        // Varsayılan rol, sağ panelde seçili olan rol
-        if (ROLES.some(r => (r.rolId ?? r.id) === selectedRoleId)) roleSelect.value = selectedRoleId;
+        f.rolId.innerHTML = ROLES.map(r => `<option value="${r.rolId ?? r.id}">${r.ad ?? r.name}</option>`).join('');
+
+        document.getElementById('umUserModalTitle').textContent = user ? 'Kullanıcıyı Düzenle' : 'Yeni Kullanıcı';
+        // Sicil no tablonun birincil anahtarı; düzenlemede değiştirilemez
+        f.kullaniciId.disabled = Boolean(user);
+        f.kullaniciId.placeholder = user ? '' : 'Boşsa otomatik atanır';
+        document.querySelector('label[for="umUserId"] .um-optional').hidden = Boolean(user);
+
+        if (user) {
+            f.kullaniciId.value = user.kullaniciId;
+            f.kullaniciKodu.value = user.kullaniciKodu || '';
+            f.ad.value = user.ad || '';
+            f.eposta.value = user.eposta || '';
+            f.rolId.value = user.rolId;
+            f.durum.value = user.durum === 'passive' ? 'passive' : 'active';
+        } else if (ROLES.some(r => (r.rolId ?? r.id) === selectedRoleId)) {
+            // Varsayılan rol, sağ panelde seçili olan rol
+            f.rolId.value = selectedRoleId;
+        }
+
         setUserFormMessage('');
         lastFocusBeforeModal = document.activeElement;
         userModal.hidden = false;
-        userForm.elements.kullaniciKodu.focus();
+        (user ? f.ad : f.kullaniciKodu).focus();
     }
 
     function closeUserModal() {
         if (!userModal || userModal.hidden) return;
         userModal.hidden = true;
+        editingUser = null;
         lastFocusBeforeModal?.focus?.();
     }
 
@@ -250,7 +275,7 @@
         const sicil = f.kullaniciId.value.trim();
         return {
             // Boş sicil no null gider; API otomatik numara atar
-            kullaniciId: sicil ? Number(sicil) : null,
+            kullaniciId: editingUser ? editingUser.kullaniciId : (sicil ? Number(sicil) : null),
             kullaniciKodu: f.kullaniciKodu.value.trim(),
             ad: f.ad.value.trim(),
             eposta: f.eposta.value.trim(),
@@ -267,13 +292,17 @@
             return 'Tüm alanları doldurun.';
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.eposta)) return 'Geçerli bir e-posta adresi girin.';
-        if (data.kullaniciId !== null && USERS.some(u => u.kullaniciId === data.kullaniciId)) {
+        if (!editingUser && data.kullaniciId !== null && USERS.some(u => u.kullaniciId === data.kullaniciId)) {
             return `${data.kullaniciId} sicil numaralı kullanıcı zaten listede.`;
         }
+        const kodSahibi = USERS.find(u =>
+            (u.kullaniciKodu || '').toLowerCase() === data.kullaniciKodu.toLowerCase()
+            && u.kullaniciId !== data.kullaniciId);
+        if (kodSahibi) return `'${data.kullaniciKodu}' kullanıcı kodu ${kodSahibi.ad} kullanıcısında kayıtlı.`;
         return '';
     }
 
-    async function saveNewUser(event) {
+    async function saveUser(event) {
         event.preventDefault();
         const data = readUserForm();
         const invalid = validateUserForm(data);
@@ -287,11 +316,13 @@
         saveBtn.textContent = 'Kaydediliyor…';
         setUserFormMessage('');
         try {
-            const created = await ApiClient.createKullanici(data);
+            const saved = editingUser
+                ? await ApiClient.updateKullanici(editingUser.kullaniciId, data)
+                : await ApiClient.createKullanici(data);
             closeUserModal();
             await loadData();
-            selectedUserId = created?.kullaniciId ?? data.kullaniciId ?? selectedUserId;
-            selectedRoleId = created?.rolId ?? data.rolId;
+            selectedUserId = saved?.kullaniciId ?? data.kullaniciId ?? selectedUserId;
+            selectedRoleId = saved?.rolId ?? data.rolId;
             renderRoleCards();
             renderUsersTable();
             await renderAccessPanel();
@@ -307,11 +338,11 @@
     }
 
     function bindUserModal() {
-        document.getElementById('umNewUserBtn')?.addEventListener('click', openUserModal);
+        document.getElementById('umNewUserBtn')?.addEventListener('click', () => openUserModal());
         userModal?.querySelectorAll('[data-um-modal-close]').forEach(el => {
             el.addEventListener('click', closeUserModal);
         });
-        userForm?.addEventListener('submit', saveNewUser);
+        userForm?.addEventListener('submit', saveUser);
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeUserModal();
         });

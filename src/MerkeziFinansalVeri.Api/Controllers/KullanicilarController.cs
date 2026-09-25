@@ -54,41 +54,16 @@ public partial class KullanicilarController(
             this, permissionService, "kullanici-yonetimi", cancellationToken);
         if (denied is not null) return denied;
 
-        var kod = dto.KullaniciKodu?.Trim() ?? string.Empty;
-        var ad = dto.Ad?.Trim() ?? string.Empty;
-        var eposta = dto.Eposta?.Trim() ?? string.Empty;
-        var rolId = dto.RolId?.Trim() ?? string.Empty;
-        var durum = dto.Durum == "passive" ? "passive" : "active";
-
-        if (kod.Length == 0 || ad.Length == 0 || eposta.Length == 0 || rolId.Length == 0)
-        {
-            return BadRequest(new { message = "Kullanıcı kodu, ad soyad, e-posta ve rol zorunludur." });
-        }
-
         if (dto.KullaniciId is <= 0)
         {
             return BadRequest(new { message = "Sicil no pozitif bir sayı olmalıdır; bilinmiyorsa boş bırakın." });
         }
 
         var kullaniciId = dto.KullaniciId ?? await NextOtomatikKullaniciIdAsync(cancellationToken);
-
-        if (!EpostaRegex().IsMatch(eposta))
-        {
-            return BadRequest(new { message = "Geçerli bir e-posta adresi girin." });
-        }
-
-        if (!await dbContext.Roller.AnyAsync(r => r.RolId == rolId, cancellationToken))
-        {
-            return BadRequest(new { message = $"'{rolId}' rolü bulunamadı." });
-        }
-
-        var kodKullanimda = await dbContext.Kullanicilar.AnyAsync(
-            k => k.KullaniciKodu == kod && k.KullaniciId != kullaniciId && !k.SilindiMi,
-            cancellationToken);
-        if (kodKullanimda)
-        {
-            return Conflict(new { message = $"'{kod}' kullanıcı kodu başka bir kullanıcıda kayıtlı." });
-        }
+        var (alanlar, hata) = await ValidateAlanlarAsync(
+            kullaniciId, dto.KullaniciKodu, dto.Ad, dto.Eposta, dto.RolId, dto.Durum, cancellationToken);
+        if (hata is not null) return hata;
+        var (kod, ad, eposta, rolId, durum) = alanlar;
 
         // UserId sicil numarasıdır; silinmiş bir kullanıcıya aitse yeni bilgilerle geri getirilir
         var entity = await dbContext.Kullanicilar
@@ -145,6 +120,49 @@ public partial class KullanicilarController(
         return (enBuyuk ?? OtomatikKullaniciIdBaslangic - 1) + 1;
     }
 
+    /// <summary>Oluşturma ve güncellemede ortak alan kontrolleri; kullanıcı kodu başka aktif kullanıcıda olamaz.</summary>
+    private async Task<((string Kod, string Ad, string Eposta, string RolId, string Durum) Alanlar, ActionResult? Hata)> ValidateAlanlarAsync(
+        int kullaniciId,
+        string? kullaniciKodu,
+        string? adSoyad,
+        string? epostaAdresi,
+        string? rol,
+        string? durumDegeri,
+        CancellationToken cancellationToken)
+    {
+        var alanlar = (
+            Kod: kullaniciKodu?.Trim() ?? string.Empty,
+            Ad: adSoyad?.Trim() ?? string.Empty,
+            Eposta: epostaAdresi?.Trim() ?? string.Empty,
+            RolId: rol?.Trim() ?? string.Empty,
+            Durum: durumDegeri == "passive" ? "passive" : "active");
+
+        if (alanlar.Kod.Length == 0 || alanlar.Ad.Length == 0 || alanlar.Eposta.Length == 0 || alanlar.RolId.Length == 0)
+        {
+            return (alanlar, BadRequest(new { message = "Kullanıcı kodu, ad soyad, e-posta ve rol zorunludur." }));
+        }
+
+        if (!EpostaRegex().IsMatch(alanlar.Eposta))
+        {
+            return (alanlar, BadRequest(new { message = "Geçerli bir e-posta adresi girin." }));
+        }
+
+        if (!await dbContext.Roller.AnyAsync(r => r.RolId == alanlar.RolId, cancellationToken))
+        {
+            return (alanlar, BadRequest(new { message = $"'{alanlar.RolId}' rolü bulunamadı." }));
+        }
+
+        var kodKullanimda = await dbContext.Kullanicilar.AnyAsync(
+            k => k.KullaniciKodu == alanlar.Kod && k.KullaniciId != kullaniciId && !k.SilindiMi,
+            cancellationToken);
+        if (kodKullanimda)
+        {
+            return (alanlar, Conflict(new { message = $"'{alanlar.Kod}' kullanıcı kodu başka bir kullanıcıda kayıtlı." }));
+        }
+
+        return (alanlar, null);
+    }
+
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
     private static partial Regex EpostaRegex();
 
@@ -154,24 +172,33 @@ public partial class KullanicilarController(
         [FromBody] KullaniciUpdateDto dto,
         CancellationToken cancellationToken)
     {
+        var denied = await PermissionAuthorization.EnsurePageAccessAsync(
+            this, permissionService, "kullanici-yonetimi", cancellationToken);
+        if (denied is not null) return denied;
+
         var entity = await dbContext.Kullanicilar
-            .Include(k => k.Rol)
             .FirstOrDefaultAsync(k => k.KullaniciId == id && !k.SilindiMi, cancellationToken);
 
         if (entity is null)
         {
-            return NotFound();
+            return NotFound(new { message = $"{id} sicil numaralı kullanıcı bulunamadı." });
         }
 
-        entity.KullaniciKodu = dto.KullaniciKodu;
-        entity.Ad = dto.Ad;
-        entity.Eposta = dto.Eposta;
-        entity.RolId = dto.RolId;
-        entity.Durum = dto.Durum;
+        var (alanlar, hata) = await ValidateAlanlarAsync(
+            id, dto.KullaniciKodu, dto.Ad, dto.Eposta, dto.RolId, dto.Durum, cancellationToken);
+        if (hata is not null) return hata;
+
+        entity.KullaniciKodu = alanlar.Kod;
+        entity.Ad = alanlar.Ad;
+        entity.Eposta = alanlar.Eposta;
+        entity.RolId = alanlar.RolId;
+        entity.Durum = alanlar.Durum;
         entity.GuncellemeZamani = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await activityLogService.LogAsync("kullanici", "Kullanıcı güncellendi", dto.Ad, HttpContext.GetCurrentUserId(), cancellationToken);
+        // Rol değişmiş olabilir; yanıttaki rol adı güncel rolden gelsin
+        await dbContext.Entry(entity).Reference(e => e.Rol).LoadAsync(cancellationToken);
+        await activityLogService.LogAsync("kullanici", "Kullanıcı güncellendi", alanlar.Ad, HttpContext.GetCurrentUserId(), cancellationToken);
 
         return Ok(ToDto(entity));
     }

@@ -78,6 +78,7 @@
         getKullanicilar() { return request('/kullanicilar'); },
         getKullanici(id) { return request(`/kullanicilar/${id}`); },
         createKullanici(data) { return request('/kullanicilar', { method: 'POST', body: data }); },
+        updateKullanici(id, data) { return request(`/kullanicilar/${id}`, { method: 'PUT', body: data }); },
         getKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler`); },
         updateKullaniciYetkiler(id, yetkiler) { return request(`/kullanicilar/${id}/yetkiler`, { method: 'PUT', body: yetkiler }); },
         sifirlaKullaniciYetkiler(id) { return request(`/kullanicilar/${id}/yetkiler/sifirla`, { method: 'POST' }); },

@@ -96,10 +96,12 @@
     color: var(--rb-text-muted);
 }
 
+/* Menü bölümleri genişliğe göre yan yana sütunlara dizilir; kısa sayfa adları tüm satırı kaplamaz */
 .um-menu-tree {
     padding: 10px 14px 14px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    align-items: start;
     gap: 10px;
 }
 
@@ -343,6 +345,13 @@
 .um-field select:focus {
     outline: none;
     border-color: var(--rb-accent);
+}
+
+/* Düzenlemede sicil no değiştirilemez */
+.um-field input:disabled {
+    background: var(--rb-filter-bg);
+    color: var(--rb-text-muted);
+    cursor: not-allowed;
 }
 
 .um-form-msg {
