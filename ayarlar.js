@@ -13,9 +13,9 @@
 
     const APP_INFO = {
         name: 'Merkezi Güvenilir Finansal Veri',
-        version: '1.0.0',
+        version: window.APP_VERSION?.version || '—',
         environment: 'Geliştirme',
-        buildDate: '2026-06-07'
+        buildDate: window.APP_VERSION?.buildDate || '—'
     };
 
     function buildAyarlarHTML() {

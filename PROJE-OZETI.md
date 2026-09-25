@@ -132,6 +132,8 @@ Ekranların sorgu ve rapor tanımları koddan ayrı tutulur; değişiklik için 
 MerkeziFinansalVeri/
 ├── MerkeziFinansalVeri.sln
 ├── baslat.bat                 # API + statik web sunucusunu birlikte başlatır
+├── version.js                 # Uygulama sürümü (tek kaynak)
+├── surum-artir.bat            # Sürümü artırır: version.js + API .csproj, commit ve v-etiketi
 ├── .editorconfig              # UTF-8, girinti ve satır sonu kuralları
 │
 ├── config/                    # Ekran sorgu/rapor tanımları (JSON + SQL)
@@ -169,7 +171,7 @@ MerkeziFinansalVeri/
 | Kayıt sayacı | `table-count.js` | "Gösterilen / Toplam" rozeti |
 | SQL IntelliSense | `sql-intellisense.js` | Sorgu ekranında tablo/kolon önerileri |
 | Tarih | `date-locale.js` | Türkçe tarih biçimi ve flatpickr tarih seçici |
-| Durum çubuğu | `status-bar.js` | Alt bilgi çubuğu: kullanıcı, tarih, sürüm ve ortam |
+| Durum çubuğu | `status-bar.js` | Alt bilgi çubuğu: kullanıcı, tarih, sürüm (`version.js`) ve ortam |
 | Tema | `theme-toggle.js` | Koyu/açık mod, `localStorage` ile kalıcı |
 | Yetki | `page-permissions.js`, `user-session.js` | Sayfa erişim kontrolü ve oturum kullanıcısı |
 | İkonlar | [Tabler Icons](https://tabler.io/icons) | CDN'den, sürümü sabit: `@tabler/icons-webfont@2.47.0` |
@@ -217,6 +219,7 @@ dotnet run --project FinansalVeriApp/FinansalVeriApp.csproj
 - **İkon sürümü:** Tabler Icons v3'te CSS dosyası `dist/` altına taşındı ve bazı ikon adları değişti. v3'e geçmek için yol `@3.x/dist/tabler-icons.min.css` olmalı ve kullanılan `ti-*` adları kontrol edilmeli.
 - **Statü renkleri:** Sabit renk kodu yazmayın; `ribbon.css` içindeki `--status-success|warning|danger|info|progress|neutral` token'larını kullanın. Yazı için `-text` varyantı (açık temada okunaklı koyu ton), zemin/kenarlık için temel token; şeffaf ton için `color-mix(in srgb, var(--status-success) 15%, transparent)`.
 - **Encoding:** Tüm dosyalar UTF-8'dir (`.editorconfig`). Türkçe karakterlerin bozulmaması için dosyaları ANSI/Windows-1254 ile kaydetmeyin.
+- **Sürüm (SemVer):** Sürüm yalnızca `version.js` içinde tutulur; elle değil `surum-artir.bat` ile artırılır. Hata düzeltmesi → `patch` (1.1.0 → 1.1.1), yeni özellik → `minor` (1.1.1 → 1.2.0), uyumu bozan değişiklik (şema/API) → `major` (1.2.0 → 2.0.0). Soldaki sayı artınca sağdakiler sıfırlanır; bir sürümde birden çok tür varsa en büyüğü belirler. Betik commit ve `vX.Y.Z` etiketi oluşturur, gönderim: `git push origin main --follow-tags`.
 - **API:** Backend değişikliklerinden sonra API manuel olarak yeniden başlatılmalıdır.
 - **Kimlik doğrulama:** `X-User-Id` başlığı yalnızca geliştirme içindir; gerçek ortamda JWT veya AD kimlik doğrulaması gerekir.
 
