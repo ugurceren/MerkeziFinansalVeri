@@ -1,5 +1,4 @@
 (function () {
-    const CUSTOM_CONN_KEY = 'vs_custom_connections';
     const CUSTOM_PREFIX = '__custom__:';
 
     const RUN_QUERY_SHORTCUT = {
@@ -30,15 +29,7 @@
             .replace(/"/g, '&quot;');
     }
 
-    function loadCustomConnections() {
-        try {
-            const raw = localStorage.getItem(CUSTOM_CONN_KEY);
-            const list = raw ? JSON.parse(raw) : [];
-            return Array.isArray(list) ? list : [];
-        } catch {
-            return [];
-        }
-    }
+    const loadCustomConnections = () => window.OzelBaglantilar.load();
 
     function readLastTarget() {
         try {
@@ -460,7 +451,7 @@
 
         // Veritabanı Bağlantısı sayfası başka sekmede açıkken eklenen/silinen bağlantılar listeye yansır
         window.addEventListener('storage', e => {
-            if (e.key !== CUSTOM_CONN_KEY) return;
+            if (e.key !== window.OzelBaglantilar.STORAGE_KEY) return;
             const previous = selectedKatman;
             customConnections = loadCustomConnections();
             renderTargetSelects();

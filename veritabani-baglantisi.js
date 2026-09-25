@@ -1,6 +1,4 @@
 (function () {
-    const CUSTOM_CONN_KEY = 'vs_custom_connections';
-
     const KATMAN_ROL = {
         TDSTG: 'Staging — ham veri katmanı',
         TDMAIN: 'Ana veri — kurumsal çekirdek',
@@ -62,20 +60,21 @@
         const rol = KATMAN_ROL[kaynak.katmanKodu] || kaynak.katmanKodu;
         const showSqlUser = kaynak.kimlikDogrulama === 'sql';
 
-        return `<div class="dbc-layout">
+        return `<div class="dbc-page">
+        <div class="dbc-page-actions">
+            <button type="button" class="dbc-new-conn-btn" id="dbcNewConnBtn">
+                <i class="ti ti-plus" aria-hidden="true"></i>
+                <span>Yeni Bağlantı</span>
+            </button>
+        </div>
+        <div class="dbc-layout">
             <article class="dbc-panel theme-${tema}" data-dbc-panel>
                 <div class="dbc-panel-head">
                     <div>
                         <h3><i class="ti ti-plug-connected" aria-hidden="true"></i> Veritabanı Bağlantısı</h3>
                         <p>TDSTG, TDMAIN ve TDREPORT ortamları için bağlantı parametrelerini yönetin.</p>
                     </div>
-                    <div class="dbc-panel-head-actions">
-                        <button type="button" class="dbc-new-conn-btn" id="dbcNewConnBtn">
-                            <i class="ti ti-plus" aria-hidden="true"></i>
-                            <span>Yeni Bağlantı</span>
-                        </button>
-                        <span class="dbc-status ${statusClass(kaynak.durum)}" data-status>${statusLabel(kaynak.durum)}</span>
-                    </div>
+                    <span class="dbc-status ${statusClass(kaynak.durum)}" data-status>${statusLabel(kaynak.durum)}</span>
                 </div>
                 <div class="dbc-panel-body">
                     <div class="dbc-field">
@@ -127,6 +126,7 @@
             <div class="dbc-footer">
                 <span class="dbc-footer-msg" id="dbcSaveMsg" role="status">Kaydedildi</span>
             </div>
+        </div>
         </div>`;
     }
 
@@ -258,19 +258,8 @@
         showSaveMsg._timer = setTimeout(() => msg.classList.remove('visible'), 2200);
     }
 
-    function loadCustomConnections() {
-        try {
-            const raw = localStorage.getItem(CUSTOM_CONN_KEY);
-            const list = raw ? JSON.parse(raw) : [];
-            return Array.isArray(list) ? list : [];
-        } catch {
-            return [];
-        }
-    }
-
-    function saveCustomConnections(list) {
-        localStorage.setItem(CUSTOM_CONN_KEY, JSON.stringify(list));
-    }
+    const loadCustomConnections = () => window.OzelBaglantilar.load();
+    const saveCustomConnections = list => window.OzelBaglantilar.save(list);
 
     function buildCustomListHTML() {
         const list = loadCustomConnections();
@@ -468,6 +457,11 @@
                 };
 
                 const list = loadCustomConnections();
+                const existing = window.OzelBaglantilar.findDuplicate(list, entry);
+                if (existing) {
+                    showConnTestMsg(modal, `Bu bağlantı zaten kayıtlı: "${existing.etiket}". Özel Bağlantılar listesinden test edebilir veya silebilirsiniz.`, true);
+                    return;
+                }
                 list.push(entry);
                 saveCustomConnections(list);
                 renderCustomList();

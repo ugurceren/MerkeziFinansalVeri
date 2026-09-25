@@ -30,12 +30,16 @@
     background: var(--rb-card);
 }
 
-.dbc-panel-head-actions {
+.dbc-page {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    flex-shrink: 0;
+    gap: 14px;
+}
+
+/* Sayfanın sağ üstü: panellerden bağımsız, tüm genişlikte sağa yaslı */
+.dbc-page-actions {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .dbc-new-conn-btn {
