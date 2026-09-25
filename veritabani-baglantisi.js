@@ -115,6 +115,15 @@
                     </div>
                 </div>
             </article>
+            <article class="dbc-panel" data-custom-panel>
+                <div class="dbc-panel-head">
+                    <div>
+                        <h3><i class="ti ti-server-2" aria-hidden="true"></i> Özel Bağlantılar</h3>
+                        <p>Bu tarayıcıda kayıtlı; Veritabanı Sorgusu sayfasında "(özel)" olarak listelenir.</p>
+                    </div>
+                </div>
+                <div class="dbc-panel-body" id="dbcCustomList">${buildCustomListHTML()}</div>
+            </article>
             <div class="dbc-footer">
                 <span class="dbc-footer-msg" id="dbcSaveMsg" role="status">Kaydedildi</span>
             </div>
@@ -263,6 +272,69 @@
         localStorage.setItem(CUSTOM_CONN_KEY, JSON.stringify(list));
     }
 
+    function buildCustomListHTML() {
+        const list = loadCustomConnections();
+        if (!list.length) {
+            return '<p class="dbc-custom-empty">Henüz özel bağlantı yok. "Yeni Bağlantı" ile ekleyebilirsiniz.</p>';
+        }
+
+        return list.map(c => {
+            const auth = c.kimlikDogrulama === 'sql' ? `SQL · ${escapeHtml(c.kullaniciAdi || '')}` : 'Windows';
+            return `<div class="dbc-custom-item" data-custom-id="${escapeHtml(c.id)}">
+                <div class="dbc-custom-info">
+                    <span class="dbc-custom-name">${escapeHtml(c.etiket)}</span>
+                    <span class="dbc-custom-detail">${escapeHtml(c.sunucu)}:${c.port || 1433} / ${escapeHtml(c.veritabani)} · ${auth}</span>
+                    <p class="dbc-test-msg" data-custom-msg role="status" hidden></p>
+                </div>
+                <div class="dbc-custom-actions">
+                    <button type="button" class="dbc-test-btn" data-custom-test>Test</button>
+                    <button type="button" class="dbc-custom-delete" data-custom-delete aria-label="Bağlantıyı sil" title="Sil">
+                        <i class="ti ti-trash" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderCustomList() {
+        const host = document.getElementById('dbcCustomList');
+        if (host) host.innerHTML = buildCustomListHTML();
+    }
+
+    async function testCustomConnection(item, button) {
+        const conn = loadCustomConnections().find(c => c.id === item.dataset.customId);
+        if (!conn) return;
+
+        const msg = item.querySelector('[data-custom-msg]');
+        const showMsg = (text, isError) => {
+            msg.hidden = !text;
+            msg.textContent = text;
+            msg.classList.toggle('error', !!isError);
+            msg.classList.toggle('success', !!text && !isError);
+        };
+
+        button.disabled = true;
+        button.textContent = 'Test ediliyor…';
+        showMsg('', false);
+        try {
+            const result = await ApiClient.testVeritabaniSorguBaglanti(toBaglantiDto(conn));
+            showMsg(result.mesaj || (result.basarili ? 'Bağlantı başarılı.' : 'Bağlantı başarısız.'), !result.basarili);
+        } catch (err) {
+            showMsg('Test isteği başarısız: ' + err.message, true);
+        }
+        button.disabled = false;
+        button.textContent = 'Test';
+    }
+
+    function deleteCustomConnection(item) {
+        const list = loadCustomConnections();
+        const conn = list.find(c => c.id === item.dataset.customId);
+        if (!conn) return;
+        if (!confirm(`"${conn.etiket}" bağlantısı silinsin mi?`)) return;
+        saveCustomConnections(list.filter(c => c.id !== conn.id));
+        renderCustomList();
+    }
+
     function toBaglantiDto(formData) {
         return {
             etiket: formData.etiket,
@@ -398,6 +470,7 @@
                 const list = loadCustomConnections();
                 list.push(entry);
                 saveCustomConnections(list);
+                renderCustomList();
                 closeConnModal();
                 showConnTestMsg(modal, '', false);
 
@@ -429,7 +502,13 @@
         document.addEventListener('click', e => {
             if (e.target.closest('#dbcNewConnBtn')) {
                 openConnModal();
+                return;
             }
+            const item = e.target.closest('[data-custom-id]');
+            if (!item) return;
+            const testBtn = e.target.closest('[data-custom-test]');
+            if (testBtn) testCustomConnection(item, testBtn);
+            else if (e.target.closest('[data-custom-delete]')) deleteCustomConnection(item);
         });
     }
 
